@@ -8,13 +8,6 @@ Right now I have tested it for the couple stores that are saved, but I will prob
 It's still a simple tracker, so errors can be found so don't expect it to compete  with the best websites out there, but I am planning to support it even more since I have a personal usage for it.
 
 
-P.S: 
-
-please note that the services have referral code, this is how you support me to continue developing the project.
-
-no data is shared with anyone, I would appreciate to keep it, but you can remove it from database if you don't want to.
-
-
 ## Deployment
 
 Copy .env.example to .env file
@@ -43,6 +36,17 @@ MAIL_ENCRYPTION=tls
 MAIL_FROM_ADDRESS="yournewemail@gmail"
 MAIL_FROM_NAME="${APP_NAME}"
 ```
+
+if you want to support me and my work, feel free to change the following:
+```text
+ALLOW_REF=0
+```
+to 
+```text
+ALLOW_REF=1
+```
+this will enable referrals and will support me as a developer.
+please note this is not mandatory, and the software will run normally without issues whether it's enabled or disabled.
 
 Run Composer install
 ```bash
