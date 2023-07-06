@@ -129,7 +129,7 @@
                                                                                     <!--[if !mso]><!--><td class=t53 style="width:69px;">
                                                                                         <!--<![endif]-->
                                                                                         <!--[if mso]><td class=t53 style="width:69px;"><![endif]-->
-                                                                                        <div style="font-size:0px;"><img class=t59 style="display:block;border:0;height:auto;width:100%;Margin:0;max-width:100%;" width=69 height=44.890625 src="{{$service->image}}" /></div></td>
+                                                                                        <div style="font-size:0px;"><img class=t59 style="display:block;border:0;height:auto;width:100%;Margin:0;max-width:100%;" width=69 height=44.890625 src="{{"/storage/service/$service->image" }}" /></div></td>
                                                                                 </tr></table>
                                                                         </td></tr><tr><td><div class=t21 style="mso-line-height-rule:exactly;mso-line-height-alt:15px;line-height:15px;font-size:1px;display:block;">&nbsp;</div></td></tr><tr><td>
                                                                             <table class=t23 role=presentation cellpadding=0 cellspacing=0 align=center><tr>
