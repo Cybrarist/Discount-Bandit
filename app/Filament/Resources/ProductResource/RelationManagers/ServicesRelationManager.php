@@ -36,7 +36,12 @@ class ServicesRelationManager extends RelationManager
         return $table
             ->columns([
                 Tables\Columns\TextColumn::make('name')->url( function ($record) {
-                    return $record->url . "/dp/" .  $record->pivot->pivotParent->ASIN ."/ref=nosim?tag=" . $record->referral;
+                    $to_return=$record->url . "/dp/" .  $record->pivot->pivotParent->ASIN;
+                    if (env('ALLOW_REF'))
+                        return  $to_return ."/ref=nosim?tag=" . $record->referral;
+                    else
+                        return $to_return;
+
                 } ,true),
                 Tables\Columns\TextColumn::make('price')->formatStateUsing(function ($record) {
                         if ($record->price <= $record->notify_price)

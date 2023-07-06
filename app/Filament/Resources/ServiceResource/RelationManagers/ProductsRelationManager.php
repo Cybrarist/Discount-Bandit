@@ -33,7 +33,12 @@ class ProductsRelationManager extends RelationManager
                 Tables\Columns\ImageColumn::make('image'),
 
                 Tables\Columns\TextColumn::make('name')->url( function ($record) {
-                    return $record->url . "/dp/" .  $record->pivot->pivotParent->ASIN ."/ref=nosim?tag=" . $record->referral;
+                    $to_return=$record->url . "/dp/" .  $record->pivot->pivotParent->ASIN;
+                    if (env('ALLOW_REF'))
+                        return  $to_return ."/ref=nosim?tag=" . $record->pivot->pivotParent->referral;
+                    else
+                        return $to_return;
+
                 } ,true)->limit(50)->searchable(),
                 Tables\Columns\TextColumn::make('price'),
                 Tables\Columns\TextColumn::make('notify_price'),

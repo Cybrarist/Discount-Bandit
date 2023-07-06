@@ -13,3 +13,13 @@ use Illuminate\Support\Facades\Route;
 | be assigned to the "web" middleware group. Make something great!
 |
 */
+
+Route::get('/test', function (){
+    return  view('mail.reached_desired_price',[
+        'product' => \App\Models\Product::first(),
+        'service' => \App\Models\Service::first(),
+        'current_price' => 100,
+        'notify_price' => 200,
+        'currency' => 'AED'
+    ]);
+});

@@ -50,7 +50,7 @@ class GetProductJob implements ShouldQueue
 
             $response=Http::withUserAgent(
                 "Mozilla/5.0 (X11; Linux i686 on x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2909.25 Safari/537.36"
-            )->get($this->service->url . "/dp/" . $this->product->ASIN . "/ref=nosim?tag=" . $this->service->referral);
+            )->get($this->service->url . "/dp/" . $this->product->ASIN);
 
             //prepare the document for the parsing
             $doc=new \DOMDocument();
