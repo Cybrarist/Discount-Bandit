@@ -28,56 +28,56 @@ class DatabaseSeeder extends Seeder
             [
                 'name'=>'Amazon UAE',
                 'url'=>'https://amazon.ae',
-                'image'=>'1.svg',
+                'image'=>'1.png',
                 'referral'=>'cybrarist04-21',
                 'currency_id'=>1
             ],
             [
                 'name'=>'Amazon USA',
                 'url'=>'https://amazon.com',
-                'image'=>'2.svg',
+                'image'=>'2.png',
                 'referral'=>'cybrarist-20',
                 'currency_id'=>2
             ],
             [
                 'name'=>'Amazon UK',
                 'url'=>'https://amazon.co.uk',
-                'image'=>'3.svg',
+                'image'=>'3.png',
                 'referral'=>'cybrarist01-21',
                 'currency_id'=>3
             ],
             [
                 'name'=>'Amazon Germany',
                 'url'=>'https://amazon.de',
-                'image'=>'4.svg',
+                'image'=>'4.png',
                 'referral'=>'cybrarist0f-21',
                 'currency_id'=>4
             ],
             [
                 'name'=>'Amazon France',
                 'url'=>'https://amazon.fr',
-                'image'=>'5.svg',
+                'image'=>'5.png',
                 'referral'=>'cybrarist09-21',
                 'currency_id'=>4
             ],
             [
                 'name'=>'Amazon Italy',
                 'url'=>'https://amazon.it',
-                'image'=>'6.svg',
+                'image'=>'6.png',
                 'referral'=>'cybrarist07f-21',
                 'currency_id'=>4
             ],
             [
                 'name'=>'Amazon Saudi Arabia',
                 'url'=>'https://amazon.sa',
-                'image'=>'7.svg',
+                'image'=>'7.png',
                 'referral'=>'cybrarist05-21',
                 'currency_id'=>5
             ],
             [
                 'name'=>'Amazon Spain',
                 'url'=>'https://amazon.es',
-                'image'=>'8.svg',
+                'image'=>'8.png',
                 'referral'=>'cybrarist0e4-21',
                 'currency_id'=>4
             ],
