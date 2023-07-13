@@ -54,6 +54,7 @@ class ServicesRelationManager extends RelationManager
                     return $record->notify_price / 100 . " " .  $record->currency->code;
                 }),
                 Tables\Columns\TextColumn::make('rate'),
+                Tables\Columns\TextColumn::make('number_of_rates')->label('Total Ratings'),
                 Tables\Columns\IconColumn::make('is_prime')->boolean()->trueIcon('heroicon-o-badge-check')->falseIcon('heroicon-o-x-circle'),
                 Tables\Columns\TextColumn::make('seller'),
             ])

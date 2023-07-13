@@ -111,12 +111,19 @@ I have added a htaccess file in case you need it, so don't forget to rename them
 
 ## Tech Stack
 
-**Server:** Laravel , FilamentPHP. 
-
-
+**Server:** Laravel , FilamentPHP.
 
 ## Support
 
 Feel free to open an issue, but please provide the product link along with the service caused the issue.
 
 I might request the log file in case I couldn't detect the problem.
+
+
+## Connect
+if you are coming outside github or don't like to use it, feel free to join my discord.
+https://discord.gg/VBMHvH8tuR
+
+## Docker
+For docker image configuration, please check the link
+https://hub.docker.com/r/cybrarist/discount-bandit

@@ -1,0 +1,17 @@
+version: '3.8'
+
+services:
+  discount-bandit:
+    build:
+      context: '.'
+    image: cybrarist/discount-bandit
+    volumes:
+      - .:/var/www/html/discount-bandit
+    ports:
+      - 8080:80
+    networks:
+      - bandit_bridge
+
+networks:
+  bandit_bridge:
+    driver: bridge

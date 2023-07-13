@@ -11,6 +11,7 @@ use App\Models\Product;
 use Carbon\Carbon;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Spatie\Health\Commands\DispatchQueueCheckJobsCommand;
 
@@ -25,22 +26,23 @@ class Kernel extends ConsoleKernel
         $schedule->call(function (){
             try {
                 Log::debug("Schedule Started");
+                //Get products by updating date sorting
+                $product_services=DB::table('product_service')->orderBy('updated_at', 'desc')->get(['id', 'product_id', 'service_id','notify_price','price']);
                 $currencies=Currency::with('service')->get()->pluck('code', 'service.id')->toArray();
 
-                $products = Product::whereNotIn('status', StatusEnum::ignored())->with(['services'=> function($query){
-                    $query->whereNotIn('status', StatusEnum::ignored())->select('services.id');
-                }])->get();
-
-                foreach ($products as $product)
-                    foreach ($product->services as $service)
-                        GetProductJob::dispatch($product, $service, $currencies[$service->id])->delay(Carbon::now()->addSeconds(10));
-
+                foreach ($product_services as $product_service)
+                    GetProductJob::dispatch(
+                        $product_service->product_id,
+                        $product_service->service_id,
+                        $currencies[$product_service->service_id] ,
+                        $product_service->notify_price ,
+                        $product_service->price )->delay(Carbon::now()->addSeconds(10));
             }
             catch (\Exception $e)
             {
-                Log::error("Error in scheduling " . $e);
+                Log::error("Couldn't Run the Schedule, Error: " . $e);
             }
-            })->everyFiveMinutes();
+            })->everyMinute();
 
             $schedule->call(function (){
                 try {

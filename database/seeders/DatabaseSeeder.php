@@ -5,6 +5,7 @@ namespace Database\Seeders;
 // use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use App\Models\Currency;
 use App\Models\Service;
+use App\Models\User;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 use Psy\Util\Str;
@@ -18,11 +19,15 @@ class DatabaseSeeder extends Seeder
     {
         // \App\Models\User::factory(10)->create();
 
-        $currencies=['AED', '$', '£', '€', 'SAR'];
+        $currencies=['AED', '$', '£', '€', 'SAR' , 'zł'];
         foreach ($currencies as $currency)
-            Currency::create([
-                'code'=>$currency
-            ]);
+            Currency::updateOrCreate(
+                [
+                    'code'=>$currency
+                ]
+                ,[
+                    'code'=>$currency
+                ]);
 
         $services=[
             [
@@ -81,16 +86,27 @@ class DatabaseSeeder extends Seeder
                 'referral'=>'cybrarist0e4-21',
                 'currency_id'=>4
             ],
+            [
+                'name'=>'Amazon Poland',
+                'url'=>'https://amazon.pl',
+                'image'=>'9.png',
+                'referral'=>'cybrarist0e4-21',
+                'currency_id'=>6
+            ],
         ];
 
         foreach ($services as $service)
-            Service::create($service);
-
-        \App\Models\User::factory()->create([
-            'name' => 'Test User',
-            'email' => 'test@test.com',
-            'password'=>Hash::make('password')
-        ]);
+            Service::updateOrCreate(
+                ['url'=>$service['url']],
+                $service
+            );
+        $users=User::all()->count();
+        if ($users == 0)
+            \App\Models\User::factory()->create([
+                'name' => 'Test User',
+                'email' => 'test@test.com',
+                'password'=>Hash::make('password')
+            ]);
 
 
     }

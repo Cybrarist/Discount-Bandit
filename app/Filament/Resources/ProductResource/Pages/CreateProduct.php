@@ -16,10 +16,18 @@ class CreateProduct extends CreateRecord
     {
         //remove the parameters
         $no_parameter=explode("?" , $data['url'])[0];
-        //get after dp
-        $after_dp=explode("/dp/" , $no_parameter)[1];
+        //get after dp/gp
+        $after_dp=explode("/dp/" , $no_parameter);
+        $after_gp=explode("/gp/product/" , $no_parameter);
+
+        if (sizeof($after_dp) > 1)
+            $asin=explode("/" , $after_dp[1]);
+        else if (sizeof($after_gp) > 1)
+            $asin=explode("/" , $after_gp[1]);
+        else
+            dd("the url is different from the usual . can you open a ticket on github");
+
         //get the first one and ignore all
-        $asin=explode("/" , $after_dp);
         $data=\Arr::add($data , 'ASIN' , $asin[0]);
         return $data;
     }

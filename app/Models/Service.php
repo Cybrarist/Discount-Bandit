@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\StatusEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -9,7 +10,7 @@ class Service extends Model
 {
     use HasFactory;
     protected $guarded=['id'];
-
+    protected $casts=['status'=>StatusEnum::class];
 
     public function products()
     {
