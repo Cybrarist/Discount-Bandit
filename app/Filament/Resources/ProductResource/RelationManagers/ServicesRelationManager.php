@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\ProductResource\RelationManagers;
 
+use App\Enums\StatusEnum;
 use App\Models\Product;
 use App\Models\Service;
 use Faker\Provider\Text;
@@ -50,10 +51,14 @@ class ServicesRelationManager extends RelationManager
                             $color_string="red";
                         return Str::of( "<span  style='color:$color_string'>" . $record->price / 100 . " " .  $record->currency->code . " </span>")->toHtmlString();
                 }),
+                Tables\Columns\TextColumn::make('shipping_price')->formatStateUsing(function ($state) {
+                    return $state/100;
+                }),
                 Tables\Columns\TextColumn::make('notify_price')->formatStateUsing(function ($record) {
                     return $record->notify_price / 100 . " " .  $record->currency->code;
                 }),
                 Tables\Columns\TextColumn::make('rate'),
+                Tables\Columns\TextColumn::make('pivot.updated_at')->label("Updated At"),
                 Tables\Columns\TextColumn::make('number_of_rates')->label('Total Ratings'),
                 Tables\Columns\IconColumn::make('is_prime')->boolean()->trueIcon('heroicon-o-badge-check')->falseIcon('heroicon-o-x-circle'),
                 Tables\Columns\TextColumn::make('seller'),
@@ -63,14 +68,23 @@ class ServicesRelationManager extends RelationManager
             ])
             ->headerActions([
                 Tables\Actions\AttachAction::make()->form(fn(Tables\Actions\AttachAction $action): array=>[
-                    $action->getRecordSelect()->reactive()->afterStateHydrated(function ($state, callable $set){
+
+                    $action->recordSelectOptionsQuery(function($query){
+                        return $query->whereIn('status', [
+                            StatusEnum::Published,
+                            StatusEnum::Silenced,
+
+                        ]);
+                    })->getRecordSelect()->reactive()
+                        ->afterStateHydrated(function ($state, callable $set){
                         $service=Service::find($state);
                         if ($service)
                         {
                             $set('currency', $service->currency->code);
                             $set('price', $service->price );
                         }
-                    })->afterStateUpdated(function ($state, callable $set){
+                    })
+                        ->afterStateUpdated(function ($state, callable $set){
                             $service=Service::find($state);
                             if ($service)
                             {

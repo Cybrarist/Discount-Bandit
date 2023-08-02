@@ -9,10 +9,24 @@ function prepare_multiple_prices_in_table($state)
         else
             $color_string="red";
 
-        return  "<span  style='color:$color_string'>" . $model->pivot->price/100 . " " .  $model->currency->code . " </span>";})->implode("<br>");
+        return  "<span  style='color:$color_string'>" . $model->pivot->price/100 . " " .  $model->currency->code . " </span>";}
+    )->implode("<br>");
 
 
     return  \Illuminate\Support\Str::of($prices)->toHtmlString();
+}
+
+function prepare_multiple_update_in_table($state)
+{
+    $dates= $state->map(function ($model) {
+
+
+        return  "<span>" .  $model->pivot->updated_at."</span>";}
+
+    )->implode("<br>");
+
+
+    return  \Illuminate\Support\Str::of($dates)->toHtmlString();
 }
 
 

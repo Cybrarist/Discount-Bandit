@@ -39,7 +39,7 @@ function get_shipping_price($right_column)
 {
     try {
         $shipping_price=$right_column->xpath("//div[@id='deliveryBlockMessage']//span[@data-csa-c-delivery-price]")[0]->__toString();
-        return (float) get_numbers_only_with_dot($shipping_price);
+        return (float) get_numbers_only_with_dot($shipping_price) ;
     }
     catch (Throwable | Exception $e)
     {
@@ -68,21 +68,15 @@ function get_original_price($center_column, $currency)
 
     //method 2 to return the price of the product
     try {
-        $whole=Str::remove([",","\u{A0}"] , $center_column->xpath("(//span[@class='a-price-whole'])[1]")[0]->__toString());
-        $fraction=Str::remove([",","\u{A0}"] , $center_column->xpath("(//span[@class='a-price-fraction'])[1]")[0]->__toString());
-
+        $whole=Str::remove([",","\u{A0}"] , $center_column->xpath("//div[@id='corePriceDisplay_desktop_feature_div']//span[@class='a-price-whole']")[0]->__toString());
+        $fraction=Str::remove([",","\u{A0}"] , $center_column->xpath("//div[@id='corePriceDisplay_desktop_feature_div']//span[@class='a-price-fraction']")[0]->__toString());
         return  100 * (float)"$whole.$fraction";
     }
     catch (Throwable | Exception $e )
     {
-        Log::debug($whole);
         Log::debug("Getting price with the second method didn't work");
         Log::error($e);
     }
-
-
-
-
 }
 
 
@@ -163,6 +157,28 @@ function check_is_top_deal($center_column)
         Log::error($e);
     }
     return  false;
+}
+
+function record_price_history($product, $service, $current_price){
+
+    try {
+
+        \App\Models\PriceHistory::where('price', '>' , $current_price)->updateOrCreate(
+                [
+                    'date'=>\Carbon\Carbon::today()->toDateString(),
+                    'product_id'=>$product,
+                    'service_id'=>$service
+                ] ,
+                [
+                    'price'=>$current_price
+                ]
+        );
+    }
+    catch (\Exception $e){
+        Log::info('price history not updated');
+    }
+
+
 }
 
 

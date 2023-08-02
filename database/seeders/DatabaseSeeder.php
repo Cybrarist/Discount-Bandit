@@ -34,7 +34,7 @@ class DatabaseSeeder extends Seeder
                 'name'=>'Amazon UAE',
                 'url'=>'https://amazon.ae',
                 'image'=>'1.png',
-                'referral'=>'cybrarist04-21',
+                'referral'=>'cybrarist08-21',
                 'currency_id'=>1
             ],
             [
@@ -93,6 +93,13 @@ class DatabaseSeeder extends Seeder
                 'referral'=>'cybrarist0e4-21',
                 'currency_id'=>6
             ],
+            [
+                'name'=>'Amazon Turkey',
+                'url'=>'https://amazon.tr',
+                'image'=>'9.png',
+                'referral'=>'cybrarist0e4-21',
+                'currency_id'=>6
+            ],
         ];
 
         foreach ($services as $service)
@@ -103,9 +110,9 @@ class DatabaseSeeder extends Seeder
         $users=User::all()->count();
         if ($users == 0)
             \App\Models\User::factory()->create([
-                'name' => 'Test User',
-                'email' => 'test@test.com',
-                'password'=>Hash::make('password')
+                'name' => env( 'USER_FIRST_NAME' , 'Test User'),
+                'email' => env( 'USER_EMAIL_ADDRESS' , 'test@test.com'),
+                'password'=>Hash::make(env('USER_PASSWORD', 'password'))
             ]);
 
 

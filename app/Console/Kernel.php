@@ -36,19 +36,19 @@ class Kernel extends ConsoleKernel
                         $product_service->service_id,
                         $currencies[$product_service->service_id] ,
                         $product_service->notify_price ,
-                        $product_service->price )->delay(Carbon::now()->addSeconds(10));
+                        $product_service->price )->onQueue('products')->delay(Carbon::now()->addSeconds(10));
             }
             catch (\Exception $e)
             {
                 Log::error("Couldn't Run the Schedule, Error: " . $e);
             }
-            })->everyMinute();
+            })->everyFiveMinutes();
 
             $schedule->call(function (){
                 try {
                     $available_group_lists=GroupList::all();
                     foreach ($available_group_lists as $group_list)
-                        CalculateGroupListPriceJob::dispatch($group_list);
+                        CalculateGroupListPriceJob::dispatch($group_list)->onQueue('grouplists');
                 }
                 catch (\Throwable | \Exception $e){
                     Log::error("Couldn't schedule group list price");

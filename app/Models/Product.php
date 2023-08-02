@@ -48,7 +48,7 @@ class Product extends Model
 
     public function price_histories()
     {
-        return $this->belongsToMany(PriceHistory::class);
+        return $this->hasMany(PriceHistory::class);
 
     }
 
@@ -57,6 +57,8 @@ class Product extends Model
     {
         return $this->belongsToMany(GroupList::class);
     }
+
+
 
 
 

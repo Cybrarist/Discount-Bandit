@@ -40,8 +40,12 @@ class ProductsRelationManager extends RelationManager
                         return $to_return;
 
                 } ,true)->limit(50)->searchable(),
-                Tables\Columns\TextColumn::make('price'),
-                Tables\Columns\TextColumn::make('notify_price'),
+                Tables\Columns\TextColumn::make('price')->formatStateUsing(function ( $state){
+                    return $state / 100;
+                }),
+                Tables\Columns\TextColumn::make('notify_price')->formatStateUsing(function ( $state){
+                    return $state / 100 ;
+                }),
                 Tables\Columns\TextColumn::make('rate'),
                 Tables\Columns\IconColumn::make('is_prime')->boolean()->trueIcon('heroicon-o-badge-check')->falseIcon('heroicon-o-x-circle'),
                 Tables\Columns\TextColumn::make('seller'),

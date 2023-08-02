@@ -37,4 +37,9 @@ class Service extends Model
         return $this->belongsToMany(GroupList::class , 'group_list_services')->withPivot('notify_price')->withTimestamps();
     }
 
+    public function price_histories()
+    {
+        return $this->belongsToMany(PriceHistory::class);
+    }
+
 }

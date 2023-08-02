@@ -9,6 +9,7 @@ use App\Filament\Resources\GroupListResource\RelationManagers\ProductsRelationMa
 use App\Filament\Resources\ProductResource\Pages;
 use App\Filament\Resources\ProductResource\RelationManagers;
 use App\Filament\Resources\ProductResource\Widgets\ProductOverview;
+use App\Filament\Widgets\PriceHistoryChart;
 use App\Models\Product;
 use App\Models\Service;
 use App\Models\User;
@@ -77,10 +78,8 @@ class ProductResource extends Resource
                     ->exists('categories','id')
                     ->preload(),
 
-
                 Forms\Components\Select::make('tags')
                     ->relationship('tags','name')
-
                     ->createOptionForm([
                         Forms\Components\TextInput::make('name')
                             ->required(),])
@@ -88,6 +87,7 @@ class ProductResource extends Resource
                     ->nullable()
                     ->exists('tags','id')
                     ->preload(),
+
 
             ]);
 
@@ -111,9 +111,17 @@ class ProductResource extends Resource
                 Tables\Columns\TextColumn::make('Services')->formatStateUsing(function ($state){
                     return prepare_multiple_notify_prices_in_table($state);
                 }  )->label('Notify at'),
+                TextColumn::make('SErvices')->formatStateUsing(function ($state){
+                    return prepare_multiple_update_in_table($state);
+                })->label('Last Update'),
                 ])
             ->filters([
-                Tables\Filters\SelectFilter::make('services')->relationship('services', 'name')->multiple()->label('Services')->indicator('Services'),
+                Tables\Filters\SelectFilter::make('services')
+                                            ->relationship('services', 'name', function ($query)
+                                            {
+                                                $query->whereIn('status', [StatusEnum::Published , StatusEnum::Silenced]);
+                                            })
+                                            ->multiple()->label('Services')->indicator('Services'),
                 Tables\Filters\SelectFilter::make('categories')->relationship('categories', 'name')->multiple()->label('Categories')->indicator('Categories'),
                 Tables\Filters\SelectFilter::make('tags')->relationship('tags', 'name')->multiple()->label('Tags')->indicator('Tags'),
                 Tables\Filters\SelectFilter::make('status')->options(StatusEnum::to_array())->label('Status'),
@@ -133,12 +141,12 @@ class ProductResource extends Resource
                 Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
-//                Tables\Actions\DeleteBulkAction::make(),
-            FilamentExportBulkAction::make('export')
-                ->fileName('Products')
-                ->csvDelimiter(',')
-                ->withColumns([TextColumn::make('ASIN')])
-            ]);
+                Tables\Actions\DeleteBulkAction::make(),
+                FilamentExportBulkAction::make('export')
+                    ->fileName('Products')
+                    ->csvDelimiter(',')
+                    ->withColumns([TextColumn::make('ASIN')])
+                ]);
     }
 
     public static function getRelations(): array
@@ -165,6 +173,12 @@ class ProductResource extends Resource
     }
 
 
+    public static function getWidgets(): array
+    {
+        return [
+            PriceHistoryChart::class,
+        ];
+    }
 
 
 }

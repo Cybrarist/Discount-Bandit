@@ -16,6 +16,7 @@ class CreateProduct extends CreateRecord
     {
         //remove the parameters
         $no_parameter=explode("?" , $data['url'])[0];
+        $data['url']=$no_parameter;
         //get after dp/gp
         $after_dp=explode("/dp/" , $no_parameter);
         $after_gp=explode("/gp/product/" , $no_parameter);

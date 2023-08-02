@@ -23,7 +23,8 @@ class AllowedDomainsRule implements ValidationRule
                 "amazon.sa",
                 "amazon.it",
                 "amazon.fr",
-                "amazon.de"
+                "amazon.de",
+                "amazon.tr"
             ];
 
             $domain_temp=\Str::replace("www." , "", $value);

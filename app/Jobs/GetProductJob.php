@@ -12,6 +12,7 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -51,13 +52,20 @@ class GetProductJob implements ShouldQueue
             $service->status == StatusEnum::Published
         )
             try {
+
                 $response=Http::withUserAgent(user_agents())->get($service->url . "/dp/" . $product->ASIN);
-//                $response=Http::withUserAgent("Mozilla/5.0 (Linux; Android 13; Pixel 6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36")->get("https://amazon.pl/dp/B09XQLH785" );
+
+
                 //prepare the document for the parsing
                 $doc=new \DOMDocument();
                 $internalErrors = libxml_use_internal_errors(true);
                 $doc->loadHTML($response);
                 $xml=simplexml_import_dom($doc);
+
+
+
+
+
 
                 try {
                     //get the center column to get the related data for it
@@ -79,26 +87,21 @@ class GetProductJob implements ShouldQueue
                 //get the name of the product
                 $name=get_product_name($center_column);
                 //get the current price of the item
-                $price=get_original_price($center_column, $this->currency);
+                $current_price=get_original_price($center_column, $this->currency);
                 //is the shipment_prime
                 if ($center_column->xpath("//div[@id='apex_desktop_qualifiedBuybox']//div[@id='deliveryPriceBadging_feature_div']"))
                     $is_prime=true;
 
-                //check if it's a top deal
+
                 $is_top_deal=check_is_top_deal($center_column);
-
-
-                //get the ratings
                 $ratings=get_number_of_rates($center_column);
                 $rating=get_rate($center_column, $service->id);
 
 
                 //get the shipping price
-                $shipping_price=get_shipping_price($right_column);
+                $shipping_price=(int)(get_shipping_price($right_column) * 100);
                 //get the seller
                 $seller=get_seller($right_column);
-
-
 
                 if (!$product->image || !$product->name || $product->name != $name)
                 {
@@ -110,9 +113,17 @@ class GetProductJob implements ShouldQueue
                     ]);
                 }
 
+
+                record_price_history(
+                    product:$product->id,
+                    service: $service->id,
+                    current_price: $current_price + $shipping_price
+                );
+
+
                 $product->services()->updateExistingPivot($service->id,
                 [
-                    'price'=> (int)((float)$price),
+                    'price'=> (int)((float)$current_price),
                     'number_of_rates'=>$ratings,
                     'seller'=>$seller,
                     'rate'=>$rating,
@@ -120,7 +131,7 @@ class GetProductJob implements ShouldQueue
                     'top_deal'=>$is_top_deal,
                     'shipping_price'=>$shipping_price,
                 ]);
-                if ($price <= $this->notify_price && $price != $this->current_price)
+                if ($current_price + $shipping_price <= $this->notify_price && $current_price != $this->current_price)
                 {
                     if ($product->status != StatusEnum::Silenced)
                     {
@@ -129,7 +140,7 @@ class GetProductJob implements ShouldQueue
                         \Mail::to($user->email)->send(new ProductDiscountMail(
                            product: $product,
                            service: $service,
-                           current_price:  $price,
+                           current_price:  $current_price,
                            notify_price:  $this->notify_price,
                            currency: $this->currency
                         ));
@@ -139,7 +150,10 @@ class GetProductJob implements ShouldQueue
             }
             catch (\Exception $e)
             {
-                Log::debug("Couldn't Run the job");
+                Log::debug("Couldn't Run the job ,  Clearing queues");
+                Artisan::call("queue:clear" , [
+                    "--queue" => "products"
+                ]);
                 Log::error($e);
             }
     }
