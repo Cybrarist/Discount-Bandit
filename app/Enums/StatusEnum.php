@@ -6,14 +6,9 @@ use Illuminate\Support\Arr;
 
 enum StatusEnum : string
 {
-    case Deleted ='x';
-
     case Published='p';
-
     case Disabled='d';
-
     case Silenced='s';
-
 
     public static function names(): array
     {
@@ -34,7 +29,6 @@ enum StatusEnum : string
     {
         return [
             self::Disabled,
-            self::Deleted,
         ];
     }
 }

@@ -1,129 +1,66 @@
+<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
 
-# Discount Bandit
+<p align="center">
+<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
+<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
+</p>
 
-I've noticed there are many price trackers, but they are either paid with missing data or outdated solutions, so I decided to build my own for amazon ( so far ) which I use the most. 
+## About Laravel
 
-Right now I have tested it for the couple stores that are saved, but I will probably test it for other stores for the future, with an update mechanism to update the crawlers.
+Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
 
-It's still a simple tracker, so errors can be found so don't expect it to compete  with the best websites out there, but I am planning to support it even more since I have a personal usage for it.
+- [Simple, fast routing engine](https://laravel.com/docs/routing).
+- [Powerful dependency injection container](https://laravel.com/docs/container).
+- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
+- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
+- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
+- [Robust background job processing](https://laravel.com/docs/queues).
+- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
 
+Laravel is accessible, powerful, and provides tools required for large, robust applications.
 
-## Deployment
+## Learning Laravel
 
-Copy .env.example to .env file
-```bash
-cp .env.example .env
-```
+Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
 
-Change the database credentials in  .env file
-```text
-DB_CONNECTION=mysql
-DB_HOST=127.0.0.1
-DB_PORT=3306
-DB_DATABASE=laravel
-DB_USERNAME=root
-DB_PASSWORD=
-```
+You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
 
-add your email to send notification from it
-```text
-MAIL_MAILER=smtp
-MAIL_HOST=smtp.gmail.com
-MAIL_PORT=465
-MAIL_USERNAME=yournewemail@gmail
-MAIL_PASSWORD="VeryComplicatedPassword"
-MAIL_ENCRYPTION=tls
-MAIL_FROM_ADDRESS="yournewemail@gmail"
-MAIL_FROM_NAME="${APP_NAME}"
-```
+If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains over 2000 video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
 
-if you want to support me and my work, feel free to change the following:
-```text
-ALLOW_REF=0
-```
-to 
-```text
-ALLOW_REF=1
-```
-this will enable referrals and will support me as a developer.
-please note this is not mandatory, and the software will run normally without issues whether it's enabled or disabled.
+## Laravel Sponsors
 
-Run Composer install
-```bash
-composer install 
-```
+We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the Laravel [Patreon page](https://patreon.com/taylorotwell).
 
+### Premium Partners
 
-Link the storage to use the images
-```bash
-php artisan storage:link 
-```
+- **[Vehikl](https://vehikl.com/)**
+- **[Tighten Co.](https://tighten.co)**
+- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
+- **[64 Robots](https://64robots.com)**
+- **[Cubet Techno Labs](https://cubettech.com)**
+- **[Cyber-Duck](https://cyber-duck.co.uk)**
+- **[Many](https://www.many.co.uk)**
+- **[Webdock, Fast VPS Hosting](https://www.webdock.io/en)**
+- **[DevSquad](https://devsquad.com)**
+- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
+- **[OP.GG](https://op.gg)**
+- **[WebReinvent](https://webreinvent.com/?utm_source=laravel&utm_medium=github&utm_campaign=patreon-sponsors)**
+- **[Lendio](https://lendio.com)**
 
+## Contributing
 
+Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
 
+## Code of Conduct
 
-Migrate the data with the seed
-```bash
-php artisan migrate:fresh --seed --no-interaction
-```
+In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
 
-Generate an app key
-```bash
-php artisan key:generate
-```
+## Security Vulnerabilities
 
-The server should be up and running with the following credentials
-```text
-email : test@test.com
-password: password
-```
+If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
 
-you need to Change the email once you log in if you want to receive emails.
+## License
 
-The app will check for prices for single products every 5 minutes, and for the group list every 15 minutes. 
-
-pls refer to this for how to set up your cron setup depending on your need.
-[https://laravel.com/docs/10.x/scheduling#running-the-scheduler]
-
-then you need to add the following command in your cron to run every second.
-```text
-* * * * *  /path/to/php /path/to/app/artisan queue:work --stop-when-empty >> /dev/null 2>&1 
-```
-
-And that should be enough for the app to run.
-
-After you're done and everything is running fine, go to your .env file and change the following:
-```text
-APP_ENV=production
-```
-
-I have added a htaccess file in case you need it, so don't forget to rename them to .htaccess if you want to use it
-
-## Features
-
-- Check Price or products across multiple Amazon Stores
-- Notify Via Email if the price reach the desired amount
-- Create Group of products with set of prices
-
-
-## Missing
-- Clothes and sizes are not working, but im working on a fix.
-
-## Tech Stack
-
-**Server:** Laravel , FilamentPHP.
-
-## Support
-
-Feel free to open an issue, but please provide the product link along with the service caused the issue.
-
-I might request the log file in case I couldn't detect the problem.
-
-
-## Connect
-if you are coming outside github or don't like to use it, feel free to join my discord.
-https://discord.gg/VBMHvH8tuR
-
-## Docker
-For docker image configuration, please check the link
-https://hub.docker.com/r/cybrarist/discount-bandit
+The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).

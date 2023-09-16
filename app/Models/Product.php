@@ -2,28 +2,36 @@
 
 namespace App\Models;
 
+use App\Casts\Money;
 use App\Enums\StatusEnum;
-use App\Jobs\GetProductJob;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Product extends Model
 {
     use HasFactory;
-    protected $guarded=['id'];
-    protected $casts=['status'=>StatusEnum::class];
 
-    protected static function booted()
+    protected $guarded=['id'];
+    protected $casts=[
+        'status'=>StatusEnum::class,
+        'stores.pivot.price'=>Money::class,
+        'stores.pivot.notify_price'=>Money::class,
+        'stores.pivot.updated_at'=>'datetime',
+    ];
+
+
+
+    public function categories()
     {
-        static::created(function ($product){
-            foreach ($product->services as $service)
-                GetProductJob::dispatch($product, $service);
-        });
+        return $this->belongsToMany(Category::class)->withTimestamps();
     }
 
-    public function services()
+
+    public function stores()
     {
-        return $this->belongsToMany(Service::class)->using(ProductService::class)->withTimestamps()->withPivot([
+        return $this->belongsToMany(Store::class)->withTimestamps()->withPivot([
+            'id',
             'price',
             'notify_price',
             'rate',
@@ -32,35 +40,23 @@ class Product extends Model
             'coupons',
             'shipping_price',
             'special_offers',
-            'is_prime',
-            'in_stock'
+            'in_stock',
+            'add_shipping',
+            'updated_at',
+            'ebay_id',
         ]);
     }
 
-    public function categories()
+    public function variations()
     {
-        return $this->belongsToMany(Category::class)->withTimestamps();
-    }
-    public function tags()
-    {
-        return $this->belongsToMany(Tag::class)->withTimestamps();
-    }
-
-    public function price_histories()
-    {
-        return $this->hasMany(PriceHistory::class);
-
+        return $this->hasMany(Product::class);
     }
 
 
-    public function group_lists()
+    public function parent_variation()
     {
-        return $this->belongsToMany(GroupList::class);
+        return $this->belongsTo(Product::class , 'id' , 'product_id');
     }
-
-
-
 
 
 }
-

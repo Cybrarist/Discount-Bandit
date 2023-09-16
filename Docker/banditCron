@@ -1,4 +1,0 @@
-
-* * * * *  /usr/local/bin/php /var/www/discount-bandit/artisan queue:work --stop-when-empty >> /dev/null 2>&1
-*/5 * * * *   /usr/local/bin/php /var/www/discount-bandit/artisan schedule:run >> /dev/null 2>&1
-

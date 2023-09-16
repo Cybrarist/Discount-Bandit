@@ -49,15 +49,15 @@ class ViewProduct extends ViewRecord
     }
 
 
-    protected function getFooterWidgets(): array
-    {
-        if ($this->getRecord()->services()->count() )
-            return [
-                PriceHistoryChart::class
-            ];
-        return [];
-
-    }
+//    protected function getFooterWidgets(): array
+//    {
+//        if ($this->getRecord()->services()->count() )
+//            return [
+//                PriceHistoryChart::class
+//            ];
+//        return [];
+//
+//    }
 
 
 }

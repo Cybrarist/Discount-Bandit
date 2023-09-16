@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Product;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
@@ -14,10 +15,12 @@ class ProductFactory extends Factory
      *
      * @return array<string, mixed>
      */
+
+    protected $model=Product::class;
     public function definition(): array
     {
         return [
-            //
+            'name'=>fake()->name,
         ];
     }
 }
