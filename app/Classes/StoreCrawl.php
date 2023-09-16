@@ -69,7 +69,6 @@ class StoreCrawl
         $this->get_condition();
         $this->is_notifiable();
         $this->get_shipping_price();
-
         $this->update_product_details();
     }
 

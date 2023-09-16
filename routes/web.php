@@ -48,13 +48,14 @@ Route::get('/', function () {
 //    }
 
 
-
-    $product_stores=DB::table('product_store')
-        ->join('stores', 'store_id', '=' , 'stores.id')
-        ->orderBy('product_store.updated_at', 'desc')
-        ->get();
-    dd($product_stores);
-
-    new \App\Classes\Ebay(Product::find(81), Store::find(23), null , "364449056534");
+//
+//    $product_stores=DB::table('product_store')
+//        ->join('stores', 'store_id', '=' , 'stores.id')
+//        ->orderBy('product_store.updated_at', 'desc')
+//        ->get();
+//    dd($product_stores);
+//
+//    new \App\Classes\Ebay(Product::find(81), Store::find(23), null , "364449056534");
+    new \App\Classes\Amazon(Product::find(86), Store::find(9));
 
 });
