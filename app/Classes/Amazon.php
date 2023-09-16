@@ -77,6 +77,7 @@ class Amazon extends StoreCrawl
         {
             Log::debug("Getting price with the first method didn't work");
             $this->throw_this_error($e , "First Method Price");
+            $this->price=0;
         }
 
         //method 2 to return the price of the product
@@ -89,8 +90,9 @@ class Amazon extends StoreCrawl
         {
             Log::debug("Getting price with the second method didn't work");
             $this->throw_this_error($e , "Second Method Price");
-
+            $this->price=0;
         }
+
     }
 
 
@@ -99,13 +101,12 @@ class Amazon extends StoreCrawl
 
             $ratings=$this->center_column->xpath("//span[@id='acrCustomerReviewText']")[0]->__toString();
             $this->no_of_rates= (int) get_numbers_only_with_dot($ratings);
-            return;
         }
         catch (Exception $e)
         {
             $this->throw_this_error($e, "The no. of rates", $this->product->asin , $this->store->host);
+            $this->no_of_rates=0;
         }
-        $this->no_of_rates=0;
     }
 
     public function get_rate(){
@@ -125,6 +126,7 @@ class Amazon extends StoreCrawl
             $this->throw_this_error($e , "The Rate", $this->product->asin , $this->store->host);
             $this->rating= -1;
         }
+
     }
 
     public function get_shipping_price(){
@@ -136,20 +138,21 @@ class Amazon extends StoreCrawl
         {
             Log::debug("Something Wrong Happened while getting the shipping price");
             Log::error($e);
+            $this->shipping_price= 0;
         }
-        $this->shipping_price= 0;
     }
 
 
     public function get_seller(){
         try {
-            $this->seller=$this->right_column->xpath("//div[@id='tabular_feature_div']//div[@class='tabular-buybox-text'][last()]//span")[0]->__toString();
+            $this->seller= $this->right_column->xpath("//div[@id='tabular_feature_div']//div[@class='tabular-buybox-text'][last()]//span")[0]->__toString();
             if (!$this->seller)
                 $this->seller=$this->right_column->xpath("//div[@id='tabular_feature_div']//div[@class='tabular-buybox-text'][last()]//span//a")[0]->__toString();
         }
         catch (Exception $e )
         {
             $this->throw_this_error($e , "The Seller" , $this->product->asin, $this->store->host);
+            $this->seller="";
         }
     }
 
