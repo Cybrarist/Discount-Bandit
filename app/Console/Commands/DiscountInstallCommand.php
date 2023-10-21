@@ -143,7 +143,7 @@ class DiscountInstallCommand extends Command
             hint:"Default: password"
         );
         (\Str::length($db_pass))?: $db_pass="password";
-        \File::append(".env" , "DB_PASSWORD=$db_pass\n");
+        \File::append(".env" , "DB_PASSWORD=\"$db_pass\"\n");
 
 
         $ntfy_url=text(
@@ -163,6 +163,11 @@ class DiscountInstallCommand extends Command
 
 
         \Artisan::call("migrate:fresh --seed --force" ,[], $this->getOutput());
+
+
+        \Artisan::call("vendor:publish --tag=\"filament-breezy-views\"" ,[], $this->getOutput());
+
+
 
         $name=text(
             label:"What is the Name for the user? ",
