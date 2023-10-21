@@ -12,6 +12,7 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Foundation\Console\Kernel as ConsoleKernel;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Spatie\Health\Commands\ScheduleCheckHeartbeatCommand;
 
 class Kernel extends ConsoleKernel
 {
@@ -23,18 +24,25 @@ class Kernel extends ConsoleKernel
         $schedule->call(function (){
             try {
                 Log::debug("Schedule Started");
-
                 //clear all the jobs, in case of some items still remain after 5 mins.
                 clear_job();
 
+                //getting stores for the queue slug
                 $product_stores=DB::table('product_store')
-                    ->join('stores', 'store_id', '=' , 'stores.id')
-                    ->orderBy('product_store.updated_at', 'desc')
+                    ->join('stores', 'stores.id', '=' , 'store_id')
+                    ->orderBy('product_store.updated_at')
+                    ->select([
+                        "product_store.id",
+                        "product_store.product_id",
+                        "product_store.store_id",
+                        "stores.domain",
+                        "stores.slug"
+                    ])
                     ->get();
 
                 foreach ($product_stores as $index=>$product_store)
                 {
-                    GetProductJob::dispatch($product_store->product_id, $product_store->store_id, null , $product_store->ebay_id)
+                    GetProductJob::dispatch($product_store->id , $product_store->domain)
                         ->onQueue($product_store->slug)
                         ->delay(now()->addSeconds($index*5));
                 }
@@ -46,7 +54,8 @@ class Kernel extends ConsoleKernel
             }
         })->everyFiveMinutes();
 
-
+        $schedule->command('notification:clear')->daily();
+        $schedule->command(ScheduleCheckHeartbeatCommand::class)->everyMinute();
     }
 
     /**

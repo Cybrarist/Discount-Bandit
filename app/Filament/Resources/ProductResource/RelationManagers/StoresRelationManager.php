@@ -2,13 +2,15 @@
 
 namespace App\Filament\Resources\ProductResource\RelationManagers;
 
+use App\Classes\MainStore;
+use App\Classes\Stores\Amazon;
+use App\Classes\Stores\Ebay;
 use App\Enums\StatusEnum;
 use App\Models\Store;
 use Filament\Forms;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Support\Colors\Color;
 use Filament\Tables;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
@@ -38,31 +40,35 @@ class StoresRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('name')
             ->columns([
+
                 Tables\Columns\TextColumn::make('name')
                     ->color("warning")
                     ->url( function ($record) {
-                        if (is_amazon($record->host))
-                            return "https://$record->host/dp/" . $this->ownerRecord->asin . "/ref=nosim?tag=" . $record->referral;
-                        elseif(is_ebay($record->host))
-                            return "https://$record->host/itm/" . $record->ebay_id;
-
+                        //todo make static function for the following
+                        if ( MainStore::is_amazon($record->domain))
+                            return Amazon::prepare_url($record->domain , $this->ownerRecord->asin ,$record->referral);
+                        elseif ( MainStore::is_ebay($record->domain))
+                            return Ebay::prepare_url($record->domain , $record->ebay_id ,$record->referral);
                     } ,true),
 
-                Tables\Columns\TextColumn::make('price')->prefix(fn ($record) => get_currencies($record->currency_id))
+                Tables\Columns\TextColumn::make('price')
+                    ->prefix(fn ($record) => get_currencies($record->currency_id))
                     ->color(fn($record)=> (($record->price <= $record->notify_price) ? "success" :"danger")),
 
-                Tables\Columns\TextColumn::make('notify_price')->
-                    prefix(fn ($record) => get_currencies($record->currency_id)),
+                Tables\Columns\TextColumn::make('notify_price')
+                    ->prefix(fn ($record) => get_currencies($record->currency_id)),
+
                 TextColumn::make('shipping_price'),
                 TextColumn::make('rate'),
-                TextColumn::make('pivot.updated_at')->label("Updated At"),
+                TextColumn::make('updated_at')->label("Updated At"),
                 TextColumn::make('number_of_rates')->label('Total Ratings'),
                 IconColumn::make('add_shipping')
                     ->boolean()
                     ->trueIcon("heroicon-o-check-circle")
                     ->falseIcon('heroicon-o-x-circle')
-                    ->label('Shipping')
+                    ->label('Add Shipping Price')
                     ->tooltip('notify price < price + shipping price'),
+
                 TextColumn::make('seller'),
             ])
             ->filters([
@@ -137,7 +143,7 @@ class StoresRelationManager extends RelationManager
 
                     return $record;
                 }),
-                Tables\Actions\DetachAction::make()->label("Remove")->color(Color::Amber),
+                Tables\Actions\DetachAction::make()->label("Remove"),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

@@ -33,7 +33,6 @@ class ProductsRelationManager extends RelationManager
                 Tables\Columns\ImageColumn::make('image'),
                 Tables\Columns\TextColumn::make('name')
                     ->words(10)
-                    ->color(Color::Red)
                     ->url( function ($record) {
                     return route('filament.admin.resources.products.edit', $record->id);
                 })

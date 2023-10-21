@@ -4,6 +4,7 @@ namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Throwable;
+use function Laravel\Prompts\error;
 
 class Handler extends ExceptionHandler
 {
@@ -18,6 +19,7 @@ class Handler extends ExceptionHandler
         'password_confirmation',
     ];
 
+
     /**
      * Register the exception handling callbacks for the application.
      */
@@ -26,5 +28,9 @@ class Handler extends ExceptionHandler
         $this->reportable(function (Throwable $e) {
             //
         });
+
+        $this->reportable(function (CrawlingException $ce){
+            error("Something Wrong happened while crawling the following website" );
+        })->stop();
     }
 }

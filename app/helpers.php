@@ -5,6 +5,23 @@ use App\Models\Store;
 use Illuminate\Support\Facades\DB;
 
 
+function prepare_single_prices_in_table($price, $currency_id , $color=false , $notify_price=null){
+
+    $price_currency=get_currencies($currency_id) . $price;
+    if ($color){
+        if ($price <= $notify_price)
+            $color_string="green";
+        else
+            $color_string="red";
+
+        $price_currency= "<span  style='color:$color_string'>$price_currency</span>";
+    }
+
+    return  \Illuminate\Support\Str::of($price_currency)->toHtmlString();
+}
+
+
+
 
 function prepare_multiple_prices_in_table($record){
 

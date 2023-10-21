@@ -1,12 +1,6 @@
 <?php
 
-use App\Jobs\GetProductJob;
-use App\Models\Product;
-use App\Models\Store;
-use App\Models\User;
 use App\Notifications\NewDiscountNotification;
-use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -20,42 +14,17 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::get('/', function () {
-
-//    $product_stores=DB::table('product_store')
-//        ->join('stores', 'store_id', '=' , 'stores.id')
-//        ->orderBy('product_store.updated_at', 'desc')
-//        ->get();
-
-//    foreach ($product_stores as $index=>$product_store)
-//    {
-//        GetProductJob::dispatch($product_store->product_id, $product_store->store_id)
-//                ->onQueue($product_store->slug)
-//                ->delay(now()->addSeconds($index*5));
-//    }
-
-//    $product_to_get=Product::where('id' ,1)
-//        ->with([
-//            'stores'=>function ($query){
-//                $query->where('stores.id', 2);
-//            }] )->first();
+//Route::get('/', function () {
+//
+//    return view('homepage');
+////    Auth::user()->notify(new \App\Notifications\ProductDiscount('test produc t', 'test store', 100 , "https://www.amazon.ae/ONEPLUS-11R-16GB-ram-256GB/dp/B0BSNNYHY5" , "https://m.media-amazon.com/images/I/613SAOPmLeL._AC_SX679_.jpg" , "AED"));
+//});
 //
 //
-//    switch (explode("_" , $product_to_get->stores[0]->slug)[0]){
-//        case "amazon": echo "amazonnnn";
-//            break;
+//Route::get('/test', function (){
 
-//    }
+//        new \App\Classes\Stores\Amazon(1);
 
+//        new \App\Classes\Ebay(Product::find(3), Store::find(23));
 
-//
-//    $product_stores=DB::table('product_store')
-//        ->join('stores', 'store_id', '=' , 'stores.id')
-//        ->orderBy('product_store.updated_at', 'desc')
-//        ->get();
-//    dd($product_stores);
-//
-//    new \App\Classes\Ebay(Product::find(81), Store::find(23), null , "364449056534");
-    new \App\Classes\Amazon(Product::find(86), Store::find(9));
-
-});
+//});
