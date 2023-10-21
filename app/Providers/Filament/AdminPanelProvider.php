@@ -72,9 +72,9 @@ class AdminPanelProvider extends PanelProvider
                     shouldRegisterUserMenu: true, // Sets the 'account' link in the panel User Menu (default = true)
                     slug: 'my-profile',
                 )
-//                ->enableTwoFactorAuthentication(
-//                    force: true, // force the user to enable 2FA before they can use the application (default = false)
-//                )
+                ->enableTwoFactorAuthentication(
+                    force: true, // force the user to enable 2FA before they can use the application (default = false)
+                )
                 ,
                 FilamentSpatieLaravelBackupPlugin::make()
                     ->usingPage(Backups::class),
