@@ -1,21 +1,20 @@
 <?php
 use App\Models\Currency;
-use App\Models\Store;
 use App\Models\User;
 
-function setup_stores() : void{
-    $stores=[
+function setup_stores() : array{
+    return [
         [
             'name'=>'Amazon UAE',
-            'host'=>'amazon.ae',
+            'domain'=>'amazon.ae',
             'image'=>'amazon_ae.png',
-            'referral'=>'cybrarist08-21',
+            'referral'=>'cybrarist0b-21',
             'currency_id'=>Currency::firstOrCreate(['code'=>'AED'])->id,
             'slug'=>'amazon_ae'
         ],
         [
             'name'=>'Amazon USA',
-            'host'=>'amazon.com',
+            'domain'=>'amazon.com',
             'image'=>'amazon.png',
             'referral'=>'cybrarist-20',
             'currency_id'=>Currency::firstOrCreate(['code'=>'$'])->id,
@@ -23,7 +22,7 @@ function setup_stores() : void{
         ],
         [
             'name'=>'Amazon UK',
-            'host'=>'amazon.co.uk',
+            'domain'=>'amazon.co.uk',
             'image'=>'amazon_co_uk.png',
             'referral'=>'cybrarist01-21',
             'currency_id'=>Currency::firstOrCreate(['code'=>'£'])->id,
@@ -31,7 +30,7 @@ function setup_stores() : void{
         ],
         [
             'name'=>'Amazon Germany',
-            'host'=>'amazon.de',
+            'domain'=>'amazon.de',
             'image'=>'amazon_de.png',
             'referral'=>'cybrarist0f-21',
             'currency_id'=>Currency::firstOrCreate(['code'=>'€'])->id,
@@ -39,7 +38,7 @@ function setup_stores() : void{
         ],
         [
             'name'=>'Amazon France',
-            'host'=>'amazon.fr',
+            'domain'=>'amazon.fr',
             'image'=>'amazon_fr.png',
             'referral'=>'cybrarist09-21',
             'currency_id'=>Currency::firstOrCreate(['code'=>'€'])->id,
@@ -47,7 +46,7 @@ function setup_stores() : void{
         ],
         [
             'name'=>'Amazon Italy',
-            'host'=>'amazon.it',
+            'domain'=>'amazon.it',
             'image'=>'amazon_it.png',
             'referral'=>'cybrarist07f-21',
             'currency_id'=>Currency::firstOrCreate(['code'=>'€'])->id,
@@ -55,7 +54,7 @@ function setup_stores() : void{
         ],
         [
             'name'=>'Amazon Saudi Arabia',
-            'host'=>'amazon.sa',
+            'domain'=>'amazon.sa',
             'image'=>'amazon_sa.png',
             'referral'=>'cybrarist05-21',
             'currency_id'=>Currency::firstOrCreate(['code'=>'SAR'])->id,
@@ -63,7 +62,7 @@ function setup_stores() : void{
         ],
         [
             'name'=>'Amazon Spain',
-            'host'=>'amazon.es',
+            'domain'=>'amazon.es',
             'image'=>'amazon_es.png',
             'referral'=>'cybrarist0e4-21',
             'currency_id'=>Currency::firstOrCreate(['code'=>'€'])->id,
@@ -71,110 +70,103 @@ function setup_stores() : void{
         ],
         [
             'name'=>'Amazon Poland',
-            'host'=>'amazon.pl',
+            'domain'=>'amazon.pl',
             'image'=>'amazon_pl.png',
-            'referral'=>'cybrarist0e4-21',
+            'referral'=>'none',
             'currency_id'=>Currency::firstOrCreate(['code'=>'zł'])->id,
             'slug'=>'amazon_pl'
         ],
         [
             'name'=>'Amazon Turkey',
-            'host'=>'amazon.com.tr',
+            'domain'=>'amazon.com.tr',
             'image'=>'amazon_com_tr.png',
-            'referral'=>'cybrarist0e4-21',
+            'referral'=>'none',
             'currency_id'=>Currency::firstOrCreate(['code'=>'TL'])->id,
             'slug'=>'amazon_com_tr'
         ],
         [
             'name'=>'Amazon Australia',
-            'host'=>'amazon.com.au',
+            'domain'=>'amazon.com.au',
             'image'=>'amazon_com_au.png',
-            'referral'=>'cybrarist0e4-21',
+            'referral'=>'none',
             'currency_id'=>Currency::firstOrCreate(['code'=>'$'])->id,
             'slug'=>'amazon_com_au'
         ],
         [
             'name'=>'Amazon Brazil',
-            'host'=>'amazon.com.br',
+            'domain'=>'amazon.com.br',
             'image'=>'amazon_com_br.png',
-            'referral'=>'cybrarist0e4-21',
+            'referral'=>'none',
             'currency_id'=>Currency::firstOrCreate(['code'=>'R$'])->id,
             'slug'=>'amazon_com_br'
         ],
         [
             'name'=>'Amazon Canada',
-            'host'=>'amazon.ca',
+            'domain'=>'amazon.ca',
             'image'=>'amazon_ca.png',
-            'referral'=>'cybrarist0e4-21',
+            'referral'=>'cybrarist08-20',
             'currency_id'=>Currency::firstOrCreate(['code'=>'$'])->id,
             'slug'=>'amazon_ca'
         ],
         [
             'name'=>'Amazon China',
-            'host'=>'amazon.cn',
+            'domain'=>'amazon.cn',
             'image'=>'amazon.png',
-            'referral'=>'cybrarist0e4-21',
+            'referral'=>'none',
             'currency_id'=>Currency::firstOrCreate(['code'=>'¥'])->id,
             'slug'=>'amazon_tr'
         ],
         [
             'name'=>'Amazon Egypt',
-            'host'=>'amazon.eg',
+            'domain'=>'amazon.eg',
             'image'=>'amazon_eg.png',
-            'referral'=>'cybrarist0e4-21',
+            'referral'=>'none',
             'currency_id'=>Currency::firstOrCreate(['code'=>'EGP'])->id,
             'slug'=>'amazon_eg'
         ],
         [
             'name'=>'Amazon Japan',
-            'host'=>'amazon.co.jp',
+            'domain'=>'amazon.co.jp',
             'image'=>'amazon_co_jp.png',
-            'referral'=>'cybrarist0e4-21',
+            'referral'=>'none',
             'currency_id'=>Currency::firstOrCreate(['code'=>'¥'])->id,
             'slug'=>'amazon_co_jp'
         ],
         [
             'name'=>'Amazon India',
-            'host'=>'amazon.in',
+            'domain'=>'amazon.in',
             'image'=>'amazon_in.png',
-            'referral'=>'cybrarist09-21',
+            'referral'=>'none',
             'currency_id'=>Currency::firstOrCreate(['code'=>'₹'])->id,
             'slug'=>'amazon_in'
         ],
-
         [
             'name'=>'Amazon Mexicon',
-            'host'=>'amazon.com.mx',
+            'domain'=>'amazon.com.mx',
             'image'=>'amazon_com_mx.png',
-            'referral'=>'cybrarist09-21',
+            'referral'=>'none',
             'currency_id'=>Currency::firstOrCreate(['code'=>'$'])->id,
             'slug'=>'amazon_com_mx'
         ],
-
-
         [
             'name'=>'Amazon Netherlands',
-            'host'=>'amazon.nl',
+            'domain'=>'amazon.nl',
             'image'=>'amazon_nl.png',
-            'referral'=>'cybrarist09-21',
+            'referral'=>'none',
             'currency_id'=>Currency::firstOrCreate(['code'=>'€'])->id,
             'slug'=>'amazon_nl'
         ],
-
-
         [
             'name'=>'Amazon Singapore',
-            'host'=>'amazon.sg',
+            'domain'=>'amazon.sg',
             'image'=>'amazon_sg.png',
-            'referral'=>'cybrarist09-21',
+            'referral'=>'none',
             'currency_id'=>Currency::firstOrCreate(['code'=>'S$'])->id,
             'slug'=>'amazon_sg'
         ],
-
-
         [
             'name'=>'Amazon Sweden',
-            'host'=>'amazon.se',
+            'domain'=>'amazon.se',
             'image'=>'amazon_se.png',
             'referral'=>'cybrarist09-21',
             'currency_id'=>Currency::firstOrCreate(['code'=>'kr'])->id,
@@ -182,43 +174,35 @@ function setup_stores() : void{
         ],
         [
             'name'=>'Amazon Belgium',
-            'host'=>'amazon.com.be',
+            'domain'=>'amazon.com.be',
             'image'=>'amazon.png',
-            'referral'=>'cybrarist09-21',
+            'referral'=>'none',
             'currency_id'=>Currency::firstOrCreate(['code'=>'€'])->id,
             'slug'=>'amazon_com_be'
         ],
 
-
-//        Ebay
+//Ebay
         [
             'name'=>'Ebay',
-            'host'=>'ebay.com',
+            'domain'=>'ebay.com',
             'image'=>'ebay.png',
-            'referral'=>'cybrarist09-21',
+            'referral'=>'none',
             'currency_id'=>Currency::firstOrCreate(['code'=>'$'])->id,
             'slug'=>'ebay_com'
         ],
 
     ];
-
-    foreach ($stores as $store)
-    {
-        Store::updateOrCreate(
-            ['host'=>$store['host']],
-            $store
-        );
-    }
 }
-function setup_main_user() :void {
-    $users=User::all()->count();
-    if ($users == 0)
-        \App\Models\User::factory()->create([
-            'name' => env( 'USER_NAME' , 'Test User'),
-            'email' => env( 'USER_EMAIL_ADDRESS' , 'test@test.com'),
-            'password'=>env('USER_PASSWORD', 'password')
-        ]);
-}
+//
+//function setup_main_user() :void {
+//    $users=User::all()->count();
+//    if ($users == 0)
+//        \App\Models\User::factory()->create([
+//            'name' => env( 'USER_NAME' , 'Test User'),
+//            'email' => env( 'USER_EMAIL_ADDRESS' , 'test@test.com'),
+//            'password'=>env('USER_PASSWORD', 'password')
+//        ]);
+//}
 
 
 

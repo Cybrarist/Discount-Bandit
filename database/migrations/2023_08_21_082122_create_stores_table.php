@@ -17,7 +17,7 @@ return new class extends Migration
             $table->softDeletes();
 
             $table->string('name');
-            $table->string('host');
+            $table->string('domain');
             $table->string('image');
             $table->string('slug');
             $table->string('referral')->nullable();

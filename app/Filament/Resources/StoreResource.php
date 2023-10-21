@@ -13,9 +13,14 @@ use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\SelectColumn;
+use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Livewire\Attributes\Layout;
 
 class StoreResource extends Resource
 {
@@ -29,7 +34,7 @@ class StoreResource extends Resource
             ->schema([
                 TextInput::make('name'),
 
-                TextInput::make('host')
+                TextInput::make('domain')
                     ->hidden(),
 
                 Select::make('currency')
@@ -61,13 +66,18 @@ class StoreResource extends Resource
     {
         return $table
             ->columns([
-                Tables\Columns\ImageColumn::make('image')->disk('store')->height(50),
-                Tables\Columns\TextColumn::make('name')->searchable(),
-                Tables\Columns\SelectColumn::make('status')->options(StatusEnum::to_array()),
-                Tables\Columns\ToggleColumn::make('tabs'),
+                ImageColumn::make('image')->disk('store')->height(50),
+                TextColumn::make('name')->searchable(),
+                SelectColumn::make('status')->options(StatusEnum::to_array()),
+                ToggleColumn::make('tabs')
             ])
             ->filters([
-            ])
+                Tables\Filters\SelectFilter::make('status')
+                    ->options(StatusEnum::to_array())
+                    ->label('Status')
+                    ->native(false),
+
+            ])->filtersLayout(Tables\Enums\FiltersLayout::AboveContent)
             ->actions([
                 Tables\Actions\EditAction::make(),
             ])

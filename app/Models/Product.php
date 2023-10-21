@@ -17,6 +17,7 @@ class Product extends Model
         'status'=>StatusEnum::class,
         'stores.pivot.price'=>Money::class,
         'stores.pivot.notify_price'=>Money::class,
+        'stores.pivot.shipping_price'=>Money::class,
         'stores.pivot.updated_at'=>'datetime',
     ];
 
@@ -31,18 +32,18 @@ class Product extends Model
     public function stores()
     {
         return $this->belongsToMany(Store::class)->withTimestamps()->withPivot([
-            'id',
+            //data
             'price',
             'notify_price',
             'rate',
             'number_of_rates',
             'seller',
-            'coupons',
             'shipping_price',
-            'special_offers',
-            'in_stock',
-            'add_shipping',
             'updated_at',
+            //extra settings
+            'add_shipping',
+            //ebay
+            'remove_if_sold',
             'ebay_id',
         ]);
     }
@@ -58,5 +59,13 @@ class Product extends Model
         return $this->belongsTo(Product::class , 'id' , 'product_id');
     }
 
+    public function product_store()
+    {
+        return $this->hasMany(ProductStore::class , 'product_id' , 'id');
+    }
 
+    public function stores_available()
+    {
+        return $this->belongsTo(Store::class , 'store_id')->whereHas('products');
+    }
 }

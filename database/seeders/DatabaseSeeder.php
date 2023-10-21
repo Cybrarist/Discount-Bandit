@@ -15,24 +15,16 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // \App\Models\User::factory(10)->create();
+        $stores=setup_stores();
+        foreach ($stores as $store)
+        {
+            Store::updateOrCreate(
+                ['domain'=>$store['domain']],
+                $store
+            );
+        }
 
-//
-//         \App\Models\User::factory()->create([
-//             'name' => 'Test User',
-//             'email' => 'test@example.com',
-//             'password' => 'password'
-//         ]);
 
-        setup_stores();
-        setup_main_user();
-
-        $stores=Store::all();
-
-//        $product=Product::factory()->hasAttached($stores->random(2),[
-//            'price'=>10000,
-//            'notify_price'=>30000,
-//
-//        ])->count(100)->create();
+//        setup_main_user();
     }
 }

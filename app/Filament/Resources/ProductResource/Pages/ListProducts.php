@@ -2,11 +2,15 @@
 
 namespace App\Filament\Resources\ProductResource\Pages;
 
+use App\Enums\StatusEnum;
 use App\Filament\Resources\ProductResource;
+use App\Models\Product;
 use App\Models\Store;
 use Filament\Actions;
 use Filament\Resources\Pages\ListRecords;
 use Illuminate\Database\Eloquent\Builder;
+use Konnco\FilamentImport\Actions\ImportAction;
+use Konnco\FilamentImport\Actions\ImportField;
 
 class ListProducts extends ListRecords
 {
@@ -15,7 +19,7 @@ class ListProducts extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            Actions\CreateAction::make(),
+            Actions\CreateAction::make()
         ];
     }
 
@@ -24,13 +28,6 @@ class ListProducts extends ListRecords
     public function getTabs() : array {
     //get the stores with products in
 
-        $active_stores=\Cache::get('active_stores');
-        if (!$active_stores)
-        {
-            $active_stores=\DB::table('product_store')->distinct()->pluck('store_id');
-            \Cache::put('active_stores', $active_stores , 1000);
-        }
-
         $tabs=[
             'all' => ListRecords\Tab::make(),
         ];
@@ -38,9 +35,11 @@ class ListProducts extends ListRecords
         $stores=\Cache::get('stores_available');
         if (!$stores)
         {
-            $stores=Store::whereIn('id', $active_stores)->where('tabs', true)->get();
-            \Cache::put('stores_available', $stores , 6000 );
+            $stores=Store::whereNotIn('status',StatusEnum::ignored())
+                ->where('tabs', true)->get();
+            \Cache::forever('stores_available', $stores  );
         }
+
         foreach ($stores as $store)
         {
             $tabs =\Arr::add($tabs , $store->name,
@@ -48,13 +47,11 @@ class ListProducts extends ListRecords
                     $query->whereHas('stores', function ($query) use ($store) {
                         $query->where([
                             'stores.id'=>$store->id,
-                            'stores.deleted_at'=>null
                             ]);
                     });
                 })
             );
         }
-
         return  $tabs;
     }
 }
