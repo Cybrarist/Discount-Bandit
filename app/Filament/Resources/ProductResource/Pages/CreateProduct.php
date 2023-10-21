@@ -35,7 +35,7 @@ class CreateProduct extends CreateRecord
     {
 
         $url=new URLHelper($this->data['url']);
-
+        $this->data['asin']=null;
         $store=Store::where('domain' , $url->domain)->first();
         $store->products()->withPivot([
             //data
