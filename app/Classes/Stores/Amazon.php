@@ -273,8 +273,14 @@ class Amazon extends MainStore
      */
     public function check_notification(): bool
     {
-        if ($this->stock_available())
+
+        if ($this->notification_snoozed())
+            return false;
+
+        if ($this->stock_available()){
+            $this->notify();
             return true;
+        }
 
         if (!$this->price_crawled_and_different_from_database())
             return false;
@@ -297,14 +303,11 @@ class Amazon extends MainStore
         if ($this->max_notification_reached())
             return false;
 
-        if (!$this->price_reached_desired())
-            return false;
-
-        if ($this->notification_snoozed())
-            return false;
-
-        $this->notify();
-        return true;
+        if ($this->price_reached_desired()){
+            $this->notify();
+            return true;
+        }
+        return false;
     }
 
 
