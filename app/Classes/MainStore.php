@@ -140,7 +140,7 @@ abstract class MainStore
             ->where('store_id', '=',  $store_id)
             ->min('price');
 
-        return ($lowest_price_in_database >= $price && $lowest_price_in_database!=0);
+        return ($lowest_price_in_database > $price && $lowest_price_in_database!=0);
     }
 
     public static function record_price_history (int $product_id , int $store_id ,int $price=0)
