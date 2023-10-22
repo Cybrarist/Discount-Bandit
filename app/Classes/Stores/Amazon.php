@@ -38,7 +38,6 @@ class Amazon extends MainStore
         //crawl the website to get the important information
         $this->crawling_process();
 
-        $this->notify();
         //check for the notification settings
         $this->check_notification();
 
@@ -278,6 +277,7 @@ class Amazon extends MainStore
             return false;
 
         if ($this->stock_available()){
+
             $this->notify();
             return true;
         }
@@ -296,6 +296,7 @@ class Amazon extends MainStore
                 days: $this->total_record->lowest_within,
                 price: $this->price
             )){
+
             $this->notify();
             return true;
             }
