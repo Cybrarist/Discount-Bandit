@@ -5,6 +5,7 @@ namespace App\Filament\Resources\ProductResource\RelationManagers;
 use App\Classes\MainStore;
 use App\Classes\Stores\Amazon;
 use App\Classes\Stores\Ebay;
+use App\Classes\Stores\Walmart;
 use App\Enums\StatusEnum;
 use App\Models\Store;
 use Filament\Forms;
@@ -49,6 +50,8 @@ class StoresRelationManager extends RelationManager
                             return Amazon::prepare_url($record->domain , $this->ownerRecord->asin ,$record->referral);
                         elseif ( MainStore::is_ebay($record->domain))
                             return Ebay::prepare_url($record->domain , $record->ebay_id ,$record->referral);
+                        elseif ( MainStore::is_walmart($record->domain))
+                            return Walmart::prepare_url($record->domain , $this->ownerRecord->walmart_ip ,$record->referral);
                     } ,true),
 
                 Tables\Columns\TextColumn::make('price')

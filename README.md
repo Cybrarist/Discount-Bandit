@@ -49,6 +49,11 @@ and can setup the notification very easily.
 # CronJob
 the previous command will give the output if whether you want to run app in the terminal or as cron for windows, mac and linux.
 
+# Updates
+if you want to update the code, after installing the new version run the following
+```text
+php artisan discount:update
+```
 ## Connect
 if you are coming outside github or don't like to use it, feel free to join my discord.
 https://discord.gg/VBMHvH8tuR

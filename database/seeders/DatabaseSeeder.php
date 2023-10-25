@@ -23,8 +23,5 @@ class DatabaseSeeder extends Seeder
                 $store
             );
         }
-
-
-//        setup_main_user();
     }
 }

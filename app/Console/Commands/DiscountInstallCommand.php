@@ -88,13 +88,6 @@ class DiscountInstallCommand extends Command
     public function handle()
     {
 
-
-
-
-
-
-
-
         \File::copy(".env.example" , ".env");
         \File::append(".env" , "\n\n\n");
 
@@ -164,10 +157,7 @@ class DiscountInstallCommand extends Command
 
         \Artisan::call("migrate:fresh --seed --force" ,[], $this->getOutput());
 
-
         \Artisan::call("vendor:publish --tag=\"filament-breezy-views\"" ,[], $this->getOutput());
-
-
 
         $name=text(
             label:"What is the Name for the user? ",
@@ -189,6 +179,11 @@ class DiscountInstallCommand extends Command
             'password'=> (\Str::length($password) >1 ) ? $password : "password",
         ]);
         \Laravel\Prompts\info("User Created Successfully");
+
+
+        \Laravel\Prompts\info("Testing Notification");
+
+        \Artisan::call("discount:test-notify");
 
 
         $how_to_run=select(
