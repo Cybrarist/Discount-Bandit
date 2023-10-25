@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Classes\MainStore;
 use App\Classes\Stores\Amazon;
 use App\Classes\Stores\Ebay;
+use App\Classes\Stores\Walmart;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -35,6 +36,8 @@ class GetProductJob implements ShouldQueue
             new Amazon($this->product_store_id);
         elseif (MainStore::is_ebay($this->domain))
             new Ebay($this->product_store_id);
+       elseif (MainStore::is_walmart($this->domain))
+            new Walmart($this->product_store_id);
 
     }
 }

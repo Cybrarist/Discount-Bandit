@@ -247,7 +247,7 @@ class Ebay extends MainStore
     {
         return self::validate_ebay_url($url) && self::is_product_unique($url) ;
     }
-    public function check_notification()
+    public function check_notification(): bool
     {
         if ($this->notification_snoozed())
             return false;

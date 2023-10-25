@@ -26,6 +26,8 @@ class URLHelper
             $data=\Arr::add($data , 'asin' , $this->get_asin());
         elseif (MainStore::is_ebay($this->domain))
             $data=\Arr::add($data , 'ebay_id' , $this->get_ebay_item_id());
+        elseif (MainStore::is_walmart($this->domain))
+            $data=\Arr::add($data , 'walmart_ip' , $this->get_walmart_ip());
     }
     public function  get_asin(): string
     {
@@ -36,4 +38,11 @@ class URLHelper
     public function  get_ebay_item_id(){
         return explode("/itm/" , $this->path)[1];
     }
+
+    public function  get_walmart_ip(): string
+    {
+        return Str::remove("/" , Str::squish(  \Arr::last(explode("/" , $this->path))) );
+    }
+
+
 }

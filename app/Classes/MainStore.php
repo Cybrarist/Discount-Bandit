@@ -4,8 +4,7 @@ namespace App\Classes;
 
 use App\Classes\Stores\Amazon;
 use App\Classes\Stores\Ebay;
-use App\Enums\StatusEnum;
-use App\Exceptions\CrawlingException;
+use App\Classes\Stores\Walmart;
 use App\Models\PriceHistory;
 use App\Models\Product;
 use App\Models\ProductStore;
@@ -14,12 +13,8 @@ use App\Models\User;
 use App\Notifications\ProductDiscount;
 use Carbon\Carbon;
 use Filament\Notifications\Notification;
-use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
-use Symfony\Component\Finder\Finder;
-use function Laravel\Prompts\error;
 
 abstract class MainStore
 {
@@ -129,6 +124,7 @@ abstract class MainStore
         $document=new \DOMDocument();
         libxml_use_internal_errors(true);
         $document->loadHTML($response);
+//        $document->getElementById()
         $xml = simplexml_import_dom($document);
     }
     public static function is_price_lowest_within(int $product_id=null,int $store_id=null, int $days=null , int $price=0)
@@ -166,7 +162,7 @@ abstract class MainStore
 
         }
         catch (\Exception $e){
-            error("Couldn't update the price history");
+            Log::error("Couldn't update the price history");
         }
     }
 
@@ -263,12 +259,19 @@ abstract class MainStore
         return \Str::contains( $string,"ebay" ,true);
     }
 
+    public static function  is_walmart($string)
+    {
+        return \Str::contains( $string,"walmart" ,true);
+    }
+
     public static function validate_url(URLHelper $url)
     {
         if (self::is_amazon($url->domain) )
             return  Amazon::validate($url);
         elseif (self::is_ebay($url->domain))
             return Ebay::validate($url);
+        elseif (self::is_walmart($url->domain))
+            return Walmart::validate($url);
         else
             Notification::make()
                 ->danger()

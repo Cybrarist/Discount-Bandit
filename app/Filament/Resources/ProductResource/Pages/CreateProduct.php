@@ -4,6 +4,7 @@ namespace App\Filament\Resources\ProductResource\Pages;
 
 use App\Classes\MainStore;
 use App\Classes\Stores\Amazon;
+use App\Classes\Stores\Walmart;
 use App\Classes\URLHelper;
 use App\Filament\Resources\ProductResource;
 use App\Models\Store;
@@ -12,7 +13,6 @@ use Filament\Resources\Pages\CreateRecord;
 
 class CreateProduct extends CreateRecord
 {
-//    use HasWizard;
 
     protected static string $resource = ProductResource::class;
 
@@ -57,6 +57,9 @@ class CreateProduct extends CreateRecord
         if ($this->data['variation_options']){
             if (MainStore::is_amazon($this->data['url'])){
                 Amazon::insert_variation($this->data['variation_options'], $store, $this->data);
+            }
+            elseif(MainStore::is_walmart($this->data['url'])){
+                Walmart::insert_variation($this->data['variation_options'], $store, $this->data);
             }
         }
     }

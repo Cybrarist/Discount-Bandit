@@ -5,6 +5,7 @@ namespace App\Filament\Resources;
 use App\Classes\MainStore;
 use App\Classes\Stores\Amazon;
 use App\Classes\Stores\Ebay;
+use App\Classes\Stores\Walmart;
 use App\Classes\URLHelper;
 use App\Enums\StatusEnum;
 use App\Filament\Resources\ProductResource\Pages;
@@ -113,6 +114,46 @@ class ProductResource extends Resource
                         ->visible(function (Forms\Get $get, $record){
                                 return MainStore::is_amazon($get('url')) ||
                                     ($record && $record->stores()->where('domain' , 'like' , "%amazon%")->count());
+                        }),
+
+
+//                Walmart Settings
+                Section::make('Walmart Settings')
+                        ->columns(4)
+                        ->schema([
+                            Forms\Components\Toggle::make('variations')
+                                ->label("choose other variations to include")
+                                ->inline(false)
+                                ->reactive()
+                                ->afterStateUpdated(function ($component, $get , $state){
+                                    $variations=[];
+                                    $url=new URLHelper($get('url'));
+                                    if($state)
+                                    {
+                                        if (MainStore::is_walmart($url->domain)){
+                                           $variations= Walmart::get_variations($url->final_url);
+                                        }
+
+                                        $component->getContainer()
+                                            ->getComponent('variation_options')
+                                            ->options($variations)
+                                            ->disabled(false)
+                                            ->multiple()
+                                            ->native(false);
+                                    }
+                                }
+                                ),
+
+                            Select::make('variation_options')
+                                ->key('variation_options')
+                                ->preload()
+                                ->disabled()
+                                ->placeholder("choose variation")
+
+                        ])
+                        ->visible(function (Forms\Get $get, $record){
+                                return MainStore::is_walmart($get('url')) ||
+                                    ($record && $record->stores()->where('domain' , 'like' , "%walmart%")->count());
                         }),
 
                 Section::make('Ebay Settings')

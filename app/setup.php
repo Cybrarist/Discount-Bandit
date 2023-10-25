@@ -190,6 +190,23 @@ function setup_stores() : array{
             'currency_id'=>Currency::firstOrCreate(['code'=>'$'])->id,
             'slug'=>'ebay_com'
         ],
+        [
+            'name'=>'Walmart USA',
+            'domain'=>'walmart.com',
+            'image'=>'walmart.png',
+            'referral'=>'none',
+            'currency_id'=>Currency::firstOrCreate(['code'=>'$'])->id,
+            'slug'=>'walmart_com'
+        ],
+
+        [
+            'name'=>'Walmart Canada',
+            'domain'=>'walmart.ca',
+            'image'=>'walmart.png',
+            'referral'=>'none',
+            'currency_id'=>Currency::firstOrCreate(['code'=>'$'])->id,
+            'slug'=>'walmart_ca'
+        ],
 
     ];
 }
