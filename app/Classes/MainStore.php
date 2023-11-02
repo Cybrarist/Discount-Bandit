@@ -208,7 +208,7 @@ abstract class MainStore
                         product_name: $this->total_record->product_name ?? $this->name ,
                         store_name: $this->total_record->store_name,
                         price: $this->price / 100,
-                        product_url: $this->product_url ."?ref=" . $this->total_record->referral,
+                        product_url: $this->product_url . $this->total_record->referral,
                         image: $this->total_record->product_image ?? $this->image,
                         currency: get_currencies($this->total_record->currency_id)));
         }

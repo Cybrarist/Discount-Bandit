@@ -15,7 +15,7 @@ use function App\Classes\error;
 
 class Amazon extends MainStore
 {
-    const MAIN_URL="https://store/en/dp/product?tag=referral_code" ;
+    const MAIN_URL="https://store/en/dp/product?ref=referral_code" ;
     private  $center_column;
     private $right_column;
 
