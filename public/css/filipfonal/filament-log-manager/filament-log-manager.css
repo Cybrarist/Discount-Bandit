@@ -1,0 +1,25 @@
+.bg-danger {
+    background-color: rgb(185 28 28);
+}
+
+.bg-warning {
+    background-color: rgb(251 191 36);
+}
+
+.bg-info {
+    background-color: rgb(34 211 238);
+}
+
+.no-bottom-radius {
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+}
+
+.no-top-radius {
+    border-top-left-radius: 0 !important;
+    border-top-right-radius: 0 !important;
+}
+
+.mb-0 {
+    margin-bottom: 0 !important;
+}

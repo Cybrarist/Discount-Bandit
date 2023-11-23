@@ -1,0 +1,44 @@
+version: '3.8'
+
+networks:
+    discount-bandit:
+
+
+services:
+    discount-bandit:
+        build:
+            context: .
+            dockerfile: dockerfile
+        image: cybrarist/discount-bandit:v3-test
+        volumes:
+            - .:/var/www/html/discount-bandit
+        ports:
+            - 8080:80
+        networks:
+            - discount-bandit
+        environment:
+            DB_HOST: discount-bandit-mysql
+            NTFY_LINK: "https://ntfy.sh/btysYNqc09HNzGPD"
+        depends_on:
+          mysql :
+              condition: service_healthy
+
+    mysql:
+        image: mysql:8.2.0
+        container_name: discount-bandit-mysql
+        restart: unless-stopped
+        tty: true
+        ports:
+            - "3307:3306"
+        environment:
+            MYSQL_DATABASE: discount-bandit
+            MYSQL_USER: bandit
+            MYSQL_PASSWORD: password
+            MYSQL_ROOT_PASSWORD: password
+            SERVICE_NAME: mysql
+        healthcheck:
+            test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+            timeout: 1s
+            retries: 10
+        networks:
+            - discount-bandit

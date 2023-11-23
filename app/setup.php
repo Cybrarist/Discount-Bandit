@@ -208,6 +208,15 @@ function setup_stores() : array{
             'slug'=>'walmart_ca'
         ],
 
+        [
+            'name'=>'Target',
+            'domain'=>'target.com',
+            'image'=>'target.png',
+            'referral'=>'none',
+            'currency_id'=>Currency::firstOrCreate(['code'=>'$'])->id,
+            'slug'=>'target_com'
+        ],
+
     ];
 }
 //
