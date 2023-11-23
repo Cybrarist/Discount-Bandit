@@ -6,9 +6,6 @@ networks:
 
 services:
     discount-bandit:
-        build:
-            context: .
-            dockerfile: dockerfile
         image: cybrarist/discount-bandit:v3-test
         volumes:
             - .:/var/www/html/discount-bandit
