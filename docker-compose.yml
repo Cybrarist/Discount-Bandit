@@ -1,8 +1,8 @@
-version: '3.8'
+version: '2'
 
-#networks:
-#    discount-bandit:
-
+networks:
+    discount-bandit:
+        driver: bridge
 
 services:
     discount-bandit:
@@ -14,8 +14,8 @@ services:
             - .:/var/www/html/discount-bandit
         ports:
             - 8080:80
-#        networks:
-#            - discount-bandit
+        networks:
+            - discount-bandit
         environment:
             DB_HOST: discount-bandit-mysql
             NTFY_LINK: "https://ntfy.sh/btysYNqc09HNzGPD"
@@ -40,5 +40,5 @@ services:
             test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
             timeout: 1s
             retries: 10
-#        networks:
-#            - discount-bandit
+        networks:
+            - discount-bandit
