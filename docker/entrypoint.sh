@@ -1,5 +1,8 @@
 #!/bin/bash
 
+
+cd /var/www/html/discount-bandit
+
 if [ ! -f "vendor/autoload.php" ]; then
   echo "Installing Composer"
   composer install --no-interaction --no-progress
