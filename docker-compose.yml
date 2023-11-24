@@ -13,7 +13,10 @@ services:
             - discount-bandit
         environment:
             DB_HOST: discount-bandit-mysql
-            NTFY_LINK: "https://ntfy.sh/btysYNqc09HNzGPD"
+            DEFAULT_USER: "test"
+            DEFAULT_EMAIL: "docker@test.com"
+            DEAFULT_PASSWORD: "thisismypassword"
+            NTFY_LINK: "https://ntfy.sh/test"
         depends_on:
             mysql :
                 condition: service_healthy
