@@ -17,6 +17,9 @@ services:
             DEFAULT_EMAIL: "docker@test.com"
             DEAFULT_PASSWORD: "thisismypassword"
             NTFY_LINK: "https://ntfy.sh/test"
+            NTFY_USER : "ntfy_user"
+            NTFY_PASSWORD : "ntfy_password"
+            NTFY_TOKEN : ""
         depends_on:
             mysql :
                 condition: service_healthy
