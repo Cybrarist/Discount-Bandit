@@ -93,14 +93,12 @@ RUN (crontab -l ; echo "*/5 * * * * /usr/local/bin/php /var/www/html/discount-ba
     (crontab -l ; echo "*/6 * * * * /usr/local/bin/php /var/www/html/discount-bandit/artisan queue:work --stop-when-empty --queue=target_com >> /dev/null 2>&1") | crontab -
 
 
-COPY docker/entrypoint.sh /usr/local/bin/entrypoint.sh
+WORKDIR /var/www/html/discount-bandit/
 
-RUN chmod +x /usr/local/bin/entrypoint.sh
 
-WORKDIR /var/www/html/discount-bandit
+RUN chmod +x docker_files/entrypoint.sh
 
-ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
-
+ENTRYPOINT ["docker_files/entrypoint.sh"]
 
 
 

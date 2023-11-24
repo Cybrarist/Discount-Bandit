@@ -1,4 +1,4 @@
-version: '2'
+version: '3.8'
 
 networks:
     discount-bandit:
@@ -7,8 +7,6 @@ networks:
 services:
     discount-bandit:
         image: cybrarist/discount-bandit:v3-test
-        volumes:
-            - .:/var/www/html/discount-bandit
         ports:
             - 8080:80
         networks:
@@ -17,8 +15,8 @@ services:
             DB_HOST: discount-bandit-mysql
             NTFY_LINK: "https://ntfy.sh/btysYNqc09HNzGPD"
         depends_on:
-          mysql :
-              condition: service_healthy
+            mysql :
+                condition: service_healthy
 
     mysql:
         image: mysql:8.2.0
