@@ -34,7 +34,17 @@ class ProductDiscount extends Notification
     }
     public function toNtfy($notifiable)
     {
-        \Http::withHeaders([
+        $auth=[];
+
+        if (env("NTFY_USER") && env("NTFY_PASSWORD"))
+            $auth["Authorization"] = "Basic " . base64_encode(env("NTFY_USER") .":" . env("NTFY_PASSWORD") );
+        elseif (env("NTFY_TOKEN"))
+            $auth["Authorization"] = "Bearer " . env("NTFY_TOKEN");
+
+
+        $respo=\Http::withHeaders(
+            array_merge($auth ,
+            [
             "Content-Type"=>"text/markdown",
             'X-Markdown'=>"1",
             'Markdown'=>"1",
@@ -42,11 +52,13 @@ class ProductDiscount extends Notification
             "Cache: no",
             'Title'=>"For Just $this->price -  Discount For " . \Str::words($this->product_name , 5),
             "Actions"=> "view, Open in $this->store_name, $this->product_url",
-            "Attach"=>"$this->image"])
+            "Attach"=>"$this->image"]
+            ))
 
             ->withBody("Your product $this->product_name, is at discount with price  $this->currency $this->price
             ")
         ->post(env("NTFY_LINK"));
+
     }
 
     /**
