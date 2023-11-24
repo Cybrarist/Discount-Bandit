@@ -1,7 +1,4 @@
-#!/bin/bash
-
-
-cd /var/www/html/discount-bandit
+#!/bin/sh
 
 if [ ! -f "vendor/autoload.php" ]; then
   echo "Installing Composer"
