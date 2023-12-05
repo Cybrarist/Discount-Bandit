@@ -16,7 +16,7 @@ function setup_stores() : array{
             'name'=>'Amazon USA',
             'domain'=>'amazon.com',
             'image'=>'amazon.png',
-            'referral'=>'cybrarist-20',
+            'referral'=>'cybrarist0e-20',
             'currency_id'=>Currency::firstOrCreate(['code'=>'$'])->id,
             'slug'=>'amazon_com'
         ],
