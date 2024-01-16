@@ -40,12 +40,16 @@ then run the following and follow the prompts
 ```text
 php artisan discount:install
 ```
-
 to make it easier for everyone, whether you are self hosting or just want to use the software, i have found that  
 https://ntfy.sh is the best solution. you can install their app from google play / appstore
 and can setup the notification very easily.
 
+# Updating
+if you updating the system, please run the following command 
 
+```text
+php artisan discount:update
+```
 # CronJob
 the previous command will give the output if whether you want to run app in the terminal or as cron for windows, mac and linux.
 
