@@ -4,6 +4,7 @@ namespace App\Filament\Resources;
 
 use App\Classes\MainStore;
 use App\Classes\Stores\Amazon;
+use App\Classes\Stores\Argos;
 use App\Classes\Stores\Ebay;
 use App\Classes\Stores\Walmart;
 use App\Classes\URLHelper;
@@ -31,8 +32,9 @@ use Str;
 class ProductResource extends Resource
 {
     protected static ?string $model = Product::class;
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
 
+    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?int $navigationSort=1;
 
     public static function form(Form $form): Form
     {
@@ -49,7 +51,7 @@ class ProductResource extends Resource
                     ->label('URL of product')
                     ->live(onBlur: true )
                     ->afterStateUpdated(function ($state, string $operation){
-                        if ($operation !="edit"){
+                        if ($operation !="edit" && $state !=null){
                             $url=new URLHelper($state);
                             MainStore::validate_url($url);
                         }
@@ -76,6 +78,42 @@ class ProductResource extends Resource
 
                 DatePicker::make('snoozed_until')
                     ->label("Snooze Notification Until"),
+
+
+                Section::make("Extra Settings")
+                    ->columns(4)
+                    ->schema([
+
+                        Forms\Components\Toggle::make('only_official')
+                            ->label("Official Sellers Only")
+                            ->inline(false),
+
+                        Forms\Components\Toggle::make('favourite')
+                            ->label("Add To Favourite")
+                            ->inline(false),
+
+                        Forms\Components\Toggle::make('stock')
+                            ->label("Alert When Stock Available")
+                            ->inline(false),
+
+                        Forms\Components\TextInput::make('lowest_within')
+                            ->label("Alert if Product lowest within")
+                            ->nullable()
+                            ->suffix('days')
+                            ->maxValue(65535),
+
+
+                        TextInput::make('max_notifications')
+                            ->label("Max Notification Sent Daily")
+                            ->integer()
+                            ->numeric()
+                            ->placeholder("unlimited")
+                            ->hintIcon("heroicon-o-information-circle", "this is for products that fluctuate in price, it won't send any more notification UNLESS the price is less than earlier"),
+
+                    ])
+                    ->collapsible(),
+
+
 
 //                Amazon Settings
                 Section::make('Amazon Settings')
@@ -114,6 +152,45 @@ class ProductResource extends Resource
                         ->visible(function (Forms\Get $get, $record){
                                 return MainStore::is_amazon($get('url')) ||
                                     ($record && $record->stores()->where('domain' , 'like' , "%amazon%")->count());
+                        }),
+
+//                Amazon Settings
+                Section::make('Argos Settings')
+                        ->columns(4)
+                        ->schema([
+                            Forms\Components\Toggle::make('variations')
+                                ->label("choose other variations to include")
+                                ->inline(false)
+                                ->reactive()
+                                ->afterStateUpdated(function ($component, $get , $state){
+                                    $variations=[];
+                                    $url=new URLHelper($get('url'));
+                                    if($state)
+                                    {
+                                        if (MainStore::is_argos($url->domain)){
+                                           $variations= Argos::get_variations($url->final_url);
+                                        }
+
+                                        $component->getContainer()
+                                            ->getComponent('variation_options')
+                                            ->options($variations)
+                                            ->disabled(false)
+                                            ->multiple()
+                                            ->native(false);
+                                    }
+                                }
+                                ),
+
+                            Select::make('variation_options')
+                                ->key('variation_options')
+                                ->preload()
+                                ->disabled()
+                                ->placeholder("choose variation")
+
+                        ])
+                        ->visible(function (Forms\Get $get, $record){
+                                return MainStore::is_argos($get('url')) ||
+                                    ($record && $record->stores()->where('domain' , 'like' , "%argos%")->count());
                         }),
 
 
@@ -169,38 +246,6 @@ class ProductResource extends Resource
                         }),
 
 
-                Section::make("Extra Settings")
-                    ->columns(4)
-                    ->schema([
-
-                        Forms\Components\Toggle::make('only_official')
-                            ->label("Official Sellers Only")
-                            ->inline(false),
-
-                        Forms\Components\Toggle::make('favourite')
-                            ->label("Add To Favourite")
-                            ->inline(false),
-
-                        Forms\Components\Toggle::make('stock')
-                            ->label("Alert When Stock Available")
-                            ->inline(false),
-
-                        Forms\Components\TextInput::make('lowest_within')
-                            ->label("Alert if Product lowest within")
-                            ->nullable()
-                            ->suffix('days')
-                            ->maxValue(65535),
-
-
-                        TextInput::make('max_notifications')
-                            ->label("Max Notification Sent Daily")
-                            ->integer()
-                            ->numeric()
-                            ->placeholder("unlimited")
-                            ->hintIcon("heroicon-o-information-circle", "this is for products that fluctuate in price, it won't send any more notification UNLESS the price is less than earlier"),
-
-                    ])
-                    ->collapsible(),
 
 
             ]);
@@ -218,9 +263,9 @@ class ProductResource extends Resource
                     ->searchable()
                     ->sortable(),
                 Tables\Columns\SelectColumn::make('status')->options(StatusEnum::to_array()),
-                Tables\Columns\TextColumn ::make('stores.name')->formatStateUsing(function ($state){
-                    return Str::of(Str::replace("," , "<br>" , $state))->toHtmlString() ;
-                }),
+//                Tables\Columns\TextColumn ::make('stores.name')->formatStateUsing(function ($state){
+//                    return Str::of(Str::replace("," , "<br>" , $state))->toHtmlString() ;
+//                }),
                 Tables\Columns\TextColumn::make('stores.pivot.price')->formatStateUsing(function ($record){
                     return prepare_multiple_prices_in_table($record);
                 })->label('Prices'),

@@ -4,6 +4,7 @@ namespace App\Filament\Resources\ProductResource\Pages;
 
 use App\Classes\MainStore;
 use App\Classes\Stores\Amazon;
+use App\Classes\Stores\Argos;
 use App\Classes\Stores\Walmart;
 use App\Classes\URLHelper;
 use App\Filament\Resources\ProductResource;
@@ -48,9 +49,10 @@ class CreateProduct extends CreateRecord
         ])->updateOrCreate(
             ['products.id'=>$this->record->id],
             [],
-            ['product_store.ebay_id'=>$this->data['ebay_id'] ?? null,
-            'product_store.notify_price'=>$this->data['notify_price'] * 100 ?? 0,
-            'product_store.remove_if_sold'=>$this->data['remove_if_sold'] ?? false,
+            [
+                'product_store.ebay_id'=>$this->data['ebay_id'] ?? null,
+                'product_store.notify_price'=>$this->data['notify_price'] * 100 ?? 0,
+                'product_store.remove_if_sold'=>$this->data['remove_if_sold'] ?? false,
             ]
         );
 
@@ -60,6 +62,9 @@ class CreateProduct extends CreateRecord
             }
             elseif(MainStore::is_walmart($this->data['url'])){
                 Walmart::insert_variation($this->data['variation_options'], $store, $this->data);
+            }
+            elseif(MainStore::is_argos($this->data['url'])){
+                Argos::insert_variation($this->data['variation_options'], $store, $this->data);
             }
         }
     }

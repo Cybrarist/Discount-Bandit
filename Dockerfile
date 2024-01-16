@@ -25,7 +25,7 @@ ENV DB_HOST=discount-bandit-mysql
 ENV APP_PORT=80
 ENV APP_URL=http://localhost:80
 ENV APP_ENV=production
-ENV APP_DEBUG=true
+ENV APP_DEBUG=false
 
 ENV DB_DATABASE=discount-bandit
 ENV DB_PORT=3306
@@ -90,7 +90,9 @@ RUN (crontab -l ; echo "*/5 * * * * /usr/local/bin/php /var/www/html/discount-ba
     (crontab -l ; echo "*/6 * * * * /usr/local/bin/php /var/www/html/discount-bandit/artisan queue:work --stop-when-empty --queue=ebay_com >> /dev/null 2>&1") | crontab - && \
     (crontab -l ; echo "*/6 * * * * /usr/local/bin/php /var/www/html/discount-bandit/artisan queue:work --stop-when-empty --queue=walmart_com >> /dev/null 2>&1") | crontab - && \
     (crontab -l ; echo "*/6 * * * * /usr/local/bin/php /var/www/html/discount-bandit/artisan queue:work --stop-when-empty --queue=walmart_ca >> /dev/null 2>&1") | crontab - && \
-    (crontab -l ; echo "*/6 * * * * /usr/local/bin/php /var/www/html/discount-bandit/artisan queue:work --stop-when-empty --queue=target_com >> /dev/null 2>&1") | crontab -
+    (crontab -l ; echo "*/6 * * * * /usr/local/bin/php /var/www/html/discount-bandit/artisan queue:work --stop-when-empty --queue=target_com >> /dev/null 2>&1") | crontab - && \
+    (crontab -l ; echo "*/6 * * * * /usr/local/bin/php /var/www/html/discount-bandit/artisan queue:work --stop-when-empty --queue=argos_co_uk >> /dev/null 2>&1") | crontab - && \
+    (crontab -l ; echo "*/11 * * * * /usr/local/bin/php /var/www/html/discount-bandit/artisan queue:work --stop-when-empty --queue=groups >> /dev/null 2>&1") | crontab -
 
 
 WORKDIR /var/www/html/discount-bandit/

@@ -5,7 +5,6 @@ namespace App\Console\Commands;
 use App\Models\Store;
 use App\Models\User;
 use Illuminate\Console\Command;
-use Laravel\Prompts\Prompt;
 use function Laravel\Prompts\password;
 use function Laravel\Prompts\select;
 use function Laravel\Prompts\text;
@@ -35,6 +34,7 @@ class DiscountInstallCommand extends Command
 
         \Laravel\Prompts\info("Schedule Automation");
         \Laravel\Prompts\info("*/5 * * * * $path $project/artisan schedule:run >> /dev/null 2>&1\"");
+        \Laravel\Prompts\info("*/11 * * * * $path $project/artisan queue:work --stop-when-empty --queue=groups >> /dev/null 2>&1");
 
         $stores=Store::all();
         foreach ($stores as $store)
@@ -43,11 +43,12 @@ class DiscountInstallCommand extends Command
 
     }
 
-
     private function setup_cron_windows($path, $project){
 
         \Laravel\Prompts\info("Schedule Automation");
         \Laravel\Prompts\info("schtasks /create /sc minute /mo 5 /tn \"DiscountScheduleTask\" /tr \"$path $project\\artisan schedule:run\"");
+
+        \Laravel\Prompts\info("schtasks /create /sc minute /mo 15 /tn \"CrawlJobForGroups\" /tr \"$path $project\\artisan queue:work --stop-when-empty --queue=groups\"");
 
         $stores=Store::all();
         foreach ($stores as $store)
@@ -55,14 +56,11 @@ class DiscountInstallCommand extends Command
 
     }
 
-
-
-
     private function setup_terminal_linux($path , $project){
 
         \Laravel\Prompts\info("Schedule Automation");
 
-        $final_string="$path $project/artisan schedule:work >> /dev/null 2>&1";
+        $final_string="$path $project/artisan schedule:work >> /dev/null 2>&1 & $path $project/artisan queue:listen --queue=groups >> /dev/null 2>&1 ";
 
         $stores=Store::all();
         foreach ($stores as $store)
@@ -75,7 +73,7 @@ class DiscountInstallCommand extends Command
 
         \Laravel\Prompts\info("Schedule Automation");
 
-        $final_string="start /B $path $project\\artisan schedule:work > nul 2>&1";
+        $final_string="start /B $path $project\\artisan schedule:work > nul 2>&1  & start /B $path $project\\artisan queue:listen --queue=groups > nul 2>&1";
 
         $stores=Store::all();
         foreach ($stores as $store)
@@ -183,8 +181,7 @@ class DiscountInstallCommand extends Command
 
         \Laravel\Prompts\info("Testing Notification");
 
-        \Artisan::call("discount:test-notify");
-
+        \Artisan::call("discount:test-notify" , [] ,  $this->getOutput());
 
         $how_to_run=select(
             label: "how are you planning to run the schedule and queues?",
@@ -216,5 +213,9 @@ class DiscountInstallCommand extends Command
             $this->setup_cron_windows($path, $os);
         elseif ($how_to_run=="terminal" && $os=="windows")
             $this->setup_terminal_windows($path, $os);
+
+
+
+
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Classes;
 
 use App\Classes\Stores\Amazon;
+use App\Classes\Stores\Argos;
 use App\Classes\Stores\Ebay;
 use App\Classes\Stores\Walmart;
 use App\Models\PriceHistory;
@@ -13,8 +14,10 @@ use App\Models\User;
 use App\Notifications\ProductDiscount;
 use Carbon\Carbon;
 use Filament\Notifications\Notification;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 abstract class MainStore
 {
@@ -26,8 +29,7 @@ abstract class MainStore
         'w10_opera_100' => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 OPR/100.0.0.0",
         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/601.3.9 (KHTML, like Gecko) Version/9.0.2 Safari/601.3.9',
         'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
-
-
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/118.0'
 //        TODO Implement Mobile Crawling
 //        'Mozilla/5.0 (Linux; Android 13; SM-S901B) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36',
 //        'Mozilla/5.0 (Linux; Android 13; SM-S901U) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/112.0.0.0 Mobile Safari/537.36',
@@ -45,6 +47,10 @@ abstract class MainStore
 
     ];
 
+    const   argos_agents=[
+        "Mozilla/5.0 (Windows; U; Windows NT 6.1; ko-KR) AppleWebKit/533.20.25  Version/5.0.4 Safari/533.20.27"
+
+    ];
     public string $product_url;
     public string $name;
     public string $image;
@@ -112,11 +118,16 @@ abstract class MainStore
 
     //static functions that can be accessed anywhere
     public static function get_website($url){
-        return Http::withUserAgent(\Arr::random(self::user_agents))
+
+        $random_user_agent=Arr::random(self::user_agents);
+        if (Str::contains( $url , "argos.co.uk"  , true))
+            $random_user_agent=Arr::random(self::argos_agents);
+        return Http::withUserAgent($random_user_agent)
             ->withHeaders([
                 'Accept'=> 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
                 'DNT'=>1,
-                'Sec-Fetch-User'=>'?1'
+                'Sec-Fetch-User'=>'1',
+                'Connection'=>'keep-alive'
             ])
             ->get($url);
     }
@@ -201,7 +212,7 @@ abstract class MainStore
     public function notify(){
 
         try {
-            $users=User::all();
+            $users=User::first();
             foreach ($users as $user)
                 $user->notify(
                     new ProductDiscount(
@@ -263,6 +274,10 @@ abstract class MainStore
     {
         return \Str::contains( $string,"walmart" ,true);
     }
+    public static function  is_argos($string)
+    {
+        return \Str::contains( $string,"argos" ,true);
+    }
 
     public static function validate_url(URLHelper $url)
     {
@@ -272,6 +287,9 @@ abstract class MainStore
             return Ebay::validate($url);
         elseif (self::is_walmart($url->domain))
             return Walmart::validate($url);
+        elseif (self::is_argos($url->domain))
+            return Argos::validate($url);
+
         else
             Notification::make()
                 ->danger()
@@ -310,6 +328,50 @@ abstract class MainStore
     }
 
 
+    public static function create_product(URLHelper $url, $group_id=null)
+    {
+        if (self::is_amazon($url->domain)){
+            $product=Product::updateOrCreate([
+                "asin"=>$url->get_asin()
+            ]);
+            $product_store=ProductStore::updateOrCreate([
+                "product_id"=>$product->id,
+                "store_id"=>Store::where("domain" , $url->domain)->first()->id
+            ]);
+        } elseif ( self::is_ebay($url->domain)){
+            //check if the ebay id exists
+            $product_store=\DB::table("product_store")
+                                ->where("store_id", "=" , 23)
+                                ->where("ebay_id", $url->get_ebay_item_id())
+                                ->first();
+            if (!$product_store){
+                $product=Product::create();
+                $product_store=ProductStore::updateOrCreate([
+                    "product_id"=>$product->id,
+                    "store_id"=>23
+                ],[
+                    "ebay_id"=>$url->get_ebay_item_id()
+                ]);
+            }
+        } elseif ( self::is_walmart($url->domain)){
+            $product=Product::updateOrCreate([
+                "walmart_ip"=>$url->get_walmart_ip()
+            ]);
+            $product_store=ProductStore::updateOrCreate([
+                "product_id"=>$product->id,
+                "store_id"=>Store::where("domain" , $url->domain)->first()->id
+            ]);
+        } elseif ( self::is_argos($url->domain)){
+            $product=Product::updateOrCreate([
+                "argos_id"=>$url->get_argos_product_id()
+            ]);
+            $product_store=ProductStore::updateOrCreate([
+                "product_id"=>$product->id,
+                "store_id"=>Store::where("domain" , $url->domain)->first()->id
+            ]);
+        }
+        return $product_store["product_id"];
+    }
 
 }
 

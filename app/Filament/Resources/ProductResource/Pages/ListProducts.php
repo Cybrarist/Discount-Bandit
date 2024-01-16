@@ -23,8 +23,6 @@ class ListProducts extends ListRecords
         ];
     }
 
-
-
     public function getTabs() : array {
     //get the stores with products in
 

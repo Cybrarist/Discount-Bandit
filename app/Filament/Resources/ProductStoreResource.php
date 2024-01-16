@@ -26,6 +26,7 @@ class ProductStoreResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-m-document';
 
+    protected static ?int $navigationSort=2;
     public static function canCreate() : bool{
      return false;
     }

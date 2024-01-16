@@ -68,4 +68,10 @@ class Product extends Model
     {
         return $this->belongsTo(Store::class , 'store_id')->whereHas('products');
     }
+
+
+    public function groups()
+    {
+        return $this->belongsToMany(Group::class)->withTimestamps()->withPivot("key");
+    }
 }

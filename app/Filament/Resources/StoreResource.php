@@ -28,6 +28,8 @@ class StoreResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-building-storefront';
 
+    protected static ?int $navigationSort=4;
+
     public static function form(Form $form): Form
     {
         return $form

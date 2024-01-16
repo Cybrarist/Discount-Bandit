@@ -60,3 +60,7 @@ https://discord.gg/VBMHvH8tuR
 
 ## Docker
 there is no docker image for beta, since i might need the flexibility to push updates or fix bugs.
+
+
+## Sponsors
+![Jetbrains](https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg)

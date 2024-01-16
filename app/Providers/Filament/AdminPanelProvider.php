@@ -3,9 +3,6 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Resources\StoreResource;
-use App\Filament\Widgets\PriceHitoryChart;
-use App\Models\Team;
-use App\Models\User;
 use Awcodes\FilamentQuickCreate\QuickCreatePlugin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -13,8 +10,6 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\Support\Colors\Color;
-use Filament\Widgets;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
 use FilipFonal\FilamentLogManager\FilamentLogManager;
@@ -26,6 +21,7 @@ use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Jeffgreco13\FilamentBreezy\BreezyCore;
+use Leandrocfe\FilamentApexCharts\FilamentApexChartsPlugin;
 use pxlrbt\FilamentSpotlight\SpotlightPlugin;
 use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
 use ShuvroRoy\FilamentSpatieLaravelBackup\Pages\Backups;
@@ -40,14 +36,18 @@ class AdminPanelProvider extends PanelProvider
             ->id('admin')
             ->path('')
             ->login()
+            ->sidebarCollapsibleOnDesktop()
+            ->maxContentWidth("full")
+            ->brandLogo("storage/bandit.png")
+            ->brandName("Discount Bandit")
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
-            ->pages([
-            ])
-            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
+//            ->pages([
+//                Pages\Dashboard::class
+//            ])
             ->widgets([
                 AccountWidget::class,
-                FilamentInfoWidget::class
+                FilamentInfoWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -60,8 +60,7 @@ class AdminPanelProvider extends PanelProvider
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
                 \Hasnayeen\Themes\Http\Middleware\SetTheme::class
-            ])
-            ->authMiddleware([
+            ])->authMiddleware([
                 Authenticate::class,
             ])->plugins([
                 \Hasnayeen\Themes\ThemesPlugin::make(),
@@ -69,14 +68,8 @@ class AdminPanelProvider extends PanelProvider
                 QuickCreatePlugin::make()->excludes([
                     StoreResource::class
                 ]),
-                BreezyCore::make()->myProfile(
-                    shouldRegisterUserMenu: true, // Sets the 'account' link in the panel User Menu (default = true)
-                    slug: 'my-profile',
-                )
-//                ->enableTwoFactorAuthentication(
-//                    force: true, // force the user to enable 2FA before they can use the application (default = false)
-//                )
-                ,
+                BreezyCore::make()->myProfile()
+                    ->enableTwoFactorAuthentication(),
                 FilamentSpatieLaravelBackupPlugin::make()
                     ->usingPage(Backups::class),
                 FilamentSpatieLaravelHealthPlugin::make(),

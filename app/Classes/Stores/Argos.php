@@ -6,25 +6,29 @@ use App\Classes\MainStore;
 use App\Classes\URLHelper;
 use App\Interfaces\StoreInterface;
 use App\Models\Product;
+use App\Models\ProductStore;
 use Error;
 use Exception;
 use Filament\Notifications\Notification;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use function App\Classes\error;
 
-class Amazon extends MainStore
+class Argos extends MainStore
 {
-    const MAIN_URL="https://store/en/dp/product?tag=referral_code" ;
-    private  $center_column;
+    const MAIN_URL="https://store/product/product_id?tag=referral_code" ;
+    private  $core_product;
     private $right_column;
+    private $accordions;
+
+    private $json_data;
 
     public function __construct($product_store_id) {
         parent::get_record($product_store_id);
 
+        $this->product_url= self::prepare_url($this->total_record->domain, $this->total_record->argos_id);
 
-
-        $this->product_url= self::prepare_url($this->total_record->domain, $this->total_record->asin);
         //crawl the url and get the data
         try {
             parent::crawl_url();
@@ -43,15 +47,22 @@ class Amazon extends MainStore
 
     }
     public function prepare_sections_to_crawl(){
+
         //get the center column to get the related data for it
-        $this->center_column=$this->xml->xpath("//div[@id='centerCol']")[0];
+        $this->core_product=$this->xml->xpath("//section[contains(@class , 'pdp-core')]")[0];
         //get the right column to get the seller and other data
-        $this->right_column=$this->xml->xpath("//div[@id='desktop_buybox']")[0];
+        $this->right_column=$this->xml->xpath("//section[contains(@class , 'pdp-right')]")[0];
+        $this->accordions=$this->xml->xpath("//section[contains(@class , 'pdp-accordions')]")[0];
+
+        //json data
+        $this->json_data=json_decode( str_replace("undefined" , "false" , explode("=" , $this->xml->xpath("body//script[2]")[0]->__toString() , 2)[1]) , true);
+        $this->json_data=Arr::only($this->json_data , "productStore")["productStore"]["data"];
     }
 
     public function crawling_process(){
+
         //if the product already has a name, no need to crawl it again.
-        if (!$this->total_record->product_name){
+        if (!$this->total_record?->product_name){
             $this->get_name();
             $this->get_image();
             $this->update_product_details($this->total_record->product_id ,[
@@ -66,7 +77,6 @@ class Amazon extends MainStore
         $this->get_rate();
         $this->get_seller();
         $this->get_shipping_price();
-
         parent::update_store_product_details(
             $this->total_record->product_store_id,
             [
@@ -101,19 +111,28 @@ class Amazon extends MainStore
     public function get_name(){
 
         try {
-            $this->name = explode(":" ,$this->document->getElementsByTagName("title")->item(0)->textContent)[0];
+            $this->name = $this->json_data["productName"];
             return;
         }
-        catch (Error | Exception $e){
+        catch ( Error | Exception $e) {
             $this->throw_error("Product Name First Method");
         }
 
         try {
-            $this->name = trim($this->center_column->xpath("//span[@id='productname'][1]")[0]
+            $remove_buy = explode("Buy" ,$this->document->getElementsByTagName("title")->item(0)->textContent)[1];
+            $this->name= trim(explode('|' , $remove_buy)[0]) ;
+            return;
+        }
+        catch (Error | Exception $e){
+            $this->throw_error("Product Name Second Method");
+        }
+
+        try {
+            $this->name = trim($this->core_product->xpath("//span[@data-test='product-title'][1]")[0]
                 ->__toString());
         }
         catch ( Error | Exception $e) {
-            $this->throw_error("Product Name Second Method");
+            $this->throw_error("Product Name Third Method");
             $this->name = "NA";
         }
 
@@ -122,143 +141,109 @@ class Amazon extends MainStore
     public function get_image(){
 
         try {
-            $this->image = $this->document->getElementById("landingImage")->getAttribute("data-old-hires");
+            $this->image=$this->json_data["media"]["images"][0];
+            return;
         }
         catch ( Error | Exception $e) {
-            $this->throw_error("The Image");
-            $this->image = "";
+            $this->throw_error("The Image First Method");
+        }
+
+        try {
+            $this->image="https:" . $this->core_product->xpath("//*[@data-test='component-media-gallery']//img[1]")[0]->attributes()->{'src'}->__toString();
+            }
+        catch ( Error | Exception $e) {
+            $this->throw_error("The Image Second Method");
         }
 
     }
     public function get_price(){
         //method 1 to return the price of the product
         try {
-            $this->price= 100 * (float) Str::replace(get_currencies($this->total_record->currency_id) , "" ,$this->center_column->xpath("(//span[contains(@class, 'apexPriceToPay')])[1]")[0]->span->__toString());
+            $this->price= 100 *  $this->json_data["prices"]["attributes"]["now"];
             return ;
         }
         catch ( Error | \Exception  $e )
         {
             $this->throw_error("First Method Price");
         }
-
-        //method 2 to return the price of the product
+//        method 2 to return the price of the product
         try {
-            $whole=Str::remove([",","\u{A0}"] ,
-                $this->center_column
-                    ->xpath("//div[@id='corePriceDisplay_desktop_feature_div']//span[@class='a-price-whole']")[0]
-                    ->__toString());
+            $this->price= 100*  (float) substr($this->right_column->xpath("//li[@itemprop ='price']//h2")[0]->__toString(), 2);
+            return;
+        }
+        catch (Error | \Exception $e ) {
+            $this->throw_error("Price Second");
+        }
 
-            $fraction=Str::remove([",","\u{A0}"] ,
-                $this->center_column
-                    ->xpath("//div[@id='corePriceDisplay_desktop_feature_div']//span[@class='a-price-fraction']")[0]
-                    ->__toString());
-
-            $this->price=  100 * (float)"$whole.$fraction";
+        try {
+            $this->price= 100 *  (float) $this->right_column->xpath("//li[@itemprop ='price']")[0]->attributes()->{'content'}->__toString();
             return;
         }
         catch (Error | \Exception $e )
         {
-            $this->throw_error( "Price Second");
+            $this->throw_error( "Price Third");
             $this->price=0;
         }
 
     }
     public function get_stock(){
-        try {
-            $availability_string=Str::squish($this->document->getElementById("availability")->textContent) ;
-            if (Str::contains($availability_string , "in stock" , true) && Str::length($availability_string) <10){
-                $this->in_stock=true;
-                return;
-            }
 
-            $this->in_stock=false;
-        }catch (\Exception $e){
+        try {
+            $this->in_stock= $this->json_data["attributes"]["deliverable"];
+        }
+        catch (\Exception $e){
             $this->throw_error( "Stock");
             $this->in_stock=true;
         }
     }
     public function get_no_of_rates(){
         try {
-            $ratings=$this->center_column->xpath("//span[@id='acrCustomerReviewText']")[0]->__toString();
-            $this->no_of_rates= (int) get_numbers_only_with_dot($ratings);
+            $this->no_of_rates= (int) $this->json_data["ratingSummary"]["attributes"]["reviewCount"];
+            return;
         }
         catch (Error | Exception $e)
         {
-            $this->throw_error("No. Of Rates");
-            $this->no_of_rates=0;
+            $this->throw_error("No. Of Rates First Method");
+        }
+
+        try {
+            $this->no_of_rates = (int) $this->core_product->xpath("//span[@itemprop='ratingCount']")[0]->__toString();
+        }
+        catch (Error | Exception $e)
+        {
+            $this->throw_error("No. Of Rates Second Method");
         }
     }
     public function get_rate(){
         try {
-            //check if the store is amazon poland or not
-             ($this->total_record->domain == "amazon.pl") ? $exploding='z' : $exploding='out';
-
-            $this->rating= explode(" $exploding" ,
-                $this->center_column->xpath("//div[@id='averageCustomerReviews']//span[@id='acrPopover']//span[@class='a-icon-alt']")[0]->__toString() ,
-                2)[0];
+            $this->rating= round((float) $this->json_data["ratingSummary"]["attributes"]["avgRating"],1);
+            return;
         }
         catch (Error | Exception $e )
         {
-            $this->throw_error("The Rate");
+            $this->throw_error("The Rate First Method");
             $this->rating= -1;
         }
 
     }
     public static function prepare_url($domain, $product, $ref=""){
         return Str::replace(
-            ["store", "product", "referral_code"],
+            ["store", "product_id", "referral_code"],
             [$domain , $product, $ref],
             self::MAIN_URL);
     }
 
     public function get_seller(){
-
-        try {
-            $this->seller=$this
-                ->right_column
-                ->xpath("//div[@id='merchantInfoFeature_feature_div']//div[@class='offer-display-feature-text']//span")[0]
-                ->__toString();
-            return;
-        }
-        catch (Error | Exception $e )
-        {
-            $this->throw_error("The Seller First Method" );
-        }
-
-        try {
-            $this->seller=$this
-                ->right_column
-                ->xpath("//div[@id='merchantInfoFeature_feature_div']//a[@id='sellerProfileTriggerId']")[0]
-                ->__toString();
-            return;
-        }
-        catch (Error | Exception $e )
-        {
-            $this->throw_error("The Seller Second method" );
-        }
-
-        //seller method for subscribe and save items
-        try {
-            $this->seller=$this
-                ->right_column
-                ->xpath("//div[@id='shipsFromSoldByMessage_feature_div']//span")[0]
-                ->__toString();
-            //trim the spaces
-            $this->seller = trim($this->seller);
-            $this->seller=explode('by ' , $this->seller)[1] ?? $this->seller;
-
-            return;
-        }
-        catch (Error | Exception $e )
-        {
-            $this->throw_error("The Seller Third Method" );
-            $this->seller="";
-        }
+        $this->seller="argos";
     }
     public function get_shipping_price(){
+
         try {
-            $shipping_price=$this->right_column->xpath("//div[@id='deliveryBlockMessage']//span[@data-csa-c-delivery-price]")[0]->__toString();
-            $this->shipping_price= (int) Str::finish(Str::replace("." , ""  , get_numbers_only_with_dot($shipping_price) ) , "00");
+            if ($this->json_data["attributes"]["freeDelivery"])
+                $this->shipping_price=0;
+            else
+                $this->shipping_price=  100 * $this->json_data["attributes"]["deliveryPrice"];
+
         }
         catch (Error  | Exception $e)
         {
@@ -273,10 +258,8 @@ class Amazon extends MainStore
     public function check_notification(): bool
     {
 
-
         if ($this->notification_snoozed())
             return false;
-
 
         if ($this->stock_available()){
             $this->notify();
@@ -317,23 +300,23 @@ class Amazon extends MainStore
     {
         $response=self::get_website($url);
         self::prepare_dom($response ,$document ,$xml);
-        try {
-            $array_script = $document->getElementById("twister_feature_div")->getElementsByTagName("script");
-            $array_script=$array_script->item($array_script->count()-1)->nodeValue;
-            $array_script=explode('"dimensionValuesDisplayData"' ,$array_script)[1];
-            $array_script=explode("\n" ,$array_script)[0];
-            $final_string=preg_replace('/\s+[\{\}\:]/', '', $array_script);
-            $array_of_keys_values=explode("]," , $final_string);
+        //json data
+        $json_data=json_decode( str_replace("undefined" , "false" , explode("=" , $xml->xpath("body//script[2]")[0]->__toString() , 2)[1]) , true);
+        $json_data=Arr::only($json_data , "productStore")["productStore"]["data"];
 
-            foreach ($array_of_keys_values as $single)
-            {
-                $key_value=explode(":[", Str::replace(['"' , ']},'], " " , $single));
-                $options[Str::replace(" ", "" , $key_value[0])]= $key_value[1];
+        try {
+            $variants=$json_data["variants"]["attributes"]["variants"];
+            foreach ($variants as $variant) {
+                foreach ($variant["attributes"] as $single_attribute) {
+                    $option_string = $single_attribute["value"] . " - ";
+                }
+                $options[$variant["partNumber"]] =  Str::beforeLast($option_string , " - ") ;
             }
+
             return $options ?? [];
 
         } catch (\Exception $e){
-                 error("couldn't get the variation");
+                 Log::error("couldn't get the variation");
 
             Notification::make()
                 ->danger()
@@ -354,7 +337,7 @@ class Amazon extends MainStore
             foreach ($variations as $single_variation)
                 {
                     $store->products()->withPivot('notify_price')->updateOrCreate(
-                        ['asin'=>$single_variation],
+                        ['argos_id'=>$single_variation],
                         [
                             'favourite' => $settings['favourite'],
                             'lowest_within'=>$settings['lowest_within'],
@@ -387,11 +370,13 @@ class Amazon extends MainStore
     }
 
     //static functions to be called anywhere
-    public static function validate_amazon_url(URLHelper $url)
+    public static function validate_argos_url(URLHelper $url)
     {
         try {
-            $url->get_asin();
-            return true;
+            $url->get_argos_product_id();
+            if (sizeof(explode("/" ,$url->path )) !=3)
+                throw new Exception();
+            return  true;
         }
         catch (\Exception) {
             Notification::make()
@@ -399,9 +384,7 @@ class Amazon extends MainStore
                 ->title("Unrecognized URL scheme")
                 ->body("
                     it should be like the following:<br>
-                    <span style='color:green'> https://$url->domain/dp/unique_code</span>
-                    <br>or<br>
-                    <span style='color: green'> https://$url->domain/gp/product/unique_code</span>")
+                    <span style='color:green'> https://$url->domain/product/unique_code</span>")
                 ->persistent()
                 ->send();
             return false;
@@ -411,11 +394,12 @@ class Amazon extends MainStore
 
     public static function is_product_unique(URLHelper $url  ,$record_id=null)
     {
-        $products_with_the_same_asin=Product::where('asin' , $url->get_asin());
-        if ($record_id)
-            $products_with_the_same_asin->whereNot('id' , $record_id);
+        $products_with_the_same_argos_id=Product::where('argos_id' , $url->get_argos_product_id());
 
-        $product=$products_with_the_same_asin->first();
+        if ($record_id)
+            $products_with_the_same_argos_id->whereNot('product_id' , $record_id);
+
+        $product=$products_with_the_same_argos_id->first();
         if (!$product)
             return true;
         else{
@@ -435,7 +419,7 @@ class Amazon extends MainStore
 
     public static function validate($url)
     {
-        return self::validate_amazon_url($url) && self::is_product_unique($url);
+        return self::validate_argos_url($url) && self::is_product_unique($url);
     }
     public function get_condition()
     {

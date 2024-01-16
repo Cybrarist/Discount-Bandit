@@ -4,7 +4,6 @@ namespace App\Filament\Resources\ProductResource\Pages;
 
 use App\Filament\Resources\ProductResource;
 use App\Filament\Widgets\PriceHistoryChart;
-use App\Filament\Widgets\PriceHitoryChart;
 use App\Jobs\GetProductJob;
 use Carbon\Carbon;
 use Filament\Notifications\Notification;

@@ -14,6 +14,16 @@ return new class extends Migration
         Schema::create('groups', function (Blueprint $table) {
             $table->id();
             $table->timestamps();
+            $table->string("name" );
+            $table->unsignedInteger("notify_price");
+            $table->unsignedInteger("currency_id");
+
+            $table->char('status', 1)->default(\App\Enums\StatusEnum::Published->value);
+            $table->date('snoozed_until')->nullable();
+
+            $table->unsignedTinyInteger('max_notifications')->nullable();
+            $table->unsignedTinyInteger('notifications_sent')->default(0);
+            $table->unsignedSmallInteger('lowest_within')->nullable();
         });
     }
 

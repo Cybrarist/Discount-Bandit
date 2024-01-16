@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Models\User;
+use App\Notifications\GroupDiscount;
 use App\Notifications\ProductDiscount;
 use Illuminate\Console\Command;
 
@@ -28,7 +29,8 @@ class DiscountTestNotificationCommand extends Command
     public function handle()
     {
         $users=User::all();
-        foreach ($users as $user)
+        foreach ($users as $user){
+
             $user->notify(new ProductDiscount(
                 product_name: 'This is a test product',
                 store_name: "this is a test store"  ,
@@ -36,5 +38,9 @@ class DiscountTestNotificationCommand extends Command
                 product_url: "https://cybrarist.com" ,
                 image: "",
                 currency: "$"));
+
+            $user->notify(new GroupDiscount("Cybrarist group" , 100 , "$"));
+        }
+
     }
 }

@@ -2,9 +2,10 @@
 
 namespace App\Enums;
 
+use Filament\Support\Contracts\HasLabel;
 use Illuminate\Support\Arr;
 
-enum StatusEnum : string
+enum StatusEnum : string implements HasLabel
 {
     case Published='p';
     case Disabled='d';
@@ -30,5 +31,10 @@ enum StatusEnum : string
         return [
             self::Disabled,
         ];
+    }
+
+    public function getLabel(): ?string
+    {
+        return $this->name;
     }
 }

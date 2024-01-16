@@ -7,7 +7,8 @@ use App\Classes\Stores\Amazon;
 use App\Classes\Stores\Ebay;
 use App\Classes\URLHelper;
 use App\Filament\Resources\ProductResource;
-use App\Filament\Widgets\PriceHitoryChart;
+use App\Filament\Resources\ProductResource\Widgets\PriceHistoryChart;
+use App\Livewire\BlogCommentsChart;
 use App\Models\Product;
 use App\Models\Store;
 use Filament\Actions;
@@ -87,7 +88,8 @@ class EditProduct extends EditRecord
     {
         if ($this->getRecord()->stores()->count() )
             return [
-                PriceHitoryChart::class
+                PriceHistoryChart::class,
+//                BlogCommentsChart::class
             ];
         return [];
 

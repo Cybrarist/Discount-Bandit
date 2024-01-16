@@ -32,5 +32,10 @@ class ClearNotificationCount extends Command
                 'notifications_sent' => 0
             ]);
 
+        \DB::table('groups')
+            ->update([
+                'notifications_sent' => 0
+            ]);
+
     }
 }

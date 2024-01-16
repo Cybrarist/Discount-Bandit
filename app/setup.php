@@ -24,7 +24,7 @@ function setup_stores() : array{
             'name'=>'Amazon UK',
             'domain'=>'amazon.co.uk',
             'image'=>'amazon_co_uk.png',
-            'referral'=>'cybrarist01-21',
+            'referral'=>'cybrarist07-21',
             'currency_id'=>Currency::firstOrCreate(['code'=>'£'])->id,
             'slug'=>'amazon_uk'
         ],
@@ -32,7 +32,7 @@ function setup_stores() : array{
             'name'=>'Amazon Germany',
             'domain'=>'amazon.de',
             'image'=>'amazon_de.png',
-            'referral'=>'cybrarist0f-21',
+            'referral'=>'cybrarist018-21',
             'currency_id'=>Currency::firstOrCreate(['code'=>'€'])->id,
             'slug'=>'amazon_de'
         ],
@@ -40,7 +40,7 @@ function setup_stores() : array{
             'name'=>'Amazon France',
             'domain'=>'amazon.fr',
             'image'=>'amazon_fr.png',
-            'referral'=>'cybrarist09-21',
+            'referral'=>'cybrarist02-21',
             'currency_id'=>Currency::firstOrCreate(['code'=>'€'])->id,
             'slug'=>'amazon_fr'
         ],
@@ -48,7 +48,7 @@ function setup_stores() : array{
             'name'=>'Amazon Italy',
             'domain'=>'amazon.it',
             'image'=>'amazon_it.png',
-            'referral'=>'cybrarist07f-21',
+            'referral'=>'cybrarist0e-21',
             'currency_id'=>Currency::firstOrCreate(['code'=>'€'])->id,
             'slug'=>'amazon_it'
         ],
@@ -64,7 +64,7 @@ function setup_stores() : array{
             'name'=>'Amazon Spain',
             'domain'=>'amazon.es',
             'image'=>'amazon_es.png',
-            'referral'=>'cybrarist0e4-21',
+            'referral'=>'cybrarist08b-21',
             'currency_id'=>Currency::firstOrCreate(['code'=>'€'])->id,
             'slug'=>'amazon_es'
         ],
@@ -215,6 +215,14 @@ function setup_stores() : array{
             'referral'=>'none',
             'currency_id'=>Currency::firstOrCreate(['code'=>'$'])->id,
             'slug'=>'target_com'
+        ],
+        [
+            'name'=>'Argos UK',
+            'domain'=>'argos.co.uk',
+            'image'=>'argos.png',
+            'referral'=>'none',
+            'currency_id'=>Currency::firstOrCreate(['code'=>'£'])->id,
+            'slug'=>'argos_co_uk'
         ],
 
     ];
