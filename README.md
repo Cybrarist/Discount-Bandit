@@ -13,9 +13,8 @@ i wasn't planning to make the project as this big tbh, so i had to redesign the 
 make it more systematic, thus the previous database will not work, and you have to insert the
 products manually sadly
 
-### will i provide the code to migrate when the app is stable?
-yes, so far i am planning to provide it as an automated step. but since this is a beta release, i want to test for errors and bugs first.
-
+# Documentation
+feel free to access the documentation from [Here](https://discount-bandit.cybrarist.com/extension.html)
 
 ## Deployment
 this is a website, so if you're beginner you need to install some tools first:
