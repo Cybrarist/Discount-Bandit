@@ -14,7 +14,7 @@ make it more systematic, thus the previous database will not work, and you have 
 products manually sadly
 
 # Documentation
-feel free to access the documentation from [Here](https://discount-bandit.cybrarist.com/extension.html)
+feel free to access the documentation from [Here](https://discount-bandit.cybrarist.com/)
 
 
 ## Deployment
