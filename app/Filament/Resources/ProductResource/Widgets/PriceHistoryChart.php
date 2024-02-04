@@ -70,7 +70,7 @@ class PriceHistoryChart extends ApexChartWidget
             foreach ($stores as $index=>$store)
             {
                 if (sizeof($store) == 1)
-                    $services[$index]['data']=[];
+                    $stores[$index]['data']=[];
             }
 
 

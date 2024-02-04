@@ -48,7 +48,6 @@
     "autoload-dev": {
         "files": [
             "app/setup.php",
-            "app/ebay.php",
             "app/helpers.php"
         ],
         "psr-4": {

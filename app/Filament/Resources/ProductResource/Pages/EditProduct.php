@@ -10,6 +10,7 @@ use App\Filament\Resources\ProductResource;
 use App\Filament\Resources\ProductResource\Widgets\PriceHistoryChart;
 use App\Livewire\BlogCommentsChart;
 use App\Models\Product;
+use App\Models\ProductStore;
 use App\Models\Store;
 use Filament\Actions;
 use Filament\Notifications\Notification;
@@ -71,9 +72,26 @@ class EditProduct extends EditRecord
 
         $extra_keys=[];
         $extra_data=['notify_price'=>$data['notify_price'] ?? null,];
+
+
         if ($data['url']){
             $url=new URLHelper($data['url']);
-            if (MainStore::is_ebay($url->domain)){
+
+            //validate the url and check for duplicates
+            if (!MainStore::validate_url($url))
+                $this->halt();
+
+            if (MainStore::is_diy($url->domain)){
+                ProductStore::updateOrCreate([
+                    "store_id" =>  Store::where('domain' , $url->domain)->first()->id,
+                    "key"=>$url->get_diy_id(),
+                    "product_id" => $this->record->id,
+                ],[
+                    "notify_price"=>$this->data['notify_price'] ?? 0,
+                ]);
+
+            }
+            elseif (MainStore::is_ebay($url->domain)){
                 $extra_keys=['ebay_id'=>$url->get_ebay_item_id()];
                 $extra_data=\Arr::add($extra_data , 'remove_if_sold' , $data['remove_if_sold']  ?? null);
             }
@@ -81,6 +99,8 @@ class EditProduct extends EditRecord
             MainStore::insert_other_store(domain: $url->domain , product_id: $this->record->id, extra_keys: $extra_keys, extra_data: $extra_data);
             $this->dispatch('refresh_products_relation');
         }
+
+
         return \Arr::except($data , ["url"]);
     }
 

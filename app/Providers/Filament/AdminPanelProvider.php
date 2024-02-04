@@ -38,7 +38,7 @@ class AdminPanelProvider extends PanelProvider
             ->login()
             ->sidebarCollapsibleOnDesktop()
             ->maxContentWidth("full")
-            ->brandLogo("storage/bandit.png")
+            ->brandLogo("/storage/bandit.png")
             ->brandName("Discount Bandit")
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
@@ -69,7 +69,10 @@ class AdminPanelProvider extends PanelProvider
                     StoreResource::class
                 ]),
                 BreezyCore::make()->myProfile()
-                    ->enableTwoFactorAuthentication(),
+                    ->enableTwoFactorAuthentication()
+                    ->enableSanctumTokens(
+                        permissions: ['get_product'] // optional, customize the permissions (default = ["create", "view", "update", "delete"])
+                    ),
                 FilamentSpatieLaravelBackupPlugin::make()
                     ->usingPage(Backups::class),
                 FilamentSpatieLaravelHealthPlugin::make(),

@@ -12,20 +12,28 @@ use Illuminate\Support\Str;
 
 class Ebay extends MainStore
 {
-    const MAIN_URL="https://store/itm/product?tag=referral_code" ;
+    const MAIN_URL="https://store/itm/product_id" ;
 
     private $right_column;
     private $left_column;
     private $information;
     public function __construct($product_store_id) {
+
         parent::get_record($product_store_id);
 
-        $this->product_url= self::prepare_url($this->total_record->domain, $this->total_record->ebay_id);
+        //prepare the url template
+        $this->product_url= parent::prepare_url(
+            domain: $this->current_record->store->domain,
+            product: $this->current_record->ebay_id,
+            store_url_template: self::MAIN_URL,
+        );
+
         try {
             parent::crawl_url();
             $this->prepare_sections_to_crawl();
         }
-        catch (\Exception){
+        catch (\Exception $exception){
+            dd($exception);
             Log::error("Couldn't Crawl the website for the following url $this->product_url \n");
             return;
         }
@@ -38,12 +46,7 @@ class Ebay extends MainStore
     /**
      * Helper Function for crawling
      */
-    public static function prepare_url($domain, $product, $ref=""){
-        return Str::replace(
-            ["store", "product", "referral_code"],
-            [$domain , $product, $ref],
-            self::MAIN_URL);
-    }
+
     public function prepare_sections_to_crawl(): void{
         try{
             $this->information=json_decode(
@@ -52,14 +55,13 @@ class Ebay extends MainStore
                     ->__toString());
             $this->information= \Arr::keyBy($this->information , '@type')['Product'];
 
-
         }catch (\Exception $e){
             $this->throw_error("Information Crawling");
         }
 
         try {
-            //get the center column to get the related data for it
-            $this->left_column=$this->xml->xpath("//div[@id='LeftSummaryPanel']")[0];
+//            //get the center column to get the related data for it
+//            $this->left_column=$this->xml->xpath("//div[@id='LeftSummaryPanel']");
             //get the right column to get the seller and other data
             $this->right_column=$this->xml->xpath("//div[@id='RightSummaryPanel']")[0];
         }
@@ -75,17 +77,16 @@ class Ebay extends MainStore
         //also check if the product is availble with amazon, since i want to give amazon the priority
         //due to proper naming the products
 
-        $this->get_image();
-        $amazon_stores=ProductStore::where('product_id', $this->total_record->product_id)
+        $amazon_stores=ProductStore::where('product_id', $this->current_record->product_id)
             ->whereHas('store' ,function($query){
                 $query->where('domain' , 'Like' , '%amazon%');
             })->count();
 
 
-        if (!$this->total_record->product_name && !$amazon_stores){
+        if (!$this->current_record->product->name && !$amazon_stores){
             $this->get_name();
             $this->get_image();
-            $this->update_product_details($this->total_record->product_id ,[
+            $this->update_product_details($this->current_record->product_id ,[
                 'name'=>$this->name,
                 'image'=>$this->image
             ]);
@@ -97,23 +98,20 @@ class Ebay extends MainStore
         $this->get_condition();
         $this->get_shipping_price();
 
-        parent::update_store_product_details(
-            $this->total_record->product_store_id,
-            [
-                'price' => $this->price,
-//                'number_of_rates' => $this->no_of_rates,
-                'seller' => $this->seller,
-//                'rate' => $this->rating,
-                'shipping_price' => $this->shipping_price,
-                'condition'=>$this->condition,
-                'in_stock'=>$this->in_stock,
-                'notifications_sent' => ($this->check_notification()) ? ++$this->total_record->notifications_sent : $this->total_record->notifications_sent ,
-            ]
-        );
+
+        $this->current_record->update([
+            'price' => (float) $this->price,
+            'seller' => $this->seller,
+            'shipping_price' => $this->shipping_price,
+            'condition'=>$this->condition,
+            'in_stock'=>$this->in_stock,
+            'notifications_sent' => ($this->check_notification()) ? ++$this->current_record->notifications_sent : $this->current_record->notifications_sent ,
+        ]);
+
 
         parent::record_price_history(
-            product_id: $this->total_record->product_id,
-            store_id: $this->total_record->store_id,
+            product_id: $this->current_record->product_id,
+            store_id: $this->current_record->store_id,
             price: $this->price
         );
 
@@ -132,7 +130,7 @@ class Ebay extends MainStore
         }
 
         try {
-            $this->name=$this->left_column->xpath("//h1[@class='x-item-title__mainTitle']//span")[0]->__toString();
+            $this->name=$this->right_column->xpath("//h1[@class='x-item-title__mainTitle']//span")[0]->__toString();
         }
         catch ( Exception $e) {
             $this->throw_error("Second Method Name");
@@ -152,14 +150,13 @@ class Ebay extends MainStore
     }
     public function get_price(): void {
         try {
-            $price_string=$this->information->offers->price;
-            $this->price= 100 * $price_string;
+            $this->price=(float) $this->information->offers->price;
         }
         catch (\Exception  $e )
         {
             $this->throw_error("Price First Method");
+            $this->price=0;
         }
-
 
     }
     public function get_stock(): void {
@@ -168,6 +165,7 @@ class Ebay extends MainStore
             ($schema=="instock") ? $this->in_stock = true : $this->in_stock=false;
         } catch (\Exception $e){
             $this->throw_error("Stock Availability");
+            $this->in_stock = true;
         }
 
     }
@@ -177,9 +175,18 @@ class Ebay extends MainStore
         }
         catch (\Error | \Exception $e )
         {
-            $this->throw_error("The Seller");
+            $this->throw_error("The Seller First Method");
+        }
+
+        try {
+            $this->seller=$this->right_column->xpath("//div[@class='x-sellercard-atf__info__about-seller']//span")[0]->__toString();
+        }
+        catch (\Error | \Exception $e )
+        {
+            $this->throw_error("The Seller Second Method");
             $this->seller="NA";
         }
+
 
     }
     public function  get_condition(): void{
@@ -195,7 +202,7 @@ class Ebay extends MainStore
     public function get_shipping_price(){
 
         try{
-            $this->shipping_price=(int)((float) ($this->information->offers->shippingDetails->shippingRate->value) * 100);
+            $this->shipping_price= (float) ($this->information->offers->shippingDetails->shippingRate->value);
         }catch (\Exception $e){
             $this->throw_error("Shipping Price");
             $this->shipping_price=0;
@@ -247,6 +254,7 @@ class Ebay extends MainStore
     {
         return self::validate_ebay_url($url) && self::is_product_unique($url) ;
     }
+
     public function check_notification(): bool
     {
         if ($this->notification_snoozed())
@@ -263,11 +271,11 @@ class Ebay extends MainStore
 
         //todo check if ebay is selling or everything through 3rd party
 
-        if ($this->total_record->lowest_within &&
+        if ($this->current_record->product->lowest_within &&
             parent::is_price_lowest_within(
-                product_id:  $this->total_record->product_id ,
-                store_id: $this->total_record->store_id,
-                days: $this->total_record->lowest_within,
+                product_id:  $this->current_record->product_id ,
+                store_id: $this->current_record->store_id,
+                days: $this->current_record->product->lowest_within,
                 price: $this->price
             )){
             $this->notify();
@@ -285,7 +293,6 @@ class Ebay extends MainStore
         return false;
     }
     public function get_no_of_rates(){
-
 
         //todo check if ebay enabled the rating again
 //        try {
@@ -318,3 +325,4 @@ class Ebay extends MainStore
 
 
 }
+

@@ -32,6 +32,7 @@ class Product extends Model
     public function stores()
     {
         return $this->belongsToMany(Store::class)->withTimestamps()->withPivot([
+            "id",
             //data
             'price',
             'notify_price',

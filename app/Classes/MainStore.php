@@ -4,6 +4,7 @@ namespace App\Classes;
 
 use App\Classes\Stores\Amazon;
 use App\Classes\Stores\Argos;
+use App\Classes\Stores\DIY;
 use App\Classes\Stores\Ebay;
 use App\Classes\Stores\Walmart;
 use App\Models\PriceHistory;
@@ -14,6 +15,7 @@ use App\Models\User;
 use App\Notifications\ProductDiscount;
 use Carbon\Carbon;
 use Filament\Notifications\Notification;
+use http\Message\Body;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -21,7 +23,7 @@ use Illuminate\Support\Str;
 
 abstract class MainStore
 {
-
+    protected ProductStore $current_record;
     const  user_agents = [
         'w10_chrome_114' => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
         'w10_edge_114' => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 Edg/114.0.1823.67",
@@ -49,33 +51,28 @@ abstract class MainStore
 
     const   argos_agents=[
         "Mozilla/5.0 (Windows; U; Windows NT 6.1; ko-KR) AppleWebKit/533.20.25  Version/5.0.4 Safari/533.20.27"
-
     ];
-    public string $product_url;
-    public string $name;
-    public string $image;
-    public string $price;
-    public string $seller;
-    public string $rating;
-    public int $no_of_rates;
-    public int $shipping_price;
-    public bool $in_stock;
-    public string $condition;
 
-
+    protected string $product_url;
+    protected string $name;
+    protected string $image;
+    protected string $price;
+    protected string $seller;
+    protected string $rating;
+    protected int $no_of_rates;
+    protected float $shipping_price;
+    protected bool $in_stock;
+    protected string $condition;
 
     //shared across all the classes inherted
-    public ?\DOMDocument $document = null;
-    public $xml;
-    public $total_record;
+    protected ?\DOMDocument $document = null;
+    protected $xml;
 
     abstract public function crawling_process();
 
     /**
      * Helper Function for crawling
      */
-    abstract public static function prepare_url($domain , $store, $ref);
-
     public static function get_numbers_only_with_dots($string)
     {
         return preg_replace('/[^0-9.]/', '', $string);
@@ -102,14 +99,16 @@ abstract class MainStore
     abstract public function check_notification();
     public function stock_available(){
         //check if the stock option is enabled, also the previous crawl was out of stock  and the current is in stock
-        return $this->total_record->stock && !$this->total_record->in_stock && $this->in_stock;
+        return $this->current_record->product->stock &&!$this->current_record->in_stock && $this->in_stock ;
     }
     public function price_crawled_and_different_from_database(){
+
         //check that we have the crawled price, and that is different from the database.
-        return  $this->price &&
-            $this->price != -1 &&
-            $this->price != $this->total_record->price &&
-            $this->total_record->price;
+        return  $this->price > 0 &&
+            $this->price != $this->current_record->price;
+
+
+
     }
     abstract public function prepare_sections_to_crawl();
 
@@ -122,12 +121,15 @@ abstract class MainStore
         $random_user_agent=Arr::random(self::user_agents);
         if (Str::contains( $url , "argos.co.uk"  , true))
             $random_user_agent=Arr::random(self::argos_agents);
+        elseif (Walmart::is_walmart($url))
+            $random_user_agent=Str::random();
+
         return Http::withUserAgent($random_user_agent)
             ->withHeaders([
-                'Accept'=> 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+                'Accept'=> '*/*',
                 'DNT'=>1,
                 'Sec-Fetch-User'=>'1',
-                'Connection'=>'keep-alive'
+                'Connection'=>'keep-alive',
             ])
             ->get($url);
     }
@@ -138,19 +140,20 @@ abstract class MainStore
 //        $document->getElementById()
         $xml = simplexml_import_dom($document);
     }
-    public static function is_price_lowest_within(int $product_id=null,int $store_id=null, int $days=null , int $price=0)
+    public static function is_price_lowest_within($product_id=null,$store_id=null, $days=null , $price=0)
     {
-        //if the current price is lower or equal to prices from x previous days, notify immediately
-        $lowest_price_in_database=\DB::table('price_histories')
-            ->where('date' , '>=' , Carbon::today()->subDay($days)->toDateString())
-            ->where('product_id', '=',  $product_id)
-            ->where('store_id', '=',  $store_id)
-            ->min('price');
 
-        return ($lowest_price_in_database > $price && $lowest_price_in_database!=0);
+        $lowest_price_in_database = PriceHistory::where('date' , '>=' , Carbon::today()->subDay($days)->toDateString())
+                ->where([
+                    "product_id" => $product_id,
+                    "store_id" => $store_id
+                ])->min("price");
+
+
+        return ($price * 100 <= $lowest_price_in_database  && $lowest_price_in_database !=0);
     }
 
-    public static function record_price_history (int $product_id , int $store_id ,int $price=0)
+    public static function record_price_history (int $product_id , int $store_id ,float $price=0)
     {
         if ($price <=0)
             return;
@@ -160,10 +163,9 @@ abstract class MainStore
                 'product_id' =>  $product_id,
                 'store_id' =>$store_id,
                 'date'=>\Carbon\Carbon::today()->toDateString(),
-            ],
-                [
-                    'price'=> $price
-                ]
+            ], [
+                'price'=> $price
+            ]
             );
 
             if ($history->price > $price)
@@ -184,44 +186,31 @@ abstract class MainStore
         self::prepare_dom($response,$this->document , $this->xml);
     }
     protected function get_record($product_store_id){
-        $this->total_record=\DB::table('product_store')
-            ->where('product_store.id' , "=" , $product_store_id)
-            ->join('stores', 'stores.id' , '=' , 'product_store.store_id')
-            ->join('products' , 'products.id' , '=' , 'product_store.product_id')
-            ->select([
-                'product_store.*',
-                'product_store.id as product_store_id',
-                'products.*',
-                'products.name as product_name',
-                'products.image as product_image',
-                'stores.*',
-                'stores.name as store_name',
-                'stores.image as store_image',
-            ])
-            ->first();
-    }
 
-    public function update_store_product_details( $product_store_id , $data){
-        ProductStore::where('id', $product_store_id)->update($data);
+        $this->current_record= ProductStore::with([
+            "product",
+            "store"
+        ])->find($product_store_id);
+
     }
 
     public function update_product_details($product_id, $data){
 
         Product::find($product_id)->update($data);
     }
+
     public function notify(){
 
         try {
-            $users=User::first();
-            foreach ($users as $user)
+            $user=User::first();
                 $user->notify(
                     new ProductDiscount(
-                        product_name: $this->total_record->product_name ?? $this->name ,
-                        store_name: $this->total_record->store_name,
-                        price: $this->price / 100,
-                        product_url: $this->product_url . $this->total_record->referral,
-                        image: $this->total_record->product_image ?? $this->image,
-                        currency: get_currencies($this->total_record->currency_id)));
+                        product_name: $this->current_record->product->name?? $this->name ,
+                        store_name: $this->current_record->store->name,
+                        price: $this->price,
+                        product_url: $this->product_url . $this->current_record->store->referral,
+                        image: $this->current_record->product->image ?? $this->image,
+                        currency: get_currencies($this->current_record->store->currency_id)));
         }
         catch (\Exception $e)
         {
@@ -230,29 +219,24 @@ abstract class MainStore
 
     }
 
-
     //Validation
     public function price_reached_desired(): bool {
-        if (!$this->price || $this->price <0)
-            return false;
         //if the price is less than the notify price and consider the shipping option
-        if ($this->total_record->add_shipping)
-            return $this->shipping_price + $this->price  <= $this->total_record->notify_price;
+        if ($this->current_record->add_shipping)
+            return $this->shipping_price + $this->price  <= $this->current_record->notify_price ;
         else
-            return $this->price  <= $this->total_record->notify_price;
+            return  $this->price  <= $this->current_record->notify_price;
 
     }
 
     public function max_notification_reached(): bool{
         //if max notifications has been sent, no need to continue.
-
-        return  $this->total_record->max_notifications &&
-                $this->total_record->notifications_sent > $this->total_record->max_notifications;
+        return  $this->current_record->product->max_notifications &&
+                $this->current_record->notifications_sent > $this->current_record->product->max_notifications;
     }
-    public function notification_snoozed(): bool{
-        return $this->total_record->snoozed_until &&  !Carbon::create($this->total_record->snoozed_until)->isPast();
+    public function notification_snoozed(): bool {
+        return $this->current_record->product->snoozed_until && Carbon::create($this->current_record->product->snoozed_until)->isFuture();
     }
-
 
 
     public function  throw_error($part): void
@@ -260,35 +244,37 @@ abstract class MainStore
         Log::error("Couldn't get the $part for the following url : $this->product_url");
     }
 
-    public static function  is_amazon($string)
-    {
-        return \Str::contains( $string,"amazon" ,true);
+    public static function  is_amazon($domain){
+        return \Str::contains( $domain,"amazon" ,true);
     }
 
-    public static function  is_ebay($string)
-    {
-        return \Str::contains( $string,"ebay" ,true);
+    public static function  is_ebay($domain){
+        return \Str::contains( $domain,"ebay" ,true);
     }
 
-    public static function  is_walmart($string)
-    {
-        return \Str::contains( $string,"walmart" ,true);
+    public static function  is_walmart($domain) {
+        return \Str::contains( $domain,"walmart" ,true);
     }
-    public static function  is_argos($string)
-    {
-        return \Str::contains( $string,"argos" ,true);
+    public static function  is_argos($domain) {
+        return \Str::contains( $domain,"argos" ,true);
+    }
+
+    public static function  is_diy($domain) {
+        return Str::contains($domain , "diy.com" , true);
     }
 
     public static function validate_url(URLHelper $url)
     {
         if (self::is_amazon($url->domain) )
-            return  Amazon::validate($url);
+            return Amazon::validate($url);
         elseif (self::is_ebay($url->domain))
             return Ebay::validate($url);
         elseif (self::is_walmart($url->domain))
             return Walmart::validate($url);
         elseif (self::is_argos($url->domain))
             return Argos::validate($url);
+        elseif ( self::is_diy($url->domain))
+            return DIY::validate($url);
 
         else
             Notification::make()
@@ -321,7 +307,8 @@ abstract class MainStore
                 ->body("This store doesn't exist in the database, please check the url")
                 ->persistent()
                 ->send();
-        self::throw_error("linking product with error \n $e");
+
+            Log::error("linking product with error \n $e");
         }
 
 
@@ -373,6 +360,14 @@ abstract class MainStore
         return $product_store["product_id"];
     }
 
+    //new methods added
+    public static function prepare_url($domain, $product, $store_url_template , $ref=""): array|string
+    {
+        return Str::replace(
+            ["store", "product_id", "referral_code"],
+            [$domain , $product, $ref],
+            $store_url_template);
+    }
 }
 
 

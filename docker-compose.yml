@@ -6,7 +6,7 @@ networks:
 
 services:
     discount-bandit:
-        image: cybrarist/discount-bandit:v3-arm
+        image: cybrarist/discount-bandit:testarm
         ports:
             - 8080:80
         networks:

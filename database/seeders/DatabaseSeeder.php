@@ -2,9 +2,6 @@
 
 namespace Database\Seeders;
 
-// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use App\Models\Currency;
-use App\Models\Product;
 use App\Models\Store;
 use Illuminate\Database\Seeder;
 

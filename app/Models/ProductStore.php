@@ -10,11 +10,14 @@ class ProductStore extends Pivot
 {
     //
 
+
     protected $casts=[
         'price'=>Money::class,
         'notify_price'=>Money::class,
         'shipping_price'=>Money::class,
     ];
+
+    protected $guarded=[];
 
     public function product()
     {

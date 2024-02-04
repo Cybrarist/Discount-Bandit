@@ -32,7 +32,7 @@ function prepare_multiple_prices_in_table($record){
         else
             $color_string="red";
 
-        return  "<span  style='color:$color_string'>" . $currencies[$model->currency_id] . $model->pivot->price/100 ." </span>";}
+        return  "<span  style='color:$color_string'>" . $currencies[$model->currency_id] . \Illuminate\Support\Number::format($model->pivot->price / 100  , maxPrecision: 2) ." </span>";}
     )->implode("<br>");
 
     return  \Illuminate\Support\Str::of($prices)->toHtmlString();
@@ -43,9 +43,8 @@ function prepare_multiple_notify_prices_in_table($record){
 
     $currencies=get_currencies();
     $notify_prices= $record->stores->map(function ($model) use ($currencies) {
-        return  $currencies[$model->currency_id]  . $model->pivot->notify_price / 100 . " " ;
+        return  $currencies[$model->currency_id]  . Number::format( $model->pivot->notify_price / 100 , maxPrecision: 2) . " " ;
     })->implode("<br>");
-
 
     return  \Illuminate\Support\Str::of($notify_prices)->toHtmlString();
 }

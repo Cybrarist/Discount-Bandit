@@ -32,7 +32,6 @@ use Str;
 class ProductResource extends Resource
 {
     protected static ?string $model = Product::class;
-
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?int $navigationSort=1;
 
@@ -40,26 +39,28 @@ class ProductResource extends Resource
     {
         return $form
             ->schema([
+
                 TextInput::make('name')
                     ->nullable()
                     ->hiddenOn(Pages\CreateProduct::class)
                     ->disabledOn(['create']),
 
                 TextInput::make('url')
-                    ->nullable()
-                    ->url()
+                    ->required(function ($operation){
+                        return $operation=="create";
+                    })->url()
+                    ->activeUrl()
                     ->label('URL of product')
                     ->live(onBlur: true )
-                    ->afterStateUpdated(function ($state, string $operation){
-                        if ($operation !="edit" && $state !=null){
+                    ->afterStateUpdated(function ($state){
+                        if  ($state){
                             $url=new URLHelper($state);
                             MainStore::validate_url($url);
                         }
-
                     }),
 
                 Select::make('status')
-                    ->options(StatusEnum::to_array())
+                    ->options(StatusEnum::class)
                     ->default(StatusEnum::Published)
                     ->preload()
                     ->native(false),
@@ -154,7 +155,7 @@ class ProductResource extends Resource
                                     ($record && $record->stores()->where('domain' , 'like' , "%amazon%")->count());
                         }),
 
-//                Amazon Settings
+//                Argos Settings
                 Section::make('Argos Settings')
                         ->columns(4)
                         ->schema([
@@ -262,23 +263,28 @@ class ProductResource extends Resource
                     ->limit(50)
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\SelectColumn::make('status')->options(StatusEnum::to_array()),
-//                Tables\Columns\TextColumn ::make('stores.name')->formatStateUsing(function ($state){
-//                    return Str::of(Str::replace("," , "<br>" , $state))->toHtmlString() ;
-//                }),
-                Tables\Columns\TextColumn::make('stores.pivot.price')->formatStateUsing(function ($record){
+                Tables\Columns\SelectColumn::make('status')
+                    ->options(StatusEnum::class),
+                Tables\Columns\TextColumn ::make('stores.name')->formatStateUsing(function ($state){
+                    return Str::of(Str::replace("," , "<br>" , $state))->toHtmlString() ;
+                }),
+                Tables\Columns\TextColumn::make('product_store.price')->formatStateUsing(function ($record){
                     return prepare_multiple_prices_in_table($record);
                 })->label('Prices'),
-                Tables\Columns\TextColumn::make('stores.pivot.notify_price')->formatStateUsing(function ($record){
+
+                Tables\Columns\TextColumn::make('product_store.notify_price')->formatStateUsing(function ($record){
                     return prepare_multiple_notify_prices_in_table($record);
                 }  )->label('Notify at'),
 
                 ToggleIconColumn::make('favourite')
                     ->onIcon("heroicon-s-star")
                     ->offIcon("heroicon-o-star"),
-                TextColumn::make('stores.updated_at')->formatStateUsing(function ($record){
+
+                TextColumn::make('stores.updated_at')
+                    ->formatStateUsing(function ($record){
                     return prepare_multiple_update_in_table($record);
-                })->label('Last Update'),
+                })
+                    ->label('Last Update'),
 
 
             ])

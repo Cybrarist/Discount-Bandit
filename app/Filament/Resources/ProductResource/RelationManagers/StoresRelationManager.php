@@ -7,6 +7,8 @@ use App\Classes\Stores\Amazon;
 use App\Classes\Stores\Ebay;
 use App\Classes\Stores\Walmart;
 use App\Enums\StatusEnum;
+use App\Models\PriceHistory;
+use App\Models\ProductStore;
 use App\Models\Store;
 use Filament\Forms;
 use Filament\Forms\Components\TextInput;
@@ -37,19 +39,18 @@ class StoresRelationManager extends RelationManager
     public function table(Table $table): Table
     {
 
-        $table->allowDuplicates(true);
         return $table
+            ->allowDuplicates()
             ->recordTitleAttribute('name')
             ->columns([
-
                 Tables\Columns\TextColumn::make('name')
                     ->color("warning")
                     ->url( function ($record) {
                         //todo make static function for the following
                         if ( MainStore::is_amazon($record->domain))
-                            return Amazon::prepare_url($record->domain , $this->ownerRecord->asin ,$record->referral);
+                            return Amazon::prepare_url($record->domain , $this->ownerRecord->asin ,Amazon::MAIN_URL, $record->referral);
                         elseif ( MainStore::is_ebay($record->domain))
-                            return Ebay::prepare_url($record->domain , $record->ebay_id ,$record->referral);
+                            return Ebay::prepare_url($record->domain , $record->ebay_id ,Ebay::MAIN_URL , $record->referral);
                         elseif ( MainStore::is_walmart($record->domain))
                             return Walmart::prepare_url($record->domain , $this->ownerRecord->walmart_ip ,$record->referral);
                     } ,true),
@@ -146,7 +147,18 @@ class StoresRelationManager extends RelationManager
 
                     return $record;
                 }),
-                Tables\Actions\DetachAction::make()->label("Remove"),
+                Tables\Actions\DetachAction::make()->label("Remove")->after(function ($record){
+                    if (ProductStore::where([
+                        "store_id" => $record->store_id,
+                        "product_id" => $record->product_id
+                    ])->count() ==0)
+                        PriceHistory::where([
+                            "store_id" => $record->store_id,
+                            "product_id" => $record->product_id,
+                        ])->delete();
+
+
+                }),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

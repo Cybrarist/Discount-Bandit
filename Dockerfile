@@ -92,6 +92,7 @@ RUN (crontab -l ; echo "*/5 * * * * /usr/local/bin/php /var/www/html/discount-ba
     (crontab -l ; echo "*/6 * * * * /usr/local/bin/php /var/www/html/discount-bandit/artisan queue:work --stop-when-empty --queue=walmart_ca >> /dev/null 2>&1") | crontab - && \
     (crontab -l ; echo "*/6 * * * * /usr/local/bin/php /var/www/html/discount-bandit/artisan queue:work --stop-when-empty --queue=target_com >> /dev/null 2>&1") | crontab - && \
     (crontab -l ; echo "*/6 * * * * /usr/local/bin/php /var/www/html/discount-bandit/artisan queue:work --stop-when-empty --queue=argos_co_uk >> /dev/null 2>&1") | crontab - && \
+    (crontab -l ; echo "*/6 * * * * /usr/local/bin/php /var/www/html/discount-bandit/artisan queue:work --stop-when-empty --queue=diy_com >> /dev/null 2>&1") | crontab - && \
     (crontab -l ; echo "*/11 * * * * /usr/local/bin/php /var/www/html/discount-bandit/artisan queue:work --stop-when-empty --queue=groups >> /dev/null 2>&1") | crontab -
 
 

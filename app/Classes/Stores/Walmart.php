@@ -16,14 +16,21 @@ use function App\Classes\error;
 
 class Walmart extends MainStore
 {
-    const MAIN_URL="https://store/ip/product" ;
+    const MAIN_URL="https://store/ip/product_id" ;
 
 //    ?tag=referral_code
     private $information;
 
     public function __construct($product_store_id) {
         parent::get_record($product_store_id);
-        $this->product_url= self::prepare_url($this->total_record->domain, $this->total_record->walmart_ip);
+
+        $this->product_url= parent::prepare_url(
+            domain:  $this->current_record->store->domain,
+            product:  $this->current_record->product->walmart_ip ,
+            store_url_template: self::MAIN_URL);
+
+
+
         //crawl the url and get the data
         try {
             parent::crawl_url();
@@ -42,23 +49,26 @@ class Walmart extends MainStore
 
     }
     public function prepare_sections_to_crawl(){
-        $product_info= $this->xml->xpath("//script[@type='application/ld+json']")[0]->__toString();
-        $this->information=json_decode($product_info);
+        try {
+            $product_info= $this->xml->xpath("//script[@type='application/ld+json']")[0];
+            $this->information=json_decode($product_info);
+        }catch (Exception $e){
+            $this->throw_error("Couldn't Crawl Walmart Product");
+        }
+
     }
 
     public function crawling_process(){
 
-
         //if the product already has a name, no need to crawl it again.
-        if (!$this->total_record->product_name){
+        if (!$this->current_record->product->name || !$this->current_record->product->image){
             $this->get_name();
             $this->get_image();
-            $this->update_product_details($this->total_record->product_id ,[
+            $this->update_product_details($this->current_record->product_id ,[
                 'name'=>$this->name,
                 'image'=>$this->image
             ]);
         }
-
 
         $this->get_price();
         $this->get_stock();
@@ -67,23 +77,20 @@ class Walmart extends MainStore
         $this->get_condition();
 //        $this->get_shipping_price();
 
-        parent::update_store_product_details(
-            $this->total_record->product_store_id,
-            [
-            'price' => (int) $this->price,
+        $this->current_record->update([
+            'price' =>  $this->price,
             'number_of_rates' => $this->no_of_rates,
             'seller' => "Walmart",
             'rate' => $this->rating,
             'shipping_price' => 0,
             'condition'=>"new",
             'in_stock'=>$this->in_stock,
-            'notifications_sent' => ($this->check_notification()) ? ++$this->total_record->notifications_sent : $this->total_record->notifications_sent ,
-            ]
-        );
+            'notifications_sent' => ($this->check_notification()) ? ++$this->current_record->notifications_sent : $this->current_record->notifications_sent ,
+        ]);
 
         parent::record_price_history(
-            product_id: $this->total_record->product_id,
-            store_id: $this->total_record->store_id,
+            product_id: $this->current_record->product_id,
+            store_id: $this->current_record->store_id,
             price: $this->price
         );
 
@@ -125,7 +132,7 @@ class Walmart extends MainStore
     public function get_price(){
         //method 1 to return the price of the product
         try {
-            $this->price= 100 * (float) $this->information->offers->price;
+            $this->price=  $this->information->offers->price;
             return ;
         }
         catch ( Error | \Exception  $e )
@@ -133,7 +140,7 @@ class Walmart extends MainStore
             $this->throw_error("First Method Price");
         }
         try {
-            $this->price= 100 * (float) self::get_numbers_only_with_dots($this->xml->xpath("//span[@itemprop='price']")[0]->__toString());
+            $this->price = self::get_numbers_only_with_dots($this->xml->xpath("//span[@itemprop='price']")[0]->__toString());
         }
         catch ( Error | \Exception  $e )
         {
@@ -185,12 +192,6 @@ class Walmart extends MainStore
             $this->rating="NA";
         }
 
-    }
-    public static function prepare_url($domain, $product, $ref=""){
-        return Str::replace(
-            ["store", "product", "referral_code"],
-            [$domain , $product, $ref],
-            self::MAIN_URL);
     }
 
     public function get_seller(){
@@ -266,11 +267,11 @@ class Walmart extends MainStore
         if (!$this->price_crawled_and_different_from_database())
             return false;
 
-        if ($this->total_record->lowest_within &&
+        if ($this->current_record->lowest_within &&
             parent::is_price_lowest_within(
-                product_id:  $this->total_record->product_id ,
-                store_id: $this->total_record->store_id,
-                days: $this->total_record->lowest_within,
+                product_id:  $this->current_record->product_id ,
+                store_id: $this->current_record->store_id,
+                days: $this->current_record->lowest_within,
                 price: $this->price
             )){
 

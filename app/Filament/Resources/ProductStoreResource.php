@@ -116,14 +116,11 @@ class ProductStoreResource extends Resource
                     ->toggle(),
 
 
-            ])->filtersLayout(Tables\Enums\FiltersLayout::AboveContent)->deferLoading(true)
+            ])->filtersLayout(Tables\Enums\FiltersLayout::AboveContent)
+            ->deferLoading(true)
             ->actions([
-                Tables\Actions\EditAction::make(),
             ])
             ->bulkActions([
-                Tables\Actions\BulkActionGroup::make([
-                    Tables\Actions\DeleteBulkAction::make(),
-                ]),
             ])
             ->emptyStateActions([
             ]);

@@ -224,21 +224,14 @@ function setup_stores() : array{
             'currency_id'=>Currency::firstOrCreate(['code'=>'£'])->id,
             'slug'=>'argos_co_uk'
         ],
+        [
+            'name'=>'DIY',
+            'domain'=>'diy.com',
+            'image'=>'diy_com.svg',
+            'referral'=>'none',
+            'currency_id'=>Currency::firstOrCreate(['code'=>'£'])->id,
+            'slug'=>'diy_com'
+        ],
 
     ];
 }
-//
-//function setup_main_user() :void {
-//    $users=User::all()->count();
-//    if ($users == 0)
-//        \App\Models\User::factory()->create([
-//            'name' => env( 'USER_NAME' , 'Test User'),
-//            'email' => env( 'USER_EMAIL_ADDRESS' , 'test@test.com'),
-//            'password'=>env('USER_PASSWORD', 'password')
-//        ]);
-//}
-
-
-
-///Check the following
-/// applicablePromotionList_feature_div

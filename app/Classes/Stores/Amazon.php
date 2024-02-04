@@ -6,6 +6,7 @@ use App\Classes\MainStore;
 use App\Classes\URLHelper;
 use App\Interfaces\StoreInterface;
 use App\Models\Product;
+use App\Models\ProductStore;
 use Error;
 use Exception;
 use Filament\Notifications\Notification;
@@ -15,26 +16,29 @@ use function App\Classes\error;
 
 class Amazon extends MainStore
 {
-    const MAIN_URL="https://store/en/dp/product?tag=referral_code" ;
+    const MAIN_URL="https://store/en/dp/product_id?tag=referral_code" ;
     private  $center_column;
     private $right_column;
 
     public function __construct($product_store_id) {
+
         parent::get_record($product_store_id);
+        //prepare the url template
+        $this->product_url= parent::prepare_url(
+            domain: $this->current_record->store->domain,
+            product: $this->current_record->product->asin,
+            store_url_template: self::MAIN_URL,
+        );
 
-
-
-        $this->product_url= self::prepare_url($this->total_record->domain, $this->total_record->asin);
         //crawl the url and get the data
         try {
             parent::crawl_url();
             self::prepare_sections_to_crawl();
         }
-        catch (\Exception){
+        catch (\Exception $exception){
             Log::error("Couldn't Crawl the website for the following url $this->product_url \n");
             return;
         }
-
         //crawl the website to get the important information
         $this->crawling_process();
 
@@ -51,10 +55,10 @@ class Amazon extends MainStore
 
     public function crawling_process(){
         //if the product already has a name, no need to crawl it again.
-        if (!$this->total_record->product_name){
+        if (!$this->current_record->product->name || !$this->current_record->product->image){
             $this->get_name();
             $this->get_image();
-            $this->update_product_details($this->total_record->product_id ,[
+            $this->update_product_details($this->current_record->product_id ,[
                 'name'=>$this->name,
                 'image'=>$this->image
             ]);
@@ -67,24 +71,21 @@ class Amazon extends MainStore
         $this->get_seller();
         $this->get_shipping_price();
 
-        parent::update_store_product_details(
-            $this->total_record->product_store_id,
-            [
-            'price' => (int)((float)$this->price),
+        $this->current_record->update([
+            'price' => (float)$this->price,
             'number_of_rates' => $this->no_of_rates,
             'seller' => $this->seller,
             'rate' => $this->rating,
             'shipping_price' => $this->shipping_price,
             'condition'=>"new",
             'in_stock'=>$this->in_stock,
-            'notifications_sent' => ($this->check_notification()) ? ++$this->total_record->notifications_sent : $this->total_record->notifications_sent ,
-            ]
-        );
+            'notifications_sent' => ($this->check_notification()) ? ++$this->current_record->notifications_sent : $this->current_record->notifications_sent ,
+        ]);
 
         parent::record_price_history(
-            product_id: $this->total_record->product_id,
-            store_id: $this->total_record->store_id,
-            price: $this->price
+            product_id: $this->current_record->product_id,
+            store_id: $this->current_record->store_id,
+            price:  $this->price
         );
 
     }
@@ -133,7 +134,8 @@ class Amazon extends MainStore
     public function get_price(){
         //method 1 to return the price of the product
         try {
-            $this->price= 100 * (float) Str::replace(get_currencies($this->total_record->currency_id) , "" ,$this->center_column->xpath("(//span[contains(@class, 'apexPriceToPay')])[1]")[0]->span->__toString());
+            $this->price=  (float) Str::replace(get_currencies($this->current_record->currency_id) , "" ,$this->center_column->xpath("(//span[contains(@class, 'apexPriceToPay')])[1]")[0]->span->__toString());
+
             return ;
         }
         catch ( Error | \Exception  $e )
@@ -153,7 +155,7 @@ class Amazon extends MainStore
                     ->xpath("//div[@id='corePriceDisplay_desktop_feature_div']//span[@class='a-price-fraction']")[0]
                     ->__toString());
 
-            $this->price=  100 * (float)"$whole.$fraction";
+            $this->price=  (float)"$whole.$fraction";
             return;
         }
         catch (Error | \Exception $e )
@@ -191,7 +193,7 @@ class Amazon extends MainStore
     public function get_rate(){
         try {
             //check if the store is amazon poland or not
-             ($this->total_record->domain == "amazon.pl") ? $exploding='z' : $exploding='out';
+             ($this->current_record->domain == "amazon.pl") ? $exploding='z' : $exploding='out';
 
             $this->rating= explode(" $exploding" ,
                 $this->center_column->xpath("//div[@id='averageCustomerReviews']//span[@id='acrPopover']//span[@class='a-icon-alt']")[0]->__toString() ,
@@ -203,12 +205,6 @@ class Amazon extends MainStore
             $this->rating= -1;
         }
 
-    }
-    public static function prepare_url($domain, $product, $ref=""){
-        return Str::replace(
-            ["store", "product", "referral_code"],
-            [$domain , $product, $ref],
-            self::MAIN_URL);
     }
 
     public function get_seller(){
@@ -258,10 +254,12 @@ class Amazon extends MainStore
     public function get_shipping_price(){
         try {
             $shipping_price=$this->right_column->xpath("//div[@id='deliveryBlockMessage']//span[@data-csa-c-delivery-price]")[0]->__toString();
-            $this->shipping_price= (int) Str::finish(Str::replace("." , ""  , get_numbers_only_with_dot($shipping_price) ) , "00");
+            $shipping_price= Str::replace("," , "." , $shipping_price);
+            $this->shipping_price= (float) get_numbers_only_with_dot($shipping_price);
         }
         catch (Error  | Exception $e)
         {
+
             $this->throw_error("Shipping Price");
             $this->shipping_price= 0;
         }
@@ -273,10 +271,8 @@ class Amazon extends MainStore
     public function check_notification(): bool
     {
 
-
         if ($this->notification_snoozed())
             return false;
-
 
         if ($this->stock_available()){
             $this->notify();
@@ -287,20 +283,21 @@ class Amazon extends MainStore
             return false;
 
         //if the seller is not amazon, then don't notify the user
-        if ($this->total_record->only_official && ! self::is_amazon($this->seller))
+        if ($this->current_record->product->only_official && ! self::is_amazon($this->seller))
             return false;
 
-        if ($this->total_record->lowest_within &&
+
+        if ($this->current_record->product->lowest_within &&
             parent::is_price_lowest_within(
-                product_id:  $this->total_record->product_id ,
-                store_id: $this->total_record->store_id,
-                days: $this->total_record->lowest_within,
+                product_id:  $this->current_record->product_id ,
+                store_id: $this->current_record->store_id,
+                days: $this->current_record->product->lowest_within,
                 price: $this->price
             )){
-
             $this->notify();
             return true;
             }
+
 
         if ($this->max_notification_reached())
             return false;
