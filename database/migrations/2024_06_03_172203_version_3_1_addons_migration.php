@@ -15,7 +15,10 @@ return new class extends Migration
             $table->unsignedInteger('used_price');
         });
 
-
+        Schema::table('product_store', function (Blueprint $table) {
+            $table->unsignedInteger("highest_price")->nullable();
+            $table->unsignedInteger("lowest_price")->nullable();
+        });
     }
 
     /**

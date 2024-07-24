@@ -3,13 +3,11 @@
 
 use App\Console\Commands\ClearNotificationCount;
 use App\Models\ProductStore;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schedule;
 use Spatie\Health\Commands\ScheduleCheckHeartbeatCommand;
 
 Schedule::call(function () {
-
     try {
         Log::info("Products Schedule Started");
 

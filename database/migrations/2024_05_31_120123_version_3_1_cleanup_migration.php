@@ -11,7 +11,6 @@ return new class extends Migration
      */
     public function up(): void
     {
-
         //remove referral from the system
         Schema::table('stores', function (Blueprint $table) {
             $table->dropColumn("referral");

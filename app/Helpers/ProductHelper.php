@@ -11,9 +11,9 @@ use Illuminate\Support\Number;
 class ProductHelper
 {
 
-    public static function prepare_multiple_prices_in_table(Product $record){
+    public static function prepare_multiple_prices_in_table(Product $record, $currencies=[]){
 
-        $currencies=CurrencyHelper::get_currencies();
+
 
 
         $prices= $record->stores->map(function ($model) use ($currencies) {
@@ -28,10 +28,8 @@ class ProductHelper
         return  \Illuminate\Support\Str::of($prices)->toHtmlString();
     }
 
-    public static function prepare_multiple_notify_prices_in_table(Product $record): \Illuminate\Support\HtmlString
+    public static function prepare_multiple_notify_prices_in_table(Product $record, $currencies=[]): \Illuminate\Support\HtmlString
     {
-
-        $currencies=CurrencyHelper::get_currencies();
 
         $notify_prices= $record->stores->map(function ($model) use ($currencies) {
             return  $currencies[$model->currency_id]  .

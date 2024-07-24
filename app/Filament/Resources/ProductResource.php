@@ -8,6 +8,7 @@ use App\Filament\Resources\ProductResource\Pages\EditProduct;
 use App\Filament\Resources\ProductResource\Pages\ListProducts;
 use App\Filament\Resources\ProductResource\Pages\ViewProduct;
 use App\Filament\Resources\ProductResource\RelationManagers;
+use App\Helpers\CurrencyHelper;
 use App\Helpers\ProductHelper;
 use App\Helpers\StoreHelper;
 use App\Helpers\URLHelper;
@@ -161,6 +162,7 @@ class ProductResource extends Resource
     public static function table(Table $table): Table
     {
 
+        $currencies=CurrencyHelper::get_currencies();
         return $table
             ->modifyQueryUsing(function ($query){
                 $query->with([
@@ -168,7 +170,6 @@ class ProductResource extends Resource
                     "product_stores:id,product_id,store_id,price,notify_price,updated_at,highest_price,lowest_price",
                 ]);
             })
-
             ->columns([
                 ImageColumn::make('image')->alignCenter(),
 
@@ -189,13 +190,13 @@ class ProductResource extends Resource
                     ->listWithLineBreaks(),
 
                 TextColumn::make('product_stores.price')
-                    ->formatStateUsing(function ($record){
-                        return ProductHelper::prepare_multiple_prices_in_table($record);
+                    ->formatStateUsing(function ($record) use ($currencies) {
+                        return ProductHelper::prepare_multiple_prices_in_table($record, $currencies);
                     })->label('Prices'),
 
                 TextColumn::make('product_stores.notify_price')
-                    ->formatStateUsing(function ($record){
-                        return ProductHelper::prepare_multiple_notify_prices_in_table($record);
+                    ->formatStateUsing(function ($record) use ($currencies) {
+                        return ProductHelper::prepare_multiple_notify_prices_in_table($record, $currencies);
                     })->label('Notify at'),
 
                 TextColumn::make('product_stores.highest_price')
@@ -277,8 +278,4 @@ class ProductResource extends Resource
             'view' =>ViewProduct::route('/{record}'),
         ];
     }
-
-
-
-
 }
