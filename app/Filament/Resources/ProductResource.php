@@ -2,15 +2,15 @@
 
 namespace App\Filament\Resources;
 
-use App\Classes\MainStore;
-use App\Classes\Stores\Amazon;
-use App\Classes\Stores\Argos;
-use App\Classes\Stores\Ebay;
-use App\Classes\Stores\Walmart;
-use App\Classes\URLHelper;
 use App\Enums\StatusEnum;
-use App\Filament\Resources\ProductResource\Pages;
+use App\Filament\Resources\ProductResource\Pages\CreateProduct;
+use App\Filament\Resources\ProductResource\Pages\EditProduct;
+use App\Filament\Resources\ProductResource\Pages\ListProducts;
+use App\Filament\Resources\ProductResource\Pages\ViewProduct;
 use App\Filament\Resources\ProductResource\RelationManagers;
+use App\Helpers\ProductHelper;
+use App\Helpers\StoreHelper;
+use App\Helpers\URLHelper;
 use App\Models\Product;
 use Archilex\ToggleIconColumn\Columns\ToggleIconColumn;
 use Filament\Forms;
@@ -19,15 +19,16 @@ use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Konnco\FilamentImport\Actions\ImportAction;
-use Str;
+use Illuminate\Support\Str;
 
 class ProductResource extends Resource
 {
@@ -35,27 +36,29 @@ class ProductResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
     protected static ?int $navigationSort=1;
 
+    protected static ?string $recordTitleAttribute="name";
+
+    protected static bool $isGloballySearchable=true;
+
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-
                 TextInput::make('name')
                     ->nullable()
-                    ->hiddenOn(Pages\CreateProduct::class)
-                    ->disabledOn(['create']),
+                    ->hiddenOn(CreateProduct::class),
 
                 TextInput::make('url')
-                    ->required(function ($operation){
-                        return $operation=="create";
-                    })->url()
-                    ->activeUrl()
+                    ->required(fn($operation)=> $operation=="create")
+                    ->autofocus(fn($operation)=> $operation=="create")
+                    ->url()
                     ->label('URL of product')
                     ->live(onBlur: true )
                     ->afterStateUpdated(function ($state){
-                        if  ($state){
+                        if($state){
                             $url=new URLHelper($state);
-                            MainStore::validate_url($url);
+                            if ($url->store )
+                                StoreHelper::is_unique($url);
                         }
                     }),
 
@@ -74,17 +77,15 @@ class ProductResource extends Resource
                     ->createOptionForm([Forms\Components\TextInput::make('name')->required()])
                     ->multiple()
                     ->nullable()
-                    ->exists('categories','id')
                     ->preload(),
 
                 DatePicker::make('snoozed_until')
                     ->label("Snooze Notification Until"),
 
 
-                Section::make("Extra Settings")
+                Section::make("Cross Stores Notification Settings")
                     ->columns(4)
                     ->schema([
-
                         Forms\Components\Toggle::make('only_official')
                             ->label("Official Sellers Only")
                             ->inline(false),
@@ -103,205 +104,125 @@ class ProductResource extends Resource
                             ->suffix('days')
                             ->maxValue(65535),
 
-
                         TextInput::make('max_notifications')
                             ->label("Max Notification Sent Daily")
                             ->integer()
+                            ->minValue(0)
                             ->numeric()
                             ->placeholder("unlimited")
-                            ->hintIcon("heroicon-o-information-circle", "this is for products that fluctuate in price, it won't send any more notification UNLESS the price is less than earlier"),
-
+                            ->hintIcon("heroicon-o-information-circle",
+                                "this is for products that fluctuate in price, it won't send any more notification UNLESS the price is less than earlier"),
                     ])
                     ->collapsible(),
 
 
+                Section::make("Variants")
+                    ->hiddenOn(["view", "edit"])
+                    ->columns(4)
+                    ->schema([
 
-//                Amazon Settings
-                Section::make('Amazon Settings')
-                        ->columns(4)
-                        ->schema([
-                            Forms\Components\Toggle::make('variations')
-                                ->label("choose other variations to include")
-                                ->inline(false)
-                                ->reactive()
-                                ->afterStateUpdated(function ($component, $get , $state){
-                                    $variations=[];
-                                    $url=new URLHelper($get('url'));
-                                    if($state)
-                                    {
-                                        if (MainStore::is_amazon($url->domain)){
-                                           $variations= Amazon::get_variations($url->final_url);
-                                        }
-
-                                        $component->getContainer()
-                                            ->getComponent('variation_options')
-                                            ->options($variations)
-                                            ->disabled(false)
-                                            ->multiple()
-                                            ->native(false);
-                                    }
+                        Forms\Components\Toggle::make('variations')
+                            ->label("choose other variations to include")
+                            ->inline(false)
+                            ->reactive()
+                            ->afterStateUpdated(function ($component, $get , $state){
+                                if (!$get('url')){
+                                    Notification::make()
+                                        ->danger()
+                                        ->title("URL Field is empty")
+                                        ->send();
+                                    return ;
                                 }
-                                ),
 
-                            Select::make('variation_options')
-                                ->key('variation_options')
-                                ->preload()
-                                ->disabled()
-                                ->placeholder("choose variation")
-
-                        ])
-                        ->visible(function (Forms\Get $get, $record){
-                                return MainStore::is_amazon($get('url')) ||
-                                    ($record && $record->stores()->where('domain' , 'like' , "%amazon%")->count());
-                        }),
-
-//                Argos Settings
-                Section::make('Argos Settings')
-                        ->columns(4)
-                        ->schema([
-                            Forms\Components\Toggle::make('variations')
-                                ->label("choose other variations to include")
-                                ->inline(false)
-                                ->reactive()
-                                ->afterStateUpdated(function ($component, $get , $state){
-                                    $variations=[];
+                                if ($state  ){
                                     $url=new URLHelper($get('url'));
-                                    if($state)
-                                    {
-                                        if (MainStore::is_argos($url->domain)){
-                                           $variations= Argos::get_variations($url->final_url);
-                                        }
-
-                                        $component->getContainer()
-                                            ->getComponent('variation_options')
-                                            ->options($variations)
-                                            ->disabled(false)
-                                            ->multiple()
-                                            ->native(false);
-                                    }
+                                    $final_class_name="App\Helpers\StoresAvailable\\" . Str::ucfirst( explode(".",$url->store->domain)[0]);
+                                    $variations = call_user_func($final_class_name . '::get_variations' , $url->final_url  );
+                                    $component->getContainer()
+                                        ->getComponent('variation_options')
+                                        ->options($variations)
+                                        ->disabled(false)
+                                        ->multiple()
+                                        ->native(false);
                                 }
-                                ),
 
-                            Select::make('variation_options')
-                                ->key('variation_options')
-                                ->preload()
-                                ->disabled()
-                                ->placeholder("choose variation")
+                            }),
 
-                        ])
-                        ->visible(function (Forms\Get $get, $record){
-                                return MainStore::is_argos($get('url')) ||
-                                    ($record && $record->stores()->where('domain' , 'like' , "%argos%")->count());
-                        }),
-
-
-//                Walmart Settings
-                Section::make('Walmart Settings')
-                        ->columns(4)
-                        ->schema([
-                            Forms\Components\Toggle::make('variations')
-                                ->label("choose other variations to include")
-                                ->inline(false)
-                                ->reactive()
-                                ->afterStateUpdated(function ($component, $get , $state){
-                                    $variations=[];
-                                    $url=new URLHelper($get('url'));
-                                    if($state)
-                                    {
-                                        if (MainStore::is_walmart($url->domain)){
-                                           $variations= Walmart::get_variations($url->final_url);
-                                        }
-
-                                        $component->getContainer()
-                                            ->getComponent('variation_options')
-                                            ->options($variations)
-                                            ->disabled(false)
-                                            ->multiple()
-                                            ->native(false);
-                                    }
-                                }
-                                ),
-
-                            Select::make('variation_options')
-                                ->key('variation_options')
-                                ->preload()
-                                ->disabled()
-                                ->placeholder("choose variation")
-
-                        ])
-                        ->visible(function (Forms\Get $get, $record){
-                                return MainStore::is_walmart($get('url')) ||
-                                    ($record && $record->stores()->where('domain' , 'like' , "%walmart%")->count());
-                        }),
-
-                Section::make('Ebay Settings')
-                        ->columns(4)
-                        ->schema([
-                            Forms\Components\Toggle::make('remove_if_sold')
-                                ->label("Remove Product If Sold")
-                                ->inline(false),
-                        ])
-                        ->visible(function (Forms\Get $get, $record){
-                            return MainStore::is_ebay($get('url')) ||
-                                ($record && $record->stores()->where('domain' , 'like' , "%ebay%")->count());
-                        }),
-
-
-
-
+                        Select::make('variation_options')
+                            ->key('variation_options')
+                            ->preload()
+                            ->disabled()
+                            ->placeholder("choose variation")
+                 ]),
             ]);
 
     }
 
     public static function table(Table $table): Table
     {
+
         return $table
+            ->modifyQueryUsing(function ($query){
+                $query->with([
+                    "stores:id,name,currency_id",
+                    "product_stores:id,product_id,store_id,price,notify_price,updated_at,highest_price,lowest_price",
+                ]);
+            })
+
             ->columns([
-                Tables\Columns\ImageColumn::make('image')
-                    ->alignCenter(),
-                Tables\Columns\TextColumn::make('name')
+                ImageColumn::make('image')->alignCenter(),
+
+                TextColumn::make('name')
+                    ->words(5)
                     ->limit(50)
                     ->searchable()
                     ->sortable(),
-                Tables\Columns\SelectColumn::make('status')
-                    ->options(StatusEnum::class),
-                Tables\Columns\TextColumn ::make('stores.name')->formatStateUsing(function ($state){
-                    return Str::of(Str::replace("," , "<br>" , $state))->toHtmlString() ;
-                }),
-                Tables\Columns\TextColumn::make('product_store.price')->formatStateUsing(function ($record){
-                    return prepare_multiple_prices_in_table($record);
-                })->label('Prices'),
 
-                Tables\Columns\TextColumn::make('product_store.notify_price')->formatStateUsing(function ($record){
-                    return prepare_multiple_notify_prices_in_table($record);
-                }  )->label('Notify at'),
+                TextColumn::make('status')
+                    ->badge()
+                    ->color(fn ($state) => StatusEnum::get_badge($state)),
+
+                TextColumn::make('stores.name')
+                    ->listWithLineBreaks(),
+
+                TextColumn::make('product_stores.price')
+                    ->listWithLineBreaks(),
+
+                TextColumn::make('product_stores.price')
+                    ->formatStateUsing(function ($record){
+                        return ProductHelper::prepare_multiple_prices_in_table($record);
+                    })->label('Prices'),
+
+                TextColumn::make('product_stores.notify_price')
+                    ->formatStateUsing(function ($record){
+                        return ProductHelper::prepare_multiple_notify_prices_in_table($record);
+                    })->label('Notify at'),
+
+                TextColumn::make('product_stores.highest_price')
+                    ->label("Highest Price")
+                    ->listWithLineBreaks()
+                    ->color('danger'),
+
+                TextColumn::make('product_stores.lowest_price')
+                    ->label("Lowest Price")
+                    ->listWithLineBreaks()
+                    ->color('success'),
 
                 ToggleIconColumn::make('favourite')
                     ->onIcon("heroicon-s-star")
                     ->offIcon("heroicon-o-star"),
 
-                TextColumn::make('stores.updated_at')
-                    ->formatStateUsing(function ($record){
-                    return prepare_multiple_update_in_table($record);
-                })
+                TextColumn::make('product_stores.updated_at')
+                    ->listWithLineBreaks()
                     ->label('Last Update'),
-
-
             ])
             ->defaultSort('favourite' , 'desc')
             ->filters([
 
-                SelectFilter::make('stores')
-                    ->relationship('stores_available', 'name')
-                    ->preload()
-                    ->multiple()
-                    ->label('Stores'),
-
                 SelectFilter::make('status')
-                    ->options(StatusEnum::to_array())
+                    ->options(StatusEnum::class)
                     ->preload()
-                    ->multiple()
-                    ->label('Status'),
+                    ->multiple(),
 
                 Filter::make('price_notify_price')->query(function ($query){
                     $query->whereHas(
@@ -318,36 +239,46 @@ class ProductResource extends Resource
                     ->label('Favourite product')
                     ->toggle(),
 
-            ])->filtersLayout(Tables\Enums\FiltersLayout::AboveContent)->deferLoading(true)
+                Filter::make('highest_price')->query(function (Builder $query) {
+                        return $query->whereHas('product_stores', function ($query){
+                            $query->whereColumn('price' , '<=' , 'highest_price');
+                        });
+                    })
+                    ->label('Lower Than Highest Price')
+                    ->toggle(),
+
+            ])
             ->actions([
                 Tables\Actions\EditAction::make(),
                 Tables\Actions\DeleteAction::make(),
-
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
-                Tables\Actions\DeleteBulkAction::make(),
+                    Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ])
-            ->emptyStateActions([
-                Tables\Actions\CreateAction::make(),
             ]);
     }
+
+
 
     public static function getRelations(): array
     {
         return [
-            RelationManagers\StoresRelationManager::class,
+            RelationManagers\StoresRelationManager::class
         ];
     }
 
     public static function getPages(): array
     {
         return [
-            'index' => Pages\ListProducts::route('/'),
-            'create' => Pages\CreateProduct::route('/create'),
-            'edit' => Pages\EditProduct::route('/{record}/edit'),
+            'index' => ListProducts::route('/'),
+            'create' => CreateProduct::route('/create'),
+            'edit' => EditProduct::route('/{record}/edit'),
+            'view' =>ViewProduct::route('/{record}'),
         ];
     }
+
+
+
 
 }

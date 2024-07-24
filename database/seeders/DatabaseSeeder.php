@@ -2,7 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\Store;
+use App\Models\User;
+// use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DatabaseSeeder extends Seeder
@@ -12,13 +13,16 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        $stores=setup_stores();
-        foreach ($stores as $store)
-        {
-            Store::updateOrCreate(
-                ['domain'=>$store['domain']],
-                $store
-            );
-        }
+
+        User::firstOrCreate([
+            'email' => 'test@test.com',
+            ], [
+            'name' => 'Test User',
+            'password'=>'password'
+        ]);
+
+        $this->call([
+            StoreSeeder::class,
+        ]);
     }
 }

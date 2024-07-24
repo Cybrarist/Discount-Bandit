@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Helpers\StoreHelper;
 use App\Models\Store;
 
 class StoreObserver
@@ -19,7 +20,7 @@ class StoreObserver
      */
     public function updated(Store $store): void
     {
-        \Cache::forget('stores_available');
+        StoreHelper::clear_caches_related_to_stores();
     }
 
     /**

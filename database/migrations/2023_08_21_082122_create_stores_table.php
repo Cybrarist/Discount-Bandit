@@ -24,7 +24,6 @@ return new class extends Migration
             $table->char('status', 1)->default(\App\Enums\StatusEnum::Published->value);
             $table->boolean('tabs')->default(false);
 
-
             $table->foreignIdFor(\App\Models\Currency::class)->nullable();
         });
     }

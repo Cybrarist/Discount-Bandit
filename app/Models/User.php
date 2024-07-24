@@ -2,18 +2,18 @@
 
 namespace App\Models;
 
-//use Illuminate\Contracts\Auth\MustVerifyEmail;
-use Filament\Panel;
+// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Jeffgreco13\FilamentBreezy\Traits\TwoFactorAuthenticatable;
 use Laravel\Sanctum\HasApiTokens;
 
-class User extends Authenticatable implements FilamentUser
+class User extends Authenticatable implements  FilamentUser
 {
-    use HasApiTokens, HasFactory, Notifiable , TwoFactorAuthenticatable;
+    use HasFactory, Notifiable , TwoFactorAuthenticatable, HasApiTokens;
 
     /**
      * The attributes that are mass assignable.
@@ -26,6 +26,8 @@ class User extends Authenticatable implements FilamentUser
         'password',
     ];
 
+//1|Bz5GmtraNUUi7KwmGp5x32j0D4fj3STBjFEqiQtHdacdfd03
+
     /**
      * The attributes that should be hidden for serialization.
      *
@@ -37,20 +39,19 @@ class User extends Authenticatable implements FilamentUser
     ];
 
     /**
-     * The attributes that should be cast.
+     * Get the attributes that should be cast.
      *
-     * @var array<string, string>
+     * @return array<string, string>
      */
-    protected $casts = [
-        'email_verified_at' => 'datetime',
-        'password' => 'hashed',
-    ];
-
-
-    public function canAccessPanel(Panel $panel): bool
+    protected function casts(): array
     {
-        return true;
-//        return str_ends_with($this->email, '@hotmail.com') && $this->hasVerifiedEmail();
+        return [
+            'email_verified_at' => 'datetime',
+            'password' => 'hashed',
+        ];
     }
+
+
+    public function canAccessPanel(Panel $panel): bool { return true;}
 
 }

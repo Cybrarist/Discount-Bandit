@@ -3,33 +3,60 @@
 namespace App\Models;
 
 use App\Casts\Money;
-use App\Enums\StatusEnum;
+use App\Models\Store;
+use Illuminate\Database\Eloquent\Casts\Attribute;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\Pivot;
 
 class ProductStore extends Pivot
 {
-    //
 
-
-    protected $casts=[
-        'price'=>Money::class,
-        'notify_price'=>Money::class,
-        'shipping_price'=>Money::class,
+    protected $fillable = [
+        "product_id",
+        "store_id",
+        "price",
+        "used_price",
+        "notify_price",
+        "rate",
+        "number_of_rates",
+        "seller",
+        "offers",
+        "shipping_price",
+        "condition",
+        "notifications_sent",
+        "lowest_30",
+        "add_shipping",
+        "in_stock",
+        "key",
+        "highest_price",
+        "lowest_price",
     ];
 
-    protected $guarded=[];
 
-    public function product()
+    protected function casts(): array
+    {
+        return [
+            'price'=>Money::class,
+            'highest_price'=>Money::class,
+            'lowest_price'=>Money::class,
+            'used_price'=>Money::class,
+            'notify_price'=>Money::class,
+            'shipping_price'=>Money::class,
+        ];
+    }
+
+
+    public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
     }
-    public function store()
+    public function store(): BelongsTo
     {
         return $this->belongsTo(Store::class);
     }
-
-    public function stores_available()
+    public function stores_available(): BelongsTo
     {
         return $this->belongsTo(Store::class , 'store_id')->whereHas('products');
     }
+
 }

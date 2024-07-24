@@ -2,15 +2,15 @@
 
 namespace App\Providers;
 
-use Illuminate\Support\Facades\Schema;
+use App\Models\User;
+use Filament\Tables\Enums\FiltersLayout;
+use Filament\Tables\Table;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Health\Checks\Checks\CacheCheck;
 use Spatie\Health\Checks\Checks\DatabaseCheck;
-use Spatie\Health\Checks\Checks\DebugModeCheck;
 use Spatie\Health\Checks\Checks\EnvironmentCheck;
-use Spatie\Health\Checks\Checks\OptimizedAppCheck;
 use Spatie\Health\Checks\Checks\PingCheck;
-use Spatie\Health\Checks\Checks\QueueCheck;
 use Spatie\Health\Checks\Checks\ScheduleCheck;
 use Spatie\Health\Facades\Health;
 
@@ -29,7 +29,18 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        Schema::defaultStringLength(191);
+//        URL::forceScheme('https');
+
+
+        if (config('settings.disable_auth'))
+            Auth::login(User::first());
+
+        Table::configureUsing(function (Table $table): void {
+            $table->filtersLayout(FiltersLayout::AboveContentCollapsible)
+                ->paginationPageOptions([ 25, 50 , 100 , 150 ,200,'all'])
+                ->deferLoading();
+        });
+
 
         Health::checks([
             CacheCheck::new(),

@@ -12,7 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('product_store', function (Blueprint $table) {
-            $table->string("key" , 100)->nullable()->after("store_id");
+            $table->string("key" , 100)->nullable();
+            $table->unsignedInteger('used_price')->nullable();
+            $table->unsignedInteger("highest_price")->nullable();
+            $table->unsignedInteger("lowest_price")->nullable();
         });
     }
 
@@ -23,6 +26,9 @@ return new class extends Migration
     {
         Schema::table('product_store', function (Blueprint $table) {
             $table->dropColumn("key");
+            $table->dropColumn("used_price");
+            $table->dropColumn("highest_price");
+            $table->dropColumn("lowest_price");
         });
     }
 };

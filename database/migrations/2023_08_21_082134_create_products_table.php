@@ -25,7 +25,6 @@ return new class extends Migration
             $table->unsignedTinyInteger('max_notifications')->nullable();
             $table->unsignedSmallInteger('lowest_within')->nullable();
             $table->boolean('only_official')->default(false);
-
         });
     }
 

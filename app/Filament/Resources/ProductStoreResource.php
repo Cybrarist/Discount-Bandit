@@ -2,11 +2,10 @@
 
 namespace App\Filament\Resources;
 
-use App\Enums\StatusEnum;
 use App\Filament\Resources\ProductStoreResource\Pages;
 use App\Filament\Resources\ProductStoreResource\RelationManagers;
+use App\Helpers\ProductHelper;
 use App\Models\ProductStore;
-use App\Models\Store;
 use Filament\Forms;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
@@ -16,8 +15,6 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Eloquent\SoftDeletingScope;
-use function Filament\Support\format_money;
 
 class ProductStoreResource extends Resource
 {
@@ -65,9 +62,9 @@ class ProductStoreResource extends Resource
                 Tables\Columns\TextColumn::make('product.name')
                     ->searchable()
                     ->words(5)
-                    ->url( function ($record) {
-                        return route('filament.admin.resources.products.edit', $record->product_id);
-                    } ,true)
+//                    ->url( function ($record) {
+//                        return route('filament.admin.resources.products.edit', $record->product_id);
+//                    } ,true)
                     ,
                 Tables\Columns\TextColumn::make('store.name')
                     ->words(5)
@@ -76,19 +73,19 @@ class ProductStoreResource extends Resource
                         return route('filament.admin.resources.stores.edit', $record->store_id);
                     } ,true)
                 ,
-                Tables\Columns\TextColumn::make('price')
-                    ->formatStateUsing(function ($record){
-                    return prepare_single_prices_in_table($record->price,$record->store->currency_id, true,$record->notify_price );
-                }),
-                Tables\Columns\TextColumn::make('notify_price')
-                    ->formatStateUsing(function ($record){
-                    return prepare_single_prices_in_table($record->notify_price,$record->store->currency_id );
-                }),
-                Tables\Columns\TextColumn::make('shipping_price')
-                    ->formatStateUsing(function ($record){
-                    return prepare_single_prices_in_table($record->shipping_price,$record->store->currency_id );
-                }),
-                Tables\Columns\TextColumn::make('rate'),
+//                Tables\Columns\TextColumn::make('price')
+//                    ->formatStateUsing(function ($record){
+//                    return  prepare_single_prices_in_table($record->price,$record->store->currency_id, true,$record->notify_price );
+//                }),
+//                Tables\Columns\TextColumn::make('notify_price')
+//                    ->formatStateUsing(function ($record){
+//                    return prepare_single_prices_in_table($record->notify_price,$record->store->currency_id );
+//                }),
+//                Tables\Columns\TextColumn::make('shipping_price')
+//                    ->formatStateUsing(function ($record){
+//                    return prepare_single_prices_in_table($record->shipping_price,$record->store->currency_id );
+//                }),
+//                Tables\Columns\TextColumn::make('rate'),
                 Tables\Columns\TextColumn::make('updated_at'),
                 Tables\Columns\TextColumn::make('number_of_rates'),
                 Tables\Columns\TextColumn::make('seller'),

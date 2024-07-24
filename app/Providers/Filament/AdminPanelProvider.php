@@ -4,27 +4,30 @@ namespace App\Providers\Filament;
 
 use App\Filament\Resources\StoreResource;
 use Awcodes\FilamentQuickCreate\QuickCreatePlugin;
+use Croustibat\FilamentJobsMonitor\FilamentJobsMonitorPlugin;
+use Croustibat\FilamentJobsMonitor\Resources\QueueMonitorResource;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\Widgets\AccountWidget;
-use Filament\Widgets\FilamentInfoWidget;
+use Filament\Support\Colors\Color;
+use Filament\Support\Enums\MaxWidth;
+use Filament\Widgets;
 use FilipFonal\FilamentLogManager\FilamentLogManager;
+use GeoSot\FilamentEnvEditor\FilamentEnvEditorPlugin;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Jeffgreco13\FilamentBreezy\BreezyCore;
 use Leandrocfe\FilamentApexCharts\FilamentApexChartsPlugin;
 use pxlrbt\FilamentSpotlight\SpotlightPlugin;
-use ShuvroRoy\FilamentSpatieLaravelBackup\FilamentSpatieLaravelBackupPlugin;
-use ShuvroRoy\FilamentSpatieLaravelBackup\Pages\Backups;
 use ShuvroRoy\FilamentSpatieLaravelHealth\FilamentSpatieLaravelHealthPlugin;
 
 class AdminPanelProvider extends PanelProvider
@@ -34,20 +37,33 @@ class AdminPanelProvider extends PanelProvider
         return $panel
             ->default()
             ->id('admin')
-            ->path('')
+            ->path('/')
             ->login()
-            ->sidebarCollapsibleOnDesktop()
-            ->maxContentWidth("full")
-            ->brandLogo("/storage/bandit.png")
-            ->brandName("Discount Bandit")
+            ->colors([
+                'primary' => Color::{config('settings.theme_color')},
+            ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\\Filament\\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\\Filament\\Pages')
-//            ->pages([
-//                Pages\Dashboard::class
-//            ])
-            ->widgets([
-                AccountWidget::class,
-                FilamentInfoWidget::class,
+            ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
+            ->plugins([
+                FilamentApexChartsPlugin::make(),
+                FilamentSpatieLaravelHealthPlugin::make(),
+                SpotlightPlugin::make(),
+                FilamentLogManager::make(),
+                FilamentJobsMonitorPlugin::make(),
+                QuickCreatePlugin::make()
+                    ->excludes([
+                        StoreResource::class,
+                        QueueMonitorResource::class
+                    ]),
+                FilamentEnvEditorPlugin::make()
+                    ->navigationGroup('Settings'),
+                BreezyCore::make()
+                    ->myProfile()
+                    ->enableTwoFactorAuthentication()
+                    ->enableSanctumTokens(
+                        permissions: ['get_product','create_product','delete_product'] // optional, customize the permissions (default = ["create", "view", "update", "delete"])
+                    ),
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -59,25 +75,17 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
-                \Hasnayeen\Themes\Http\Middleware\SetTheme::class
-            ])->authMiddleware([
+            ])
+            ->authMiddleware([
                 Authenticate::class,
-            ])->plugins([
-                \Hasnayeen\Themes\ThemesPlugin::make(),
-                SpotlightPlugin::make(),
-                QuickCreatePlugin::make()->excludes([
-                    StoreResource::class
-                ]),
-                BreezyCore::make()->myProfile()
-                    ->enableTwoFactorAuthentication()
-                    ->enableSanctumTokens(
-                        permissions: ['get_product'] // optional, customize the permissions (default = ["create", "view", "update", "delete"])
-                    ),
-                FilamentSpatieLaravelBackupPlugin::make()
-                    ->usingPage(Backups::class),
-                FilamentSpatieLaravelHealthPlugin::make(),
-                FilamentLogManager::make(),
-            ]);
-
+            ])
+            ->brandLogo(logo: asset("storage/bandit.png"))
+            ->brandName("Discount Bandit")
+            ->maxContentWidth(MaxWidth::Full)
+            ->sidebarCollapsibleOnDesktop()
+            ->topNavigation(config('settings.top_nav'))
+            ->topbar(config('settings.disable_top_bar'))
+            ->breadcrumbs(config('settings.breadcrumbs'))
+            ->spa(config('settings.spa'));
     }
 }

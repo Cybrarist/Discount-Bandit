@@ -2,20 +2,32 @@
 
 namespace App\Filament\Resources\ProductResource\Widgets;
 
+use App\Enums\StatusEnum;
+use App\Helpers\CurrencyHelper;
+use App\Helpers\ProductHelper;
+use App\Helpers\StoreHelper;
+use App\Models\PriceHistory;
+use App\Models\ProductStore;
+use App\Models\Store;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Number;
 use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
 class PriceHistoryChart extends ApexChartWidget
 {
     public ?Model $record = null;
 
+    protected static bool $deferLoading = true;
+
     /**
      * Chart Id
      *
      * @var string
      */
-    protected static string $chartId = "priceHistoryChart";
+    protected static ?string $chartId = "priceHistoryChart";
 
     /**
      * Widget Title
@@ -33,54 +45,25 @@ class PriceHistoryChart extends ApexChartWidget
      *
      * @return array
      */
+
+    protected static ?string $pollingInterval='300s';
+
     protected function getOptions(): array
     {
-        if ($this->record){
-            $product=$this->record;
-
-            $stores=$product->stores()->pluck('name', 'stores.id')->map(function ($record){
-                return [
-                    "name"=>$record,
-                ];
-            })->toArray();
-            $available_stores=implode("," ,  array_keys($stores));
-
-            $price_history=DB::select("
-                                    SELECT store_id, GROUP_CONCAT(CONCAT(date, '_', price)) AS date_price
-                                    FROM price_histories
-                                    WHERE product_id =  $product->id
-                                    and store_id IN ($available_stores)
-                                    GROUP BY store_id;
-                                    ") ;
+        try {
 
 
-            foreach ($price_history as $single_price_history)
-            {
-                $dates_prices=explode(",", $single_price_history->date_price);
-                foreach ($dates_prices as $date_price)
-                {
-                    $seperated=explode("_", $date_price);
-                    $stores[$single_price_history->store_id]["data"][]=[
-                        'x'=>$seperated[0],
-                        'y'=>((int)($seperated[1]))/100
-                    ];
-                }
-            }
-
-            foreach ($stores as $index=>$store)
-            {
-                if (sizeof($store) == 1)
-                    $stores[$index]['data']=[];
-            }
-
+            $price_histories_per_store=ProductHelper::get_product_history_per_store($this->record->id);
 
             return [
                 'chart' => [
                     'type' => 'area',
                     'height' => 300,
                 ],
-                'series'=>array_values($stores),
-                'colors' => ['#6366f1','#ffffff'],
+                'series'=>array_values($price_histories_per_store),
+                'theme'=>[
+                    "palette"=> 'palette1'
+                ],
                 'xaxis' => [
                     "type"=> 'datetime',
                     'categories' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
@@ -95,13 +78,17 @@ class PriceHistoryChart extends ApexChartWidget
                 ],
                 'dataLabels' => [
                     'enabled' => false,
-                ]
+                ],
+
+
 
             ];
 
+        }catch (\Exception $e){
+            dd($e);
+            return [];
         }
 
-        return [];
     }
 
 }

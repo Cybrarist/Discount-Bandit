@@ -4,29 +4,44 @@ namespace App\Models;
 
 use App\Casts\Money;
 use App\Enums\StatusEnum;
+use App\Observers\StoreObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
+
+#[ObservedBy(StoreObserver::class)]
 class Store extends Model
 {
     use HasFactory ;
 
-    protected $guarded=['id'];
-
-    protected $casts=[
-        'status'=>StatusEnum::class,
-        'price'=>Money::class,
-        'notify_price'=>Money::class,
-        'shipping_price'=>Money::class,
-
-        'pivot.updated_at'=>'datetime',
+    protected $fillable=[
+        "deleted_at",
+        "name",
+        "domain",
+        "image",
+        "slug",
+        "status",
+        "tabs",
+        "currency_id",
     ];
 
 
+    protected function casts(): array
+    {
+        return [
+            'status'=>StatusEnum::class,
+            'price'=>Money::class,
+            'lowest_price'=>Money::class,
+            'highest_price'=>Money::class,
+            'notify_price'=>Money::class,
+            'shipping_price'=>Money::class,
+            'pivot.updated_at'=>'datetime',
+        ];
+    }
 
 
-    public function currency()
+    public function currency(): \Illuminate\Database\Eloquent\Relations\BelongsTo
     {
         return $this->belongsTo(Currency::class);
     }
@@ -50,4 +65,4 @@ class Store extends Model
             'ebay_id',
         ]);
     }
-    }
+}

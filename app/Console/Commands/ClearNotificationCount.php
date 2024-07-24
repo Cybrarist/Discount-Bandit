@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Models\ProductStore;
 use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
 
 class ClearNotificationCount extends Command
 {
@@ -24,18 +24,11 @@ class ClearNotificationCount extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): void
     {
-
-        \DB::table('product_store')
+        DB::table('product_store')
             ->update([
                 'notifications_sent' => 0
             ]);
-
-        \DB::table('groups')
-            ->update([
-                'notifications_sent' => 0
-            ]);
-
     }
 }

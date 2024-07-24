@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\User;
 use App\Notifications\GroupDiscount;
 use App\Notifications\ProductDiscount;
+use App\Notifications\ProductDiscounted;
 use Illuminate\Console\Command;
 
 class DiscountTestNotificationCommand extends Command
@@ -26,21 +27,17 @@ class DiscountTestNotificationCommand extends Command
     /**
      * Execute the console command.
      */
-    public function handle()
+    public function handle(): void
     {
-        $users=User::all();
-        foreach ($users as $user){
-
-            $user->notify(new ProductDiscount(
-                product_name: 'This is a test product',
-                store_name: "this is a test store"  ,
-                price: '100' ,
-                product_url: "https://cybrarist.com" ,
+        User::first()->notify(new ProductDiscounted(
+                product_name: "This is a test product",
+                store_name: "this is a test store",
+                price: 100,
+                highest_price: 120,
+                lowest_price: 80,
+                product_url: "https://cybrarist.com",
                 image: "",
-                currency: "$"));
-
-            $user->notify(new GroupDiscount("Cybrarist group" , 100 , "$"));
-        }
-
+                currency: "$", tags: ",New Test Tags",
+        ));
     }
 }

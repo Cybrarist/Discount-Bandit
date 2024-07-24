@@ -11,9 +11,23 @@ class PriceHistory extends Model
     use HasFactory;
 
     protected $casts=[
-        "price"=>Money::class
+
     ];
-    protected $guarded=['id'];
+    protected $fillable=[
+        "date",
+        "price",
+        "product_id",
+        "store_id",
+        "used_price",
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            "price"=>Money::class,
+            "used_price"=>Money::class
+        ];
+    }
 
     public function product_store()
     {

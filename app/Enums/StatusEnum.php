@@ -10,6 +10,21 @@ enum StatusEnum : string implements HasLabel
     case Published='p';
     case Disabled='d';
     case Silenced='s';
+    case Archived='a';
+
+
+    public static function get_badge($value)
+    {
+
+        return match ($value){
+            self::Published=>"success",
+            self::Disabled=>"danger",
+            self::Silenced=>"warning",
+            self::Archived=>"info",
+        };
+
+    }
+
 
     public static function names(): array
     {
