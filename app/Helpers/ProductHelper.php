@@ -6,36 +6,35 @@ use App\Enums\StatusEnum;
 use App\Models\PriceHistory;
 use App\Models\Product;
 use App\Models\Store;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Number;
 
 class ProductHelper
 {
 
-    public static function prepare_multiple_prices_in_table(Product $record, $currencies=[]){
+    public static function prepare_multiple_prices_in_table(Product $record, $currencies=[], $stores=[]): \Illuminate\Support\HtmlString
+    {
+        $prices="";
+        foreach ($record->product_stores as $single_product_store){
+            $color_string=($single_product_store->price <= $single_product_store->notify_price) ? "green" :"red";
 
 
-
-
-        $prices= $record->stores->map(function ($model) use ($currencies) {
-            if ($model['pivot']['price'] <= $model->pivot->notify_price)
-                $color_string="green";
-            else
-                $color_string="red";
-
-            return  "<span  style='color:$color_string'>" . $currencies[$model->currency_id] . \Illuminate\Support\Number::format($model->pivot->price / 100  , maxPrecision: 2) ." </span>";}
-        )->implode("<br>");
+            $prices.= "<p  style='color:$color_string'>" .
+                $currencies[$stores[$single_product_store->store_id]["currency_id"]].
+                \Illuminate\Support\Number::format($single_product_store->price   , maxPrecision: 2) .
+                "</p>";
+        }
 
         return  \Illuminate\Support\Str::of($prices)->toHtmlString();
     }
 
-    public static function prepare_multiple_notify_prices_in_table(Product $record, $currencies=[]): \Illuminate\Support\HtmlString
+    public static function prepare_multiple_notify_prices_in_table(Product $record, $currencies=[], $stores=[]): \Illuminate\Support\HtmlString
     {
-
-        $notify_prices= $record->stores->map(function ($model) use ($currencies) {
-            return  $currencies[$model->currency_id]  .
-                Number::format( $model->pivot->notify_price / 100 , maxPrecision: 2)
-                . " " ;
-        })->implode("<br>");
+        $notify_prices="";
+        foreach ($record->product_stores as $single_product_store)
+            $notify_prices.= "<p>". $currencies[$stores[$single_product_store->store_id]["currency_id"]].
+                \Illuminate\Support\Number::format($single_product_store->notify_price   , maxPrecision: 2) .
+                "</p>";
 
         return  \Illuminate\Support\Str::of($notify_prices)->toHtmlString();
     }

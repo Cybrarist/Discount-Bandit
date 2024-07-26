@@ -2,19 +2,26 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\StatusEnum;
 use App\Filament\Resources\ProductStoreResource\Pages;
-use App\Filament\Resources\ProductStoreResource\RelationManagers;
-use App\Helpers\ProductHelper;
+use App\Helpers\CurrencyHelper;
+use App\Helpers\StoreHelper;
 use App\Models\ProductStore;
+use Archilex\ToggleIconColumn\Columns\ToggleIconColumn;
+use Filament\Actions\ViewAction;
 use Filament\Forms;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Number;
+use Illuminate\Support\Str;
 
 class ProductStoreResource extends Resource
 {
@@ -24,21 +31,21 @@ class ProductStoreResource extends Resource
     protected static ?string $navigationIcon = 'heroicon-m-document';
 
     protected static ?int $navigationSort=2;
-    public static function canCreate() : bool{
-     return false;
+    public static function canCreate() : bool {
+        return false;
     }
+
     public static function form(Form $form): Form
     {
         return $form
             ->schema([
-                Forms\Components\Checkbox::make('add_shipping')
-                    ->label('Add Shipping Price'),
+
                 TextInput::make('price')
                     ->disabled()
                     ->dehydrated(false)
                     ->label('Current Price')
                     ->prefix(function ($record){
-                        return get_currencies($record->store->currency_id);
+                        return  CurrencyHelper::get_currencies($record->store->currency_id);
                     }),
 
                 TextInput::make('notify_price')
@@ -46,50 +53,90 @@ class ProductStoreResource extends Resource
                     ->integer()
                     ->label('Notify when cheaper than')
                     ->prefix(function ($record){
-                        return get_currencies($record->store->currency_id);
+                        return  CurrencyHelper::get_currencies($record->store->currency_id);
                     }),
-            ]);
+                Forms\Components\Toggle::make('add_shipping')
+                    ->label('Add Shipping Price'),
+            ])->columns(3);
 
     }
 
     public static function table(Table $table): Table
     {
 
-        return $table
-            ->columns([
-                Tables\Columns\ImageColumn::make('product.image')
-                    ->alignCenter(),
-                Tables\Columns\TextColumn::make('product.name')
-                    ->searchable()
-                    ->words(5)
-//                    ->url( function ($record) {
-//                        return route('filament.admin.resources.products.edit', $record->product_id);
-//                    } ,true)
-                    ,
-                Tables\Columns\TextColumn::make('store.name')
-                    ->words(5)
-                    ->color("warning")
-                    ->url( function ($record) {
-                        return route('filament.admin.resources.stores.edit', $record->store_id);
-                    } ,true)
-                ,
-//                Tables\Columns\TextColumn::make('price')
-//                    ->formatStateUsing(function ($record){
-//                    return  prepare_single_prices_in_table($record->price,$record->store->currency_id, true,$record->notify_price );
-//                }),
-//                Tables\Columns\TextColumn::make('notify_price')
-//                    ->formatStateUsing(function ($record){
-//                    return prepare_single_prices_in_table($record->notify_price,$record->store->currency_id );
-//                }),
-//                Tables\Columns\TextColumn::make('shipping_price')
-//                    ->formatStateUsing(function ($record){
-//                    return prepare_single_prices_in_table($record->shipping_price,$record->store->currency_id );
-//                }),
-//                Tables\Columns\TextColumn::make('rate'),
-                Tables\Columns\TextColumn::make('updated_at'),
-                Tables\Columns\TextColumn::make('number_of_rates'),
-                Tables\Columns\TextColumn::make('seller'),
+        $stores=StoreHelper::get_stores_with_active_products();
+        $currencies=CurrencyHelper::get_currencies();
 
+        return $table
+            ->modifyQueryUsing(function ($query){
+                $query->with([
+                    "product:id,name,image,status,notify_price,favourite",
+                ]);
+            })
+            ->recordAction(ViewAction::class)
+            ->columns([
+
+                ImageColumn::make('product.image')->alignCenter(),
+
+                TextColumn::make('product.name')
+                    ->words(5)
+                    ->limit(50)
+                    ->searchable()
+                    ->sortable(),
+
+                TextColumn::make('product.status')
+                    ->badge()
+                    ->color(fn ($state) => StatusEnum::get_badge($state)),
+
+                TextColumn::make('store_id')
+                    ->formatStateUsing(function ($state) use($stores){
+                        return $stores[$state]["name"];
+                    })
+                    ->listWithLineBreaks(),
+
+                TextColumn::make('price')
+                    ->formatStateUsing(function ($record) use ($currencies, $stores) {
+                        $color_string=($record->price <= $record->notify_price) ? "green" :"red";
+
+                        return Str::of("<p  style='color:$color_string'>" .
+                            $currencies[$stores[$record->store_id]["currency_id"]].
+                            \Illuminate\Support\Number::format($record->price   , maxPrecision: 2) .
+                            "</p>")->toHtmlString();
+                    })->label('Prices'),
+
+                TextColumn::make('notify_price')
+                    ->formatStateUsing(function ($record) use ($currencies, $stores) {
+                         return Str::of("<p>" .
+                            $currencies[$stores[$record->store_id]["currency_id"]].
+                            \Illuminate\Support\Number::format($record->notify_price   , maxPrecision: 2) .
+                            "</p>")->toHtmlString();
+                    })
+                    ->label('Notify Price'),
+
+
+                TextColumn::make('highest_price')
+                    ->label("Highest Price")
+                    ->formatStateUsing(function ($record) use ($currencies, $stores) {
+                        return $currencies[$stores[$record->store_id]["currency_id"]]. Number::format($record->highest_price, 2);
+                    })
+                    ->listWithLineBreaks()
+                    ->color('danger'),
+
+                TextColumn::make('lowest_price')
+                    ->label("Lowest Price")
+                    ->formatStateUsing(function ($record) use ($currencies, $stores) {
+                        return $currencies[$stores[$record->store_id]["currency_id"]]. Number::format($record->lowest_price, 2);
+                    })
+                    ->listWithLineBreaks()
+                    ->color('success'),
+
+                ToggleIconColumn::make('product.favourite')
+                    ->onIcon("heroicon-s-star")
+                    ->offIcon("heroicon-o-star"),
+
+                TextColumn::make('updated_at')
+                    ->listWithLineBreaks()
+                    ->label('Last Update'),
             ])
             ->defaultSort('updated_at', 'desc')
             ->filters([
@@ -112,23 +159,9 @@ class ProductStoreResource extends Resource
                     ->label('Favourite product')
                     ->toggle(),
 
-
-            ])->filtersLayout(Tables\Enums\FiltersLayout::AboveContent)
-            ->deferLoading(true)
-            ->actions([
-            ])
-            ->bulkActions([
-            ])
-            ->emptyStateActions([
             ]);
     }
 
-    public static function getRelations(): array
-    {
-        return [
-            //
-        ];
-    }
 
     public static function getPages(): array
     {

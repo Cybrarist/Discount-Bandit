@@ -73,5 +73,18 @@ class StoreHelper
     public static function clear_caches_related_to_stores(): void
     {
         Cache::forget('stores_active_for_tabs');
+        Cache::forget('stores_with_active_products');
     }
+
+
+    public static function get_stores_with_active_products()
+    {
+        return Cache::remember('stores_with_active_products' , now()->addDay(), function () {
+            return Store::whereIn('id' , ProductStore::distinct()->get('store_id')->toArray())
+                ->get(["id","name","currency_id"])
+                ->keyBy("id")
+                ->toArray();
+        });
+    }
+
 }

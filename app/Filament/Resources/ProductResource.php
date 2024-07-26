@@ -162,11 +162,11 @@ class ProductResource extends Resource
     public static function table(Table $table): Table
     {
 
+        $stores=StoreHelper::get_stores_with_active_products();
         $currencies=CurrencyHelper::get_currencies();
         return $table
             ->modifyQueryUsing(function ($query){
                 $query->with([
-                    "stores:id,name,currency_id",
                     "product_stores:id,product_id,store_id,price,notify_price,updated_at,highest_price,lowest_price",
                 ]);
             })
@@ -183,20 +183,20 @@ class ProductResource extends Resource
                     ->badge()
                     ->color(fn ($state) => StatusEnum::get_badge($state)),
 
-                TextColumn::make('stores.name')
+                TextColumn::make('product_stores.store_id')
+                    ->formatStateUsing(function ($state) use($stores){
+                        return $stores[$state]["name"];
+                    })
                     ->listWithLineBreaks(),
 
                 TextColumn::make('product_stores.price')
-                    ->listWithLineBreaks(),
-
-                TextColumn::make('product_stores.price')
-                    ->formatStateUsing(function ($record) use ($currencies) {
-                        return ProductHelper::prepare_multiple_prices_in_table($record, $currencies);
+                    ->formatStateUsing(function ($record) use ($currencies, $stores) {
+                        return ProductHelper::prepare_multiple_prices_in_table($record, $currencies, $stores);
                     })->label('Prices'),
 
                 TextColumn::make('product_stores.notify_price')
-                    ->formatStateUsing(function ($record) use ($currencies) {
-                        return ProductHelper::prepare_multiple_notify_prices_in_table($record, $currencies);
+                    ->formatStateUsing(function ($record) use ($currencies, $stores) {
+                        return ProductHelper::prepare_multiple_notify_prices_in_table($record, $currencies, $stores);
                     })->label('Notify at'),
 
                 TextColumn::make('product_stores.highest_price')
