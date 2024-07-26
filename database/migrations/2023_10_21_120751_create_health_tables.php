@@ -11,27 +11,31 @@ return new class extends Migration
     public function up()
     {
 
-        $connection = (new HealthCheckResultHistoryItem())->getConnectionName();
-        $tableName = EloquentHealthResultStore::getHistoryItemInstance()->getTable();
+        if (!Schema::hasTable('health_check_results')) {
 
-        Schema::connection($connection)->create($tableName, function (Blueprint $table) {
-            $table->id();
+            $connection = (new HealthCheckResultHistoryItem())->getConnectionName();
+            $tableName = EloquentHealthResultStore::getHistoryItemInstance()->getTable();
 
-            $table->string('check_name');
-            $table->string('check_label');
-            $table->string('status');
-            $table->text('notification_message')->nullable();
-            $table->string('short_summary')->nullable();
-            $table->json('meta');
-            $table->timestamp('ended_at');
-            $table->uuid('batch');
+            Schema::connection($connection)->create($tableName, function (Blueprint $table) {
+                $table->id();
 
-            $table->timestamps();
-        });
+                $table->string('check_name');
+                $table->string('check_label');
+                $table->string('status');
+                $table->text('notification_message')->nullable();
+                $table->string('short_summary')->nullable();
+                $table->json('meta');
+                $table->timestamp('ended_at');
+                $table->uuid('batch');
 
-        Schema::connection($connection)->table($tableName, function(Blueprint $table) {
-            $table->index('created_at');
-            $table->index('batch');
-        });
+                $table->timestamps();
+            });
+
+            Schema::connection($connection)->table($tableName, function(Blueprint $table) {
+                $table->index('created_at');
+                $table->index('batch');
+            });
+
+        }
     }
 };

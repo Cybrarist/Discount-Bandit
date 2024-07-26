@@ -28,7 +28,7 @@ class DiscountUpdateCommand extends Command
      */
     public function handle(): void
     {
-        //add the new stores.
+        //add the new stores and apply new migrations
 
         Artisan::call("migrate --seed --force", [] , $this->output);
 
@@ -45,5 +45,17 @@ class DiscountUpdateCommand extends Command
 //        \Laravel\Prompts\info("-----------------------------------------------");
 //        \Laravel\Prompts\info("*/11 * * * * php_path project_path/artisan queue:work --stop-when-empty --queue=groups >> /dev/null 2>&1");
 
+
+        //clear caches
+        Artisan::call("optimize:clear", [] , $this->output);
+        Artisan::call("filament:clear-cached-components", [] , $this->output);
+        Artisan::call("icons:clear", [] , $this->output);
+        Artisan::call("queue:clear", [] , $this->output);
+        Artisan::call("notification:clear", [] , $this->output);
+
+        //cache stuff
+        Artisan::call("optimize", [] , $this->output);
+        Artisan::call("filament:cache-components", [] , $this->output);
+        Artisan::call("icons:cache", [] , $this->output);
     }
 }

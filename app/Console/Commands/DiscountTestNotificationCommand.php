@@ -30,14 +30,15 @@ class DiscountTestNotificationCommand extends Command
     public function handle(): void
     {
         User::first()->notify(new ProductDiscounted(
-                product_name: "This is a test product",
-                store_name: "this is a test store",
-                price: 100,
-                highest_price: 120,
-                lowest_price: 80,
-                product_url: "https://cybrarist.com",
-                image: "",
-                currency: "$", tags: ",New Test Tags",
+            product_name: "This is a test product",
+            store_name: "this is a test store",
+            price: 100,
+            highest_price: 120,
+            lowest_price: 80,
+            product_url: "https://cybrarist.com",
+            image: "",
+            currency: "$",
+            tags: ",New Test Tags",
         ));
     }
 }
