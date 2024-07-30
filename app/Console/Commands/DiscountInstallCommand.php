@@ -92,18 +92,14 @@ class DiscountInstallCommand extends Command
     public function handle(): void
     {
 
-        Artisan::call("optimize:clear", [] , $this->output);
-        Artisan::call("icons:clear", [] , $this->output);
-        Artisan::call("config:clear", [] , $this->output);
-
-
 
         File::copy(".env.example" , ".env");
         File::append(".env" , "\n\n\n");
 
-        sleep(1);
-        Artisan::call("key:generate --force"  ,[], $this->getOutput());
 
+        sleep(1);
+        Artisan::call("config:clear"  ,[], $this->getOutput());
+        Artisan::call("key:generate --force"  ,[], $this->getOutput());
 
         //APP URL
         $app_url=text(
@@ -167,8 +163,15 @@ class DiscountInstallCommand extends Command
 
         File::append(".env" , "DB_CONNECTION=$database_type\n");
 
-
         Artisan::call("migrate:fresh --seed --force" ,[], $this->getOutput());
+
+
+
+
+        Artisan::call("optimize:clear", [] , $this->output);
+        Artisan::call("icons:clear", [] , $this->output);
+        Artisan::call("config:clear", [] , $this->output);
+
 
 
         $name=text(

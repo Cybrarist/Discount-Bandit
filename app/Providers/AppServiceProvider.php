@@ -31,7 +31,6 @@ class AppServiceProvider extends ServiceProvider
     {
 //        URL::forceScheme('https');
 
-
         if (config('settings.disable_auth'))
             Auth::login(User::first());
 

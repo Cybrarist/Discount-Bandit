@@ -159,11 +159,15 @@ abstract class StoreTemplate
 
         $update_basic_product=[];
 
-        if (!$this->current_record->product->name || $this->current_record->product->name =="NA")
-            $update_basic_product["name"]=$this->get_name();
+        if (!$this->current_record->product->name || $this->current_record->product->name =="NA"){
+            $this->get_name();
+            $update_basic_product["name"]=$this->name;
+        }
 
-        if (!$this->current_record->product->image )
-            $update_basic_product["image"]=$this->get_image();
+        if (!$this->current_record->product->image ){
+            $this->get_image();
+            $update_basic_product["image"]=$this->image;
+        }
 
         if (!empty($update_basic_product))
             Product::where("id", $this->current_record->product_id)
@@ -241,11 +245,11 @@ abstract class StoreTemplate
 
 
         if (self::is_price_lowest_within(
-                product_id:  $this->current_record->product_id ,
-                store_id: $this->current_record->store_id,
-                days: $this->current_record->product->lowest_within,
-                price: $this->price
-            )){
+            product_id:  $this->current_record->product_id ,
+            store_id: $this->current_record->store_id,
+            days: $this->current_record->product->lowest_within,
+            price: $this->price
+        )){
             $this->ntfy_tags.=", Lowest Within {$this->current_record->product->lowest_within} Days";
             $this->notify();
             return true;
