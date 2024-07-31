@@ -120,7 +120,7 @@ class Mediamarkt extends StoreTemplate
     public static function get_variations($url) : array {return [];}
 
 
-    public static function prepare_url( $domain, $product, $store = null): array|string
+    public static function prepare_url( $domain, $product, $store = null): string
     {
         //doing this before making sure other domains for the same store do the same thing.
         $language= match ($domain){

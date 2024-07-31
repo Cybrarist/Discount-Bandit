@@ -242,7 +242,7 @@ class Costco extends StoreTemplate
     public static function get_variations($url) : array { return []; }
 
 
-    public static function prepare_url($domain, $product , ?Store $store =null ): array|string
+    public static function prepare_url($domain, $product , ?Store $store =null ): string
     {
         return match($domain){
             "costco.com","costco.ca"=>Str::replace(["store", "product_id"], [$domain , Str::upper($product)], self::MAIN_URL),

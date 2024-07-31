@@ -173,10 +173,8 @@ class Noon extends StoreTemplate
     }
 
 
-    public static function prepare_url($domain, $product , ?Store $store=null ): array|string
+    public static function prepare_url($domain, $product , ?Store $store=null ): string
     {
-
-
 
         return Str::replace(
             ["store","country", "product_id"],

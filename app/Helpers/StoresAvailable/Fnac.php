@@ -406,7 +406,7 @@ class Fnac extends StoreTemplate
     }
 
 
-    public static function prepare_url($domain, $product ): array|string
+    public static function prepare_url($domain, $product, ?Store $store = null): string
     {
 
         return Str::replace(

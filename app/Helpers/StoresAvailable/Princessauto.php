@@ -105,7 +105,7 @@ class Princessauto extends StoreTemplate
     public static function get_variations($url) : array {return [];}
 
 
-    public static function prepare_url( $domain, $product, $store = null): array|string
+    public static function prepare_url( $domain, $product, $store = null): string
     {
         return Str::replace(
             ["store", "product_id"],

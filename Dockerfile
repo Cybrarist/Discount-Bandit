@@ -1,8 +1,6 @@
 FROM dunglas/frankenphp:latest-builder-php8.3.7-bookworm
 
-
 LABEL authors="Cybrarist"
-
 
 ENV SERVER_NAME=":80"
 ENV FRANKENPHP_CONFIG="worker /app/public/index.php"

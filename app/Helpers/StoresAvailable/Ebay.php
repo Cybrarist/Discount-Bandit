@@ -174,7 +174,7 @@ class Ebay extends StoreTemplate
 
     public static function get_variations() : void {}
 
-    public static function prepare_url($domain, $product, $store = null): array|string
+    public static function prepare_url($domain, $product, $store = null): string
     {
 
         return Str::replace(

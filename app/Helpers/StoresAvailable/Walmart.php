@@ -242,7 +242,7 @@ class Walmart extends StoreTemplate
     }
 
 
-    public static function prepare_url($domain, $product, $store=null ): array|string
+    public static function prepare_url($domain, $product, $store=null ): string
     {
 
         return Str::replace(

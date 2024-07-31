@@ -209,7 +209,7 @@ class Wallapop extends StoreTemplate
         return  [];
     }
 
-    public static function prepare_url($domain, $product , ?Store $store ): array|string
+    public static function prepare_url($domain, $product ,  $store=null ): string
     {
 
 
