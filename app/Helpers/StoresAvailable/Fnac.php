@@ -414,4 +414,14 @@ class Fnac extends StoreTemplate
             [$domain , $product],
             self::MAIN_URL);
     }
+
+    #[\Override] function crawler(): void
+    {
+        // TODO: Implement crawler() method.
+    }
+
+    #[\Override] public function get_used_price()
+    {
+        // TODO: Implement get_used_price() method.
+    }
 }

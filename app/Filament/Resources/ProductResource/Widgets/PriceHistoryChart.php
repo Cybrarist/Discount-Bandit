@@ -2,18 +2,9 @@
 
 namespace App\Filament\Resources\ProductResource\Widgets;
 
-use App\Enums\StatusEnum;
-use App\Helpers\CurrencyHelper;
 use App\Helpers\ProductHelper;
-use App\Helpers\StoreHelper;
-use App\Models\PriceHistory;
-use App\Models\ProductStore;
-use App\Models\Store;
+use Filament\Support\RawJs;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Number;
 use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
 class PriceHistoryChart extends ApexChartWidget
@@ -52,7 +43,6 @@ class PriceHistoryChart extends ApexChartWidget
     {
         try {
 
-
             $price_histories_per_store=ProductHelper::get_product_history_per_store($this->record->id);
 
             return [
@@ -73,6 +63,10 @@ class PriceHistoryChart extends ApexChartWidget
                         ],
                     ],
                 ],
+                'yaxis' => [
+                    "decimalsInFloat"=>2,
+                ],
+
                 'stroke' => [
                     'curve' => 'smooth',
                 ],
@@ -82,13 +76,28 @@ class PriceHistoryChart extends ApexChartWidget
 
 
 
+
             ];
 
         }catch (\Exception $e){
-            dd($e);
             return [];
         }
 
     }
+    protected function extraJsOptions(): ?\Filament\Support\RawJs
+    {
+        return RawJs::make(<<<'JS'
+        {
+            yaxis: {
+                labels: {
+                    formatter: function (val, index) {
+                        return val.toLocaleString('en-US');
+                    }
+                }
+            }
+        }
+        JS);
+    }
+
 
 }

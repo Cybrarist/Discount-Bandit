@@ -43,17 +43,20 @@ class EditProduct extends EditRecord
 
 
        if ($data['url']){
-
             $new_url=new URLHelper($data['url']);
 
 
+            $extra_data['key']=$new_url->product_unique_key;
+
             //if product across multi region store has the same id, then user can just add the domain
            // and the code will add the other store.
+
 
             if (!$new_url->product_unique_key){
                 $get_same_store_product= ProductStore::where("product_id", $this->record->id)
                     ->whereIn("store_id" , Store::where('domain' , 'like' , $new_url->top_host.'%')->pluck("id")->toArray())
                     ->first();
+
 
                 $extra_data['key']=$get_same_store_product->key;
             }
@@ -61,6 +64,7 @@ class EditProduct extends EditRecord
                 $this->halt();
 
             StoreTemplate::insert_other_store(domain: $new_url->domain , product_id: $this->record->id, extra_data: $extra_data);
+
 
             $this->dispatch('refresh_products_relation');
         }

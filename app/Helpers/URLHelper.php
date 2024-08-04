@@ -120,11 +120,11 @@ class URLHelper
     }
     public function  get_walmart_ip(): string
     {
-        return Str::remove("/" , Str::squish(  \Arr::last(explode("/" , $this->path))) );
+        return Str::remove("/" , Str::squish(  Arr::last(explode("/" , $this->path))) );
     }
     public function  get_argos_product_id(): string
     {
-        return Str::remove("/" , Str::squish(  \Arr::last(explode("/" , $this->path))) );
+        return Str::remove("/" , Str::squish(  Arr::last(explode("/" , $this->path))) );
     }
 
     public function get_fnac_key(): string

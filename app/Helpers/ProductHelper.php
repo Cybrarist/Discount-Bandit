@@ -6,8 +6,8 @@ use App\Enums\StatusEnum;
 use App\Models\PriceHistory;
 use App\Models\Product;
 use App\Models\Store;
+use Carbon\Carbon;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Number;
 
 class ProductHelper
 {
@@ -42,34 +42,78 @@ class ProductHelper
 
     public static function get_product_history_per_store ($product_id): array
     {
-        $price_histories= PriceHistory::where("product_id", $product_id)
-            ->groupBy(["date" , "store_id" ,  "price"])
-            ->whereDate("date" , ">=" , today()->subYear())
-            ->select([
-                "store_id",
-                "date as x",
-                "price as y"
-            ])
-            ->get();
+
+
+
+
+        $available_stores=PriceHistory::where('product_id',$product_id)
+            ->distinct()
+            ->select('store_id')
+            ->pluck('store_id')
+            ->toArray();
+
+
+
+        $currencies=CurrencyHelper::get_currencies();
 
         $stores= Store::where("status" , StatusEnum::Published)
-            ->whereIn('id' , $price_histories->pluck("store_id"))
+            ->whereIn('id' , $available_stores)
             ->get(["id" , "currency_id" , "name"])
             ->keyBy("id")
-            ->map(function ($record){
-                $currency=CurrencyHelper::get_currencies($record->currency_id);
+            ->map(function ($record) use ($currencies){
                 return [
-                    "name"=>"$record->name ({$currency})",
+                    "name"=>"$record->name ({$currencies[$record->currency_id]})",
                 ];
             })
             ->toArray();
 
-        foreach ($price_histories as $single_price_history)  {
-            $stores[$single_price_history->store_id]["data"][]=[
-                'x'=>$single_price_history->x,
-                'y'=>Number::format( $single_price_history->y / 100 , 2)
-            ];
+
+
+        $price_histories= PriceHistory::where("product_id", $product_id)
+            ->whereDate("date" , ">=" , today()->subYear())
+            ->orderBy("date", "desc")
+            ->selectRaw(
+                "store_id,
+                date,
+                price,
+                store_id || '_' ||date  as con_date"
+            )
+            ->get()
+            ->keyBy("con_date")
+            ->toArray();
+
+
+        $min_date=Carbon::parse(explode("_" , Arr::last($price_histories)["con_date"])[1]) ;
+        $max_date=Carbon::parse(explode("_" , Arr::first($price_histories)["con_date"])[1]);
+
+
+        $difference=$min_date->diffInDays($max_date);
+
+        try {
+            for ($i=0 ; $i<= $difference ; $i++){
+                $current_date_loop= $min_date->addDays($i)->toDateString();
+
+
+                foreach ($available_stores as $single_store){
+                    $current_store_date_key=$single_store . "_" . $current_date_loop;
+                    if (Arr::exists($price_histories,$current_store_date_key ))
+                        $stores[$single_store]["data"][]=[
+                            'x'=> $price_histories[$current_store_date_key]["date"],
+                            'y'=> $price_histories[$current_store_date_key]["price"],
+                        ];
+                    else
+                        $stores[$single_store]["data"][]=[
+                            'x'=> $current_date_loop,
+                            'y'=>0,
+                        ];
+                }
+
+            }
+        }catch (\Exception $exception){
+            dd($exception->getMessage());
         }
+
+
 
         return $stores;
     }

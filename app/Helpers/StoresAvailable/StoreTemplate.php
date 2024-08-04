@@ -189,7 +189,7 @@ abstract class StoreTemplate
             'price' => $this->price,
             'used_price' => $this->price_used,
             'highest_price' => ($this->price > $this->current_record->highest_price) ? $this->price : $this->current_record->highest_price,
-            'lowest_price' => ($this->price < $this->current_record->lowest_price) ? $this->price : $this->current_record->lowest_price,
+            'lowest_price' => ($this->price < $this->current_record->lowest_price || $this->current_record->lowest_price==0) ? $this->price : $this->current_record->lowest_price,
             'number_of_rates' => $this->no_of_rates,
             'seller' => $this->seller,
             'rate' => $this->rating,

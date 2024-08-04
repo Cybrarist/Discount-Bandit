@@ -10,9 +10,7 @@ class PriceHistory extends Model
 {
     use HasFactory;
 
-    protected $casts=[
 
-    ];
     protected $fillable=[
         "date",
         "price",

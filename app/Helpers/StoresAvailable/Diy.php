@@ -233,4 +233,9 @@ class Diy extends StoreTemplate
     }
 
     public function get_condition(): void { $this->condition="New";}
+
+    public function crawler(): void
+    {
+
+    }
 }

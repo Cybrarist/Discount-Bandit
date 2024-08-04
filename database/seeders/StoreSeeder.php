@@ -221,21 +221,21 @@ class StoreSeeder extends Seeder
             [
                 'name'=>'Noon UAE',
                 'domain'=>'noon.com',
-                'image'=>'noon.png',
+                'image'=>'noon.svg',
                 'currency_id'=>Currency::firstOrCreate(['code'=>'AED'])->id,
                 'slug'=>'noon_com'
             ],
             [
                 'name'=>'Noon Egypt',
                 'domain'=>'noon.com',
-                'image'=>'noon.png',
+                'image'=>'noon.svg',
                 'currency_id'=>Currency::firstOrCreate(['code'=>'EGP'])->id,
                 'slug'=>'noon_com'
             ],
             [
                 'name'=>'Noon Saudi',
                 'domain'=>'noon.com',
-                'image'=>'noon.png',
+                'image'=>'noon.svg',
                 'currency_id'=>Currency::firstOrCreate(['code'=>'SAR'])->id,
                 'slug'=>'noon_com'
             ],
