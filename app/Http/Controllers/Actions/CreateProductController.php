@@ -35,7 +35,6 @@ class CreateProductController extends Controller
         try {
             $url = new URLHelper($request->url);
 
-
             //make sure the store exists
             $store= Store::where("domain" , $url->domain)->first();
             if (!$store)
@@ -44,7 +43,7 @@ class CreateProductController extends Controller
             //check the product doesn't exist already
             $product_store=ProductStore::where([
                 "store_id" => $store->id,
-                "key" => $url->product_unique_key
+                "key" => $url->product_unique_key,
                 ])->first();
 
             if ($product_store){
@@ -73,18 +72,19 @@ class CreateProductController extends Controller
            ProductStore::updateOrCreate([
                "store_id" => $store->id,
                "product_id" => $product_id,
+               "key"=>$url->product_unique_key,
            ],[
                "notify_price" => $request->notify_price,
                "number_of_rates" => $request->number_of_rates,
+               "price" => $request->price,
            ]);
 
             return response([
                 "message"=>"Product Added / Updated Successfully" ,
-                "link"=> ProductResource::getUrl("edit", ["record"=>$product])
+                "link"=> ProductResource::getUrl("edit", ["record"=>$product_id])
             ] , 200);
 
         } catch (\Exception $e){
-            Log::error("API Store");
             Log::error($e);
             return response(["message"=>"Something Wrong Happened"] , 500);
         }

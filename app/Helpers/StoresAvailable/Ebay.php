@@ -30,8 +30,8 @@ class Ebay extends StoreTemplate
                     ->__toString());
             $this->information= Arr::keyBy($this->information , '@type')['Product'];
 
-        }catch (Exception){
-            $this->log_error("Information Crawling");
+        }catch (Exception $exception){
+            $this->log_error("Information Crawling", $exception->getMessage());
         }
 
         try {
@@ -42,7 +42,7 @@ class Ebay extends StoreTemplate
         }
         catch (Exception )
         {
-            $this->log_error("Crawl The Website");
+            $this->log_error("Crawl The Website" ,$exception->getMessage());
             return;
         }
 
@@ -63,14 +63,14 @@ class Ebay extends StoreTemplate
             return;
         }
         catch ( Exception $e) {
-            $this->log_error("First Method Name");
+            $this->log_error("First Method Name", $exception->getMessage());
         }
 
         try {
             $this->name=$this->right_column->xpath("//h1[@class='x-item-title__mainTitle']//span")[0]->__toString();
         }
         catch ( Exception $e) {
-            $this->log_error("Second Method Name");
+            $this->log_error("Second Method Name", $exception->getMessage());
             $this->name="NA";
         }
 
@@ -81,7 +81,7 @@ class Ebay extends StoreTemplate
             $this->image = $this->information->image ?? "NA";
         }
         catch ( Exception $e) {
-            $this->log_error("Image First Method");
+            $this->log_error("Image First Method", $exception->getMessage());
             $this->image = "";
         }
     }
@@ -91,7 +91,7 @@ class Ebay extends StoreTemplate
         }
         catch (Exception  $e )
         {
-            $this->log_error("Price First Method");
+            $this->log_error("Price First Method", $exception->getMessage());
         }
 
     }
@@ -101,8 +101,8 @@ class Ebay extends StoreTemplate
         try {
             $schema=Str::lower( Arr::last( explode("/" , $this->information->offers->availability)));
             ($schema=="instock") ? $this->in_stock = true : $this->in_stock=false;
-        } catch (\Exception $e){
-            $this->log_error("Stock Availability");
+        } catch (\Exception $exception){
+            $this->log_error("Stock Availability", $exception->getMessage());
             $this->in_stock = true;
         }
 
@@ -141,17 +141,17 @@ class Ebay extends StoreTemplate
         try {
             $this->seller=$this->right_column->xpath("//div[@class='ux-seller-section__item--seller']//span")[0]->__toString();
         }
-        catch (Error | \Exception  )
+        catch (Error | \Exception  $exception)
         {
-            $this->log_error("The Seller First Method");
+            $this->log_error("The Seller First Method", $exception->getMessage());
         }
 
         try {
             $this->seller=$this->right_column->xpath("//div[@class='x-sellercard-atf__info__about-seller']//span")[0]->__toString();
         }
-        catch (Error | Exception )
+        catch (Error | Exception $exception)
         {
-            $this->log_error("The Seller Second Method");
+            $this->log_error("The Seller Second Method", $exception->getMessage());
             $this->seller="NA";
         }
 
@@ -163,8 +163,8 @@ class Ebay extends StoreTemplate
 
         try{
             $this->shipping_price= (float) ($this->information->offers->shippingDetails->shippingRate->value);
-        }catch (Exception $e){
-            $this->log_error("Shipping Price");
+        }catch (Exception $exception){
+            $this->log_error("Shipping Price", $exception->getMessage());
         }
     }
 
@@ -187,9 +187,9 @@ class Ebay extends StoreTemplate
         try{
             $schema=Arr::last( explode("/" , $this->information->offers->itemCondition));
             $this->condition=Str::squish(Str::replace('condition' , '' ,  Str::headline($schema), false));
-        }  catch (Exception)
+        }  catch (Exception $exception)
         {
-            $this->log_error("The Condition ");
+            $this->log_error("The Condition", $exception->getMessage());
             $this->condition="New";
         }
     }

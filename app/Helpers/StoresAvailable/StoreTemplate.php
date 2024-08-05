@@ -44,6 +44,7 @@ abstract class StoreTemplate
     ];
 
     const string OTHER_AGENT="Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0";
+    const string NOON_AGENT="Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:127.0) Gecko/20100101 Firefox/127.0";
 
     protected string $product_url;
     protected string $name="NA";
@@ -79,6 +80,7 @@ abstract class StoreTemplate
             $this->prepare_sections_to_crawl();
         }
         catch (Exception $exception){
+            dd($exception);
             $this->log_error(part: "Crawling" , exception: $exception->getMessage());
             return;
         }
@@ -421,6 +423,17 @@ abstract class StoreTemplate
             )
             ->get($url, $data);
 
+
+        // todo remove later if noon is working fine for a while.
+
+//        $extra_headers=[
+//            "Connection"=> "keep-alive",
+//            "Cache-Control"=> "no-cache",
+//            "Accept"=> "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+//            "Accept-Language"=> "en-US,en;q=0.5",
+//            "Priority"=> "u=1",
+//        ];
+
     }
 
 
@@ -579,7 +592,8 @@ abstract class StoreTemplate
     public static function  get_random_user_agent($url): string
     {
         return match (true){
-            Str::contains($url,["noon.com" , "costco." ,"currys.c"] , true) => self::OTHER_AGENT,
+            Str::contains($url,[ "costco." ,"currys.c"] , true) => self::OTHER_AGENT,
+            Str::contains($url,"noon.com" , true) => self::NOON_AGENT,
             Str::contains( $url , "argos.co.uk"  , true) => Arr::random(self::ARGOS_AGENTS),
             Str::contains( $url , "walmart"  , true) => Str::random(),
             default => Arr::random(self::USER_AGENTS)

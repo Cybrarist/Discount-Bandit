@@ -14,7 +14,7 @@ class PriceHistoryChart extends ApexChartWidget
     protected static bool $deferLoading = true;
 
     /**
-     * Chart Id
+     * Chart Idcreate
      *
      * @var string
      */
@@ -44,6 +44,7 @@ class PriceHistoryChart extends ApexChartWidget
         try {
 
             $price_histories_per_store=ProductHelper::get_product_history_per_store($this->record->id);
+
 
             return [
                 'chart' => [

@@ -52,8 +52,6 @@ class ProductHelper
             ->pluck('store_id')
             ->toArray();
 
-
-
         $currencies=CurrencyHelper::get_currencies();
 
         $stores= Store::where("status" , StatusEnum::Published)
@@ -91,8 +89,7 @@ class ProductHelper
 
         try {
             for ($i=0 ; $i<= $difference ; $i++){
-                $current_date_loop= $min_date->addDays($i)->toDateString();
-
+                $current_date_loop= $min_date->addDay()->toDateString();
 
                 foreach ($available_stores as $single_store){
                     $current_store_date_key=$single_store . "_" . $current_date_loop;

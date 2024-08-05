@@ -189,7 +189,6 @@ class StoreSeeder extends Seeder
                 'currency_id'=>Currency::firstOrCreate(['code'=>'$'])->id,
                 'slug'=>'ebay_com'
             ],
-
             [
                 'name'=>'Fnac',
                 'domain'=>'fnac.com',
