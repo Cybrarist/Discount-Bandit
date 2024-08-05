@@ -4,6 +4,7 @@ namespace App\Filament\Resources\ProductResource\RelationManagers;
 
 use App\Enums\StatusEnum;
 use App\Helpers\CurrencyHelper;
+use App\Helpers\StoreHelper;
 use App\Models\PriceHistory;
 use App\Models\ProductStore;
 use App\Models\Store;
@@ -145,6 +146,7 @@ class StoresRelationManager extends RelationManager
 
                     return $record;
                 }),
+
                 Tables\Actions\DetachAction::make()->label("Remove")->after(function ($record){
                     if (ProductStore::where([
                         "store_id" => $record->store_id,
@@ -157,6 +159,12 @@ class StoresRelationManager extends RelationManager
 
 
                 }),
+
+                Tables\Actions\Action::make('Fetch')
+                    ->color('primary')
+                    ->action(fn($record)=> StoreHelper::fetch_product_store(ProductStore::find($record->pivot_id)))
+                    ->after(fn ($livewire) => $livewire->dispatch('refresh'))
+                    ->color('primary')
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

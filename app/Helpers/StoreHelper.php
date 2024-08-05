@@ -63,6 +63,32 @@ class StoreHelper
 
     }
 
+
+    public static function fetch_product_store(ProductStore $product_store): void
+    {
+        try {
+            $product_store->load([
+                "store"
+            ]);
+
+            $final_class_name="App\Helpers\StoresAvailable\\" . Str::ucfirst( explode(".",$product_store->store->domain)[0]);//
+            new $final_class_name($product_store->id);
+
+            Notification::make()
+                ->title('Data Has been Fetched, Please refresh to see the new values.')
+                ->success()
+                ->send();
+        }
+        catch ( \Exception $e){
+            Log::error("Couldn't fetch the job with error : $e" );
+            Notification::make()
+                ->title("Couldn't fetch the product, refer to logs")
+                ->danger()
+                ->send();
+        }
+
+    }
+
     public static function get_stores_active_for_tabs()
     {
         return Cache::remember('stores_active_for_tabs' , now()->addDay(), function () {

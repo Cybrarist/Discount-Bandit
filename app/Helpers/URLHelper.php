@@ -149,9 +149,8 @@ class URLHelper
             "saudi" => Store::whereDomain($this->domain)->whereCurrencyId(Currency::where("code" , "SAR")->first()->id)->first(),
         };
 
+        return Str::lower($paths[sizeof($paths)-3]);
 
-        if (sizeof($paths) >=4 && $paths[3] !="")
-            return Str::lower($paths[3]) ;
 
         throw new \Exception("wrong formula");
     }

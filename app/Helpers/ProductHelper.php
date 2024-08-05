@@ -86,10 +86,9 @@ class ProductHelper
 
 
         $difference=$min_date->diffInDays($max_date);
-
+        $current_date_loop=$min_date->toDateString();
         try {
             for ($i=0 ; $i<= $difference ; $i++){
-                $current_date_loop= $min_date->addDay()->toDateString();
 
                 foreach ($available_stores as $single_store){
                     $current_store_date_key=$single_store . "_" . $current_date_loop;
@@ -104,8 +103,11 @@ class ProductHelper
                             'y'=>0,
                         ];
                 }
+                $current_date_loop= $min_date->addDay()->toDateString();
+
 
             }
+
         }catch (\Exception $exception){
             dd($exception->getMessage());
         }
