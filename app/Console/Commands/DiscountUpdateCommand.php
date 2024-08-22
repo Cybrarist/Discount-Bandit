@@ -39,11 +39,11 @@ class DiscountUpdateCommand extends Command
         $stores=Store::all();
 
         foreach ($stores as $store)
-            \Laravel\Prompts\info("*/6 * * * * php_path project_path/artisan queue:work --stop-when-empty --queue=$store->slug >> /dev/null 2>&1");
+            \Laravel\Prompts\info("*/6 * * * * php_path project_path/artisan queue:work  --max-time=300 --sleep=1 --queue=$store->slug >> /dev/null 2>&1");
 
 //        \Laravel\Prompts\info("Groups Crons:");
 //        \Laravel\Prompts\info("-----------------------------------------------");
-//        \Laravel\Prompts\info("*/11 * * * * php_path project_path/artisan queue:work --stop-when-empty --queue=groups >> /dev/null 2>&1");
+//        \Laravel\Prompts\info("*/11 * * * * php_path project_path/artisan queue:work --max-time=300 --sleep=1  --queue=groups >> /dev/null 2>&1");
 
 
         //clear caches

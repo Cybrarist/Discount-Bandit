@@ -74,10 +74,6 @@ class PriceHistoryChart extends ApexChartWidget
                 'dataLabels' => [
                     'enabled' => false,
                 ],
-
-
-
-
             ];
 
         }catch (\Exception $e){

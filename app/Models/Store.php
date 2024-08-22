@@ -8,6 +8,7 @@ use App\Observers\StoreObserver;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 
 #[ObservedBy(StoreObserver::class)]
@@ -64,5 +65,10 @@ class Store extends Model
             'remove_if_sold',
             'ebay_id',
         ]);
+    }
+
+    public function product_stores(): HasMany
+    {
+        return $this->hasMany(ProductStore::class);
     }
 }

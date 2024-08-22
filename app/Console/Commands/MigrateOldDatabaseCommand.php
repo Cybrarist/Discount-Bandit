@@ -46,8 +46,8 @@ class MigrateOldDatabaseCommand extends Command
             $products=Product::whereNotNull('asin')->get();
             //update amazon products
             foreach ($products as $product){
-                ProductStore::where('product_id' , $product)
-                    ->whereIn('store_id' , Store::where('name' , 'Like' , '%Amazon')->pluck('id')->toArray())
+                ProductStore::where('product_id' , $product->id)
+                    ->whereIn('store_id' , Store::where('name' , 'Like' , 'Amazon%')->pluck('id')->toArray())
                     ->update([
                         'key'=>$product->asin
                     ]);
@@ -58,8 +58,8 @@ class MigrateOldDatabaseCommand extends Command
             $products=Product::whereNotNull('argos_id')->get();
             //update amazon products
             foreach ($products as $product){
-                ProductStore::where('product_id' , $product)
-                    ->whereIn('store_id' , Store::where('name' , 'Like' , '%Argos')->pluck('id')->toArray())
+                ProductStore::where('product_id' , $product->id)
+                    ->whereIn('store_id' , Store::where('name' , 'Like' , 'Argos%')->pluck('id')->toArray())
                     ->update([
                         'key'=>$product->argos_id
                     ]);
@@ -69,8 +69,8 @@ class MigrateOldDatabaseCommand extends Command
             $products=Product::whereNotNull('argos_id')->get();
             //update amazon products
             foreach ($products as $product){
-                ProductStore::where('product_id' , $product)
-                    ->whereIn('store_id' , Store::where('name' , 'Like' , '%Walmart')->pluck('id')->toArray())
+                ProductStore::where('product_id' , $product->id)
+                    ->whereIn('store_id' , Store::where('name' , 'Like' , 'Walmart%')->pluck('id')->toArray())
                     ->update([
                         'key'=>$product->walmart_ip
                     ]);

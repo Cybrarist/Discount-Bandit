@@ -15,6 +15,7 @@ use DOMDocument;
 use Exception;
 use Filament\Notifications\Notification;
 use HeadlessChromium\BrowserFactory;
+use HeadlessChromium\Exception\OperationTimedOut;
 use HeadlessChromium\Page;
 use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Response;
@@ -58,6 +59,7 @@ abstract class StoreTemplate
     protected float $shipping_price=0;
     protected string $condition="new";
 
+    //todo change to array
     private string $ntfy_tags="";
 
     protected ?DOMDocument $document = null;
@@ -80,9 +82,7 @@ abstract class StoreTemplate
             $this->prepare_sections_to_crawl();
         }
         catch (Exception $exception){
-            dd($exception);
             $this->log_error(part: "Crawling" , exception: $exception->getMessage());
-            return;
         }
 
         $this->get_product_information();
@@ -124,21 +124,13 @@ abstract class StoreTemplate
      */
     public function crawl_url(): void {
         $response=self::get_website($this->product_url);
-
         self::prepare_dom($response,$this->document , $this->xml);
     }
 
     public function crawl_url_chrome(): void {
         $response=self::get_website_chrome($this->product_url);
-
         self::prepare_dom($response,$this->document , $this->xml);
     }
-
-
-
-
-
-
     /**
      * Prepare the parts of page that needs to be crawled or add
      * extra steps to crawl the products.
@@ -191,7 +183,7 @@ abstract class StoreTemplate
             'price' => $this->price,
             'used_price' => $this->price_used,
             'highest_price' => ($this->price > $this->current_record->highest_price) ? $this->price : $this->current_record->highest_price,
-            'lowest_price' => ($this->price < $this->current_record->lowest_price || $this->current_record->lowest_price==0) ? $this->price : $this->current_record->lowest_price,
+            'lowest_price' => ($this->price < $this->current_record->lowest_price || !$this->current_record->lowest_price) ? $this->price : $this->current_record->lowest_price,
             'number_of_rates' => $this->no_of_rates,
             'seller' => $this->seller,
             'rate' => $this->rating,
@@ -282,7 +274,7 @@ abstract class StoreTemplate
     }
     public function price_crawled_and_different_from_database(): bool {
         //check that we have the crawled price, and that is different from the database.
-        return  $this->price  &&  $this->price != $this->current_record->price;
+        return  $this->price &&  ($this->price != $this->current_record->price);
     }
     public function is_official_seller(): bool
     {
@@ -292,7 +284,7 @@ abstract class StoreTemplate
     }
     public static function is_price_lowest_within($product_id=null,$store_id=null, $days=null , $price=0): bool
     {
-        if (!$days)
+        if (!$days ||  !$price)
             return false;
 
         $lowest_price_in_database = PriceHistory::whereDate('date' , '>=' , Carbon::today()->subDays($days))
@@ -411,6 +403,14 @@ abstract class StoreTemplate
 
     public static function get_website(string $url , array $data=[], array $extra_headers=[]): Response {
 
+        $extra_headers=match (true){
+            Str::contains( $url , "argos.co.uk"  , true) => [
+                "Accept-Encoding"=> "gzip, deflate, br, zstd"
+            ],
+            default => $extra_headers
+        };
+
+
         return Http::withUserAgent(self::get_random_user_agent($url))
             ->withHeaders(
                 array_merge([
@@ -443,27 +443,36 @@ abstract class StoreTemplate
      * @return string
      */
 
-    public static function get_website_chrome(string $url): string {
+    public static function get_website_chrome(string $url , array $extra_headers=[]): string {
 
-        $browser_factory = new BrowserFactory();
+        $browser_factory = new BrowserFactory('chromium');
 
-        $browser = $browser_factory->createBrowser([
-            'headless' => false,
-            'windowSize'   => [1920, 1000],
-            'enableImages' => true,
+        $browser = $browser_factory
+            ->createBrowser([
+                'headless' => true,
+                'noSandbox' => true,
+                "headers"=>$extra_headers
         ]);
+
+        $page=$browser->createPage();
+
         try {
-            $page=$browser->createPage();
 
             $page_event=match(true){
                 Str::contains($url , "mediamarket", true)=> Page::DOM_CONTENT_LOADED,
                 default => Page::NETWORK_IDLE
             };
 
-            $page->navigate($url)->waitForNavigation($page_event );
+            $page->navigate($url)->waitForNavigation($page_event , 10000);
+
             return $page->getHtml();
 
-        }catch (Exception $exception){
+        }
+        catch ( OperationTimedOut $e) {
+            return $page->getHtml();
+            // too long to load
+        }
+        catch ( Exception $exception){
             self::log_error("Crawling using chrome", $exception->getMessage());
         }
         return "";
@@ -582,7 +591,7 @@ abstract class StoreTemplate
     /*
      * record the error with the part responsible.
      */
-    public function log_error(string $part , string $exception): void {
+    public function log_error(string $part , string $exception = null): void {
         Context::add("product" , $this->product_url);
         Log::error("Couldn't get the $part");
         Log::error("Full error message:\n $exception");

@@ -31,7 +31,7 @@ class AppServiceProvider extends ServiceProvider
     {
 //        URL::forceScheme('https');
 
-        if (config('settings.disable_auth'))
+        if (config('settings.disable_auth') && ! app()->runningInConsole())
             Auth::login(User::first());
 
         Table::configureUsing(function (Table $table): void {

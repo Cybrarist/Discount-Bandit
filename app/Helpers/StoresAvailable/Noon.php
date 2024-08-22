@@ -25,7 +25,6 @@ class Noon extends StoreTemplate
 
     public function crawler(): void
     {
-//        parent::crawl_url_chrome();
         parent::crawl_url();
     }
 
@@ -42,7 +41,6 @@ class Noon extends StoreTemplate
             $this->log_error("Crawling Noon");
         }
     }
-
 
    /**
      * Get the data from the store

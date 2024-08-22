@@ -39,11 +39,11 @@ class DiscountInstallCommand extends Command
     {
         \Laravel\Prompts\info("Schedule Automation");
         \Laravel\Prompts\info("*/5 * * * * $path $project/artisan schedule:run >> /dev/null 2>&1\"");
-//        \Laravel\Prompts\info("*/11 * * * * $path $project/artisan queue:work --stop-when-empty --queue=groups >> /dev/null 2>&1");
+//        \Laravel\Prompts\info("*/11 * * * * $path $project/artisan queue:work --max-time=300 --sleep=1  --queue=groups >> /dev/null 2>&1");
 
         $stores=Store::all();
         foreach ($stores as $store)
-            \Laravel\Prompts\info("*/6 * * * * $path $project/artisan queue:work --stop-when-empty --queue=$store->slug >> /dev/null 2>&1");
+            \Laravel\Prompts\info("*/6 * * * * $path $project/artisan queue:work --max-time=300 --sleep=1  --queue=$store->slug >> /dev/null 2>&1");
     }
 
     private function setup_cron_windows($path, $project): void
@@ -51,11 +51,11 @@ class DiscountInstallCommand extends Command
         \Laravel\Prompts\info("Schedule Automation");
         \Laravel\Prompts\info("schtasks /create /sc minute /mo 5 /tn \"DiscountScheduleTask\" /tr \"$path $project\\artisan schedule:run\"");
 
-//        \Laravel\Prompts\info("schtasks /create /sc minute /mo 15 /tn \"CrawlJobForGroups\" /tr \"$path $project\\artisan queue:work --stop-when-empty --queue=groups\"");
+//        \Laravel\Prompts\info("schtasks /create /sc minute /mo 15 /tn \"CrawlJobForGroups\" /tr \"$path $project\\artisan queue:work --max-time=300 --sleep=1  --queue=groups\"");
 
         $stores=Store::all();
         foreach ($stores as $store)
-            \Laravel\Prompts\info("schtasks /create /sc minute /mo 6 /tn \"CrawlJobFor$store->id\" /tr \"$path $project\\artisan queue:work --stop-when-empty --queue=$store->slug\"");
+            \Laravel\Prompts\info("schtasks /create /sc minute /mo 6 /tn \"CrawlJobFor$store->id\" /tr \"$path $project\\artisan queue:work --max-time=300 --sleep=1  --queue=$store->slug\"");
 
     }
 

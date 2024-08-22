@@ -42,7 +42,7 @@ class StoresRelationManager extends RelationManager
                     } ,true),
 
                 TextColumn::make('price')
-                    ->formatStateUsing(fn($state)=> Number::format($state ,2))
+                    ->formatStateUsing(fn($state)=>  Number::format($state ,2))
                     ->prefix(fn ($record) => CurrencyHelper::get_currencies($record->currency_id))
                     ->color(fn($record)=> (($record->price <= $record->notify_price) ? "success" :"danger")),
 

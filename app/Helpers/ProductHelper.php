@@ -43,9 +43,6 @@ class ProductHelper
     public static function get_product_history_per_store ($product_id): array
     {
 
-
-
-
         $available_stores=PriceHistory::where('product_id',$product_id)
             ->distinct()
             ->select('store_id')
@@ -66,19 +63,25 @@ class ProductHelper
             ->toArray();
 
 
+        if (env('DB_CONNECTION') == 'mysql')
+            $concat="CONCAT(store_id, '_', date)";
+        else
+            $concat="store_id || '_' || date";
+
+
 
         $price_histories= PriceHistory::where("product_id", $product_id)
-            ->whereDate("date" , ">=" , today()->subYear())
-            ->orderBy("date", "desc")
-            ->selectRaw(
-                "store_id,
-                date,
-                price,
-                store_id || '_' ||date  as con_date"
-            )
-            ->get()
-            ->keyBy("con_date")
-            ->toArray();
+        ->whereDate("date" , ">=" , today()->subYear())
+        ->orderBy("date", "desc")
+        ->selectRaw(
+            "store_id,
+            date,
+            price,
+            $concat   as con_date"
+        )
+        ->get()
+        ->keyBy("con_date")
+        ->toArray();
 
 
         $min_date=Carbon::parse(explode("_" , Arr::last($price_histories)["con_date"])[1]) ;
@@ -109,7 +112,8 @@ class ProductHelper
             }
 
         }catch (\Exception $exception){
-            dd($exception->getMessage());
+            dump($exception->getMessage());
+            return [];
         }
 
 

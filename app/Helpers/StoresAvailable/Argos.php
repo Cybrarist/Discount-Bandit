@@ -15,7 +15,7 @@ use Illuminate\Support\Str;
 
 class Argos extends StoreTemplate
 {
-    const string MAIN_URL="https://store/product/product_id" ;
+    const string MAIN_URL="https://www.store/product/product_id" ;
     private  $core_product;
     private $right_column;
     private $accordions;

@@ -1,0 +1,30 @@
+version: '3.8'
+
+networks:
+  discount-bandit:
+    driver: bridge
+
+services:
+  discount-bandit:
+    build:
+      context: .
+#    image: ./
+    ports:
+      - 8080:80
+    networks:
+      - discount-bandit
+    environment:
+      DB_CONNECTION: sqlite
+      NTFY_CHANNEL_ID: "HnBRDHWX4RXY3EWc"
+      DEFAULT_USER: "test"
+      DEFAULT_EMAIL: "docker@test.com"
+      DEFAULT_PASSWORD: "thisismypassword"
+      APP_TIMEZONE: UTC
+      RSS_FEED: 1
+      TOP_NAVIGATION: 0
+      DISABLE_TOP_BAR: 0
+      BREADCRUMBS: 1
+      SPA: 1
+      DISABLE_AUTH: 1
+      THEME_COLOR: Stone
+      APP_URL: "http://localhost:8080"

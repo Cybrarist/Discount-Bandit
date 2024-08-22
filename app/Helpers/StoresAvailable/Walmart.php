@@ -17,7 +17,7 @@ use Override;
 
 class Walmart extends StoreTemplate
 {
-    const MAIN_URL="https://store/ip/product_id" ;
+    const MAIN_URL="https://www.store/ip/product_id" ;
 
     private $information;
 
@@ -29,7 +29,7 @@ class Walmart extends StoreTemplate
 
     public function crawler(): void
     {
-        parent::crawl_url_chrome();
+        parent::crawl_url();
     }
 
 
@@ -37,10 +37,9 @@ class Walmart extends StoreTemplate
     {
         try {
             $product_info= $this->xml->xpath("//script[@type='application/ld+json']")[0];
-
             $this->information=json_decode($product_info);
-        }catch (Exception){
-            $this->log_error("Crawling Walmart");
+        }catch (Exception $exception){
+            $this->log_error("Crawling Walmart" );
         }
 
     }

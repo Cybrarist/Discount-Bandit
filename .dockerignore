@@ -22,3 +22,7 @@ Homestead.json
 /.vagrant
 .phpunit.result.cache
 
+.git
+.gitattributes
+.gitignore
+.idea

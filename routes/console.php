@@ -2,7 +2,10 @@
 
 
 use App\Console\Commands\ClearNotificationCount;
+use App\Enums\StatusEnum;
+use App\Jobs\CrawlProductJob;
 use App\Models\ProductStore;
+use App\Models\Store;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schedule;
 use Spatie\Health\Commands\ScheduleCheckHeartbeatCommand;
@@ -10,18 +13,23 @@ use Spatie\Health\Commands\ScheduleCheckHeartbeatCommand;
 Schedule::call(function () {
     try {
         Log::info("Products Schedule Started");
-
-        //getting stores for the queue slug
-        $product_stores=ProductStore::
-            with('store')
-            ->orderBy("updated_at","desc")
-            ->limit(60)
+        $stores= Store::with([
+            "product_stores"=>function($query){
+                $query->orderBy("updated_at")->limit(2);
+            }])
+            ->whereHas('product_stores')
+            ->where('status', StatusEnum::Published)
             ->get();
 
-        foreach ($product_stores as $index=>$product_store)
-            \App\Jobs\CrawlProductJob::dispatch($product_store->id)
-                ->onQueue($product_store->store->slug)
-                ->delay(now()->addSeconds($index*5));
+        foreach ($stores as $store)
+            foreach ($store->product_stores as $index=>$product_store){
+                CrawlProductJob::dispatch($product_store->id)
+                    ->onQueue($product_store->store->slug)
+                    ->delay( now()->addSeconds($index * 5));
+
+                Log::info($product_store->store_id);
+            }
+
 
         Log::info("Products Schedule Finished Successfully");
     }
