@@ -112,7 +112,6 @@ class ProductHelper
             }
 
         }catch (\Exception $exception){
-            dump($exception->getMessage());
             return [];
         }
 

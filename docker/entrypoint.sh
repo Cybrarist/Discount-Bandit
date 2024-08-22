@@ -2,7 +2,6 @@
 
 cp .env.example .env
 
-php artisan discount:fill-supervisor-workers
 
 php artisan storage:link
 php artisan config:clear
@@ -14,6 +13,9 @@ php artisan key:generate --force
 printenv > /etc/environment
 
 php artisan migrate --seed --force
+
+
+php artisan discount:fill-supervisor-workers
 
 php artisan icons:cache
 php artisan config:cache

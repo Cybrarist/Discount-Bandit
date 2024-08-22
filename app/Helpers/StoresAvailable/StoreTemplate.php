@@ -533,7 +533,7 @@ abstract class StoreTemplate
                     $product->product_stores()->create([
                         "key" =>  $single_variation,
                         "store_id" => $store->id,
-                        "notify_price" => $settings['notify_price'] * 100
+                        "notify_price" => $settings['notify_price']
                     ]);
                 }
 
