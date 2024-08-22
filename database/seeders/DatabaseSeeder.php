@@ -14,13 +14,6 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
 
-        User::firstOrCreate([
-            'email' => 'test@test.com',
-            ], [
-            'name' => 'Test User',
-            'password'=>'password'
-        ]);
-
         $this->call([
             StoreSeeder::class,
         ]);
