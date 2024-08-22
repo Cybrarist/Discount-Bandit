@@ -15,7 +15,7 @@ Schedule::call(function () {
         Log::info("Products Schedule Started");
         $stores= Store::with([
             "product_stores"=>function($query){
-                $query->orderBy("updated_at")->limit(2);
+                $query->orderBy("updated_at")->limit(60);
             }])
             ->whereHas('product_stores')
             ->where('status', StatusEnum::Published)
@@ -26,8 +26,6 @@ Schedule::call(function () {
                 CrawlProductJob::dispatch($product_store->id)
                     ->onQueue($product_store->store->slug)
                     ->delay( now()->addSeconds($index * 5));
-
-                Log::info($product_store->store_id);
             }
 
 

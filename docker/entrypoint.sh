@@ -25,3 +25,4 @@ Xvfb :99 -screen 0 2000x2000x24 & export DISPLAY=:99
 
 
 supervisord -c  /etc/supervisor/conf.d/supervisord.conf
+

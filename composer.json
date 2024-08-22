@@ -17,7 +17,6 @@
         "filament/filament": "^3.2",
         "filipfonal/filament-log-manager": "^2.0",
         "geo-sot/filament-env-editor": "^0.0.4",
-        "itsgoingd/clockwork": "^5.2",
         "jeffgreco13/filament-breezy": "^2.4",
         "laravel/framework": "^11.9",
         "laravel/octane": "^2.5",

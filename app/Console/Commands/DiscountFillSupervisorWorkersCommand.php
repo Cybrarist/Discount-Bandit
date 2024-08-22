@@ -43,7 +43,7 @@ class DiscountFillSupervisorWorkersCommand extends Command
 [program:laravel-worker-{$store->id}]
 process_name=%(program_name)s_%(process_num)02d
 user=root
-command=php artisan queue:work --queue={$store->slug} --max-time=300 --sleep=1
+command=php artisan queue:work --queue={$store->slug} --max-time=300 --sleep=1 --tries=1
 autostart=true
 autorestart=true
 stopasgroup=true

@@ -43,7 +43,7 @@ class DiscountInstallCommand extends Command
 
         $stores=Store::all();
         foreach ($stores as $store)
-            \Laravel\Prompts\info("*/6 * * * * $path $project/artisan queue:work --max-time=300 --sleep=1  --queue=$store->slug >> /dev/null 2>&1");
+            \Laravel\Prompts\info("*/6 * * * * $path $project/artisan queue:work --max-time=300 --sleep=1  --tries=1 --queue=$store->slug >> /dev/null 2>&1");
     }
 
     private function setup_cron_windows($path, $project): void
@@ -55,7 +55,7 @@ class DiscountInstallCommand extends Command
 
         $stores=Store::all();
         foreach ($stores as $store)
-            \Laravel\Prompts\info("schtasks /create /sc minute /mo 6 /tn \"CrawlJobFor$store->id\" /tr \"$path $project\\artisan queue:work --max-time=300 --sleep=1  --queue=$store->slug\"");
+            \Laravel\Prompts\info("schtasks /create /sc minute /mo 6 /tn \"CrawlJobFor$store->id\" /tr \"$path $project\\artisan queue:work --max-time=300 --tries=1 --sleep=1  --queue=$store->slug\"");
 
     }
 
