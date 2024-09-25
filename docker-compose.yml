@@ -15,7 +15,7 @@ services:
             DB_HOST: discount-bandit-mysql
             DEFAULT_USER: "test"
             DEFAULT_EMAIL: "docker@test.com"
-            DEAFULT_PASSWORD: "thisismypassword"
+            DEFAULT_PASSWORD: "thisismypassword"
             NTFY_LINK: "https://ntfy.sh/test"
             NTFY_USER : ""
             NTFY_PASSWORD : ""
