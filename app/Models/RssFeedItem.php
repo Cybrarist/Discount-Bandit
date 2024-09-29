@@ -25,7 +25,6 @@ class RssFeedItem extends Model implements  Feedable
 
     public function toFeedItem(): FeedItem
     {
-
         return FeedItem::create([
             "id"=>$this->id,
             'title' => $this->data["title"],

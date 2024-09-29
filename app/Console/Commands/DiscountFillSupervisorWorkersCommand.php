@@ -36,7 +36,7 @@ class DiscountFillSupervisorWorkersCommand extends Command
         Store::where("status" , StatusEnum::Published)->get()
             ->each(function ($store) {
 
-                Log::info($store->name . "append");
+                Log::info($store->name . " appended");
 
                 File::append('/etc/supervisor/conf.d/supervisord.conf',
                     "

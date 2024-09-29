@@ -197,4 +197,6 @@ class Ebay extends StoreTemplate
     function crawler(): void {
         $this->crawl_url();
     }
+    function is_system_detected_as_robot(): bool { return false;}
+
 }

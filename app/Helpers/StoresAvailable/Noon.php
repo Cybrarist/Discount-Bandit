@@ -180,5 +180,6 @@ class Noon extends StoreTemplate
             [$domain ,explode(" " , $store->name)[1]  , Str::upper($product)],
             self::MAIN_URL);
     }
+    function is_system_detected_as_robot(): bool { return false;}
 
 }

@@ -31,13 +31,12 @@ abstract class StoreTemplate
     protected ProductStore $current_record;
 
     const array USER_AGENTS = [
-        'w10_chrome_114' => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
-        'w10_edge_114' => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 Edg/114.0.1823.67",
-        'w10_firefox_115' => "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/115.0",
-        'w10_opera_100' => "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36 OPR/100.0.0.0",
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2) AppleWebKit/601.3.9 (KHTML, like Gecko) Version/9.0.2 Safari/601.3.9',
-        'Mozilla/5.0 (compatible; Googlebot/2.1; +http://www.google.com/bot.html)',
-        'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:109.0) Gecko/20100101 Firefox/118.0'
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/127.0.2651.105',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 14.6; rv:129.0) Gecko/20100101 Firefox/129.0',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 14.6; rv:128.0) Gecko/20100101 Firefox/128.0',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_6_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_6_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 OPR/113.0.0.0',
     ];
 
     const array ARGOS_AGENTS=[
@@ -80,13 +79,17 @@ abstract class StoreTemplate
         try {
             $this->crawler();
             $this->prepare_sections_to_crawl();
+            if ($this->is_system_detected_as_robot()){
+                Context::add('current product', $this->current_record);
+                Log::error('blocked due to robot, system will stop now');
+                return ;
+            }
+            $this->get_product_information();
+            $this->check_notification();
         }
         catch (Exception $exception){
             $this->log_error(part: "Crawling" , exception: $exception->getMessage());
         }
-
-        $this->get_product_information();
-        $this->check_notification();
     }
 
 
@@ -117,6 +120,9 @@ abstract class StoreTemplate
      */
     abstract function crawler() : void;
 
+
+    abstract function is_system_detected_as_robot(): bool;
+
     /**
      * get the product page and prepare the dom and xpath.
      * @return void
@@ -127,8 +133,8 @@ abstract class StoreTemplate
         self::prepare_dom($response,$this->document , $this->xml);
     }
 
-    public function crawl_url_chrome(): void {
-        $response=self::get_website_chrome($this->product_url);
+    public function crawl_url_chrome(array $extra_headers=[]): void {
+        $response=self::get_website_chrome($this->product_url, $extra_headers);
         self::prepare_dom($response,$this->document , $this->xml);
     }
     /**
@@ -178,12 +184,14 @@ abstract class StoreTemplate
         $this->get_condition();
 
 
+
+
         //update the current record
         $this->current_record->update([
             'price' => $this->price,
             'used_price' => $this->price_used,
             'highest_price' => ($this->price > $this->current_record->highest_price) ? $this->price : $this->current_record->highest_price,
-            'lowest_price' => ($this->price < $this->current_record->lowest_price || !$this->current_record->lowest_price) ? $this->price : $this->current_record->lowest_price,
+            'lowest_price' => (($this->price && $this->price < $this->current_record->lowest_price) || !$this->current_record->lowest_price) ? $this->price : $this->current_record->lowest_price,
             'number_of_rates' => $this->no_of_rates,
             'seller' => $this->seller,
             'rate' => $this->rating,
@@ -221,6 +229,7 @@ abstract class StoreTemplate
             return true;
         }
 
+
         if (config('settings.notify_any_change') && $this->price_crawled_and_different_from_database()){
             $this->ntfy_tags.=",Any Change";
             $this->notify();
@@ -234,8 +243,12 @@ abstract class StoreTemplate
 
         if ($this->is_official_seller())
             $this->ntfy_tags.=", Official Only";
+        elseif(!$this->current_record->product->only_official)
+            $this->ntfy_tags.=", Not Official";
         else
-            return false;
+           return false;
+
+
 
 
         if (self::is_price_lowest_within(
@@ -249,11 +262,19 @@ abstract class StoreTemplate
             return true;
         }
 
+
+
         if ($this->max_notification_reached())
             return false;
 
         if ($this->price_reached_desired()){
             $this->ntfy_tags.=",Price Reached";
+            $this->notify();
+            return true;
+        }
+
+        if ($this->price_reached_dropped_percentage()){
+            $this->ntfy_tags.=",Price Percentage Dropped";
             $this->notify();
             return true;
         }
@@ -270,7 +291,7 @@ abstract class StoreTemplate
     }
     public function stock_available(): bool {
         //check if the stock option is enabled, also the previous crawl was out of stock  and the current is in stock
-        return $this->current_record->product->stock && !$this->current_record->in_stock && $this->in_stock ;
+        return $this->current_record->product->stock && !$this->current_record->in_stock && $this->in_stock && $this->price ;
     }
     public function price_crawled_and_different_from_database(): bool {
         //check that we have the crawled price, and that is different from the database.
@@ -282,6 +303,8 @@ abstract class StoreTemplate
         return $this->current_record->product->only_official &&
             Str::contains($this->seller  , end($class_called) , true);
     }
+
+
     public static function is_price_lowest_within($product_id=null,$store_id=null, $days=null , $price=0): bool
     {
         if (!$days ||  !$price)
@@ -296,8 +319,15 @@ abstract class StoreTemplate
 
         return ($price * 100 <= $lowest_price_in_database  && $lowest_price_in_database !=0);
     }
+
     public function price_reached_desired(): bool {
         return ($this->current_record->add_shipping) ? $this->shipping_price + $this->price <= $this->current_record->notify_price :  $this->price  <= $this->current_record->notify_price;
+    }
+
+    public function price_reached_dropped_percentage(): bool {
+        return   $this->price &&
+            $this->current_record->notify_percentage &&
+            ( ($this->current_record->price - $this->price) / $this->current_record->price) *100 >= $this->current_record->notify_percentage;
     }
     public function max_notification_reached(): bool {
         return  $this->current_record->product->max_notifications &&
@@ -327,16 +357,18 @@ abstract class StoreTemplate
                     currency: CurrencyHelper::get_currencies($this->current_record->store->currency_id),
                     tags: $this->ntfy_tags));
 
-            RssFeedItem::create([
-                "data"=>[
-                    'title' =>"For Just $this->price -  Discount For " . Str::words($this->current_record->product->name),
-                    'summary' => "Your product " . $this->current_record->product->name . ", is at discount with price  " . $this->current_record->store->currency->code .  " $this->price",
-                    'updated' => now()->toDateTimeString(),
-                    'product_id' =>  $this->current_record->product_id,
-                    'image' => $this->image ?? $this->current_record->product->image,
-                    'name' => "Discount Bandit",
-                ]
-            ]);
+
+            if (env('RSS_FEED'))
+                RssFeedItem::create([
+                    "data"=>[
+                        'title' =>"For Just $this->price -  Discount For " . Str::words($this->current_record->product->name),
+                        'summary' => "Your product " . $this->current_record->product->name . ", is at discount with price  " . $this->current_record->store->currency->code .  " $this->price",
+                        'updated' => now()->toDateTimeString(),
+                        'product_id' =>  $this->current_record->product_id,
+                        'image' => $this->image ?? $this->current_record->product->image,
+                        'name' => "Discount Bandit",
+                    ]
+                ]);
         }
         catch (Exception $exception)
         {
@@ -407,11 +439,14 @@ abstract class StoreTemplate
             Str::contains( $url , "argos.co.uk"  , true) => [
                 "Accept-Encoding"=> "gzip, deflate, br, zstd"
             ],
+            Str::contains( $url , "emaxme.com"  , true) => [
+                "x-context-request"=> '{"applicationId":101,"tenantId":"5DF1363059675161A85F576D"}'
+            ],
             default => $extra_headers
         };
 
 
-        return Http::withUserAgent(self::get_random_user_agent($url))
+        return Http::withUserAgent("insomnia/9.3.3")
             ->withHeaders(
                 array_merge([
                     'Accept'=> '*/*',
@@ -445,25 +480,32 @@ abstract class StoreTemplate
 
     public static function get_website_chrome(string $url , array $extra_headers=[]): string {
 
-        $browser_factory = new BrowserFactory('chromium');
+//        $browser_factory = new BrowserFactory('chromium');
+        $browser_factory = new BrowserFactory();
 
         $browser = $browser_factory
             ->createBrowser([
                 'headless' => true,
                 'noSandbox' => true,
-                "headers"=>$extra_headers
+                "headers"=>$extra_headers,
+                'userAgent'=>self::get_random_user_agent(),
         ]);
 
         $page=$browser->createPage();
 
         try {
-
             $page_event=match(true){
-                Str::contains($url , "mediamarket", true)=> Page::DOM_CONTENT_LOADED,
+                Str::contains($url , ["mediamarket" , "emaxme"], true)=> Page::DOM_CONTENT_LOADED,
                 default => Page::NETWORK_IDLE
             };
 
-            $page->navigate($url)->waitForNavigation($page_event , 10000);
+            $timeout=match(true){
+                Str::contains($url , "bestbuy", true)=> 20000,
+                default => 10000
+            };
+
+
+            $page->navigate($url)->waitForNavigation($page_event , $timeout);
 
             return $page->getHtml();
 
@@ -533,7 +575,8 @@ abstract class StoreTemplate
                     $product->product_stores()->create([
                         "key" =>  $single_variation,
                         "store_id" => $store->id,
-                        "notify_price" => $settings['notify_price']
+                        "notify_price" => $settings['notify_price'],
+                        "notify_percentage" => $settings['notify_percentage'],
                     ]);
                 }
 
@@ -593,12 +636,11 @@ abstract class StoreTemplate
      */
     public function log_error(string $part , string $exception = null): void {
         Context::add("product" , $this->product_url);
-        Log::error("Couldn't get the $part");
-        Log::error("Full error message:\n $exception");
+        Log::error("Couldn't get the $part \n Full error message:\n $exception");
     }
 
 
-    public static function  get_random_user_agent($url): string
+    public static function  get_random_user_agent($url=""): string
     {
         return match (true){
             Str::contains($url,[ "costco." ,"currys.c"] , true) => self::OTHER_AGENT,
@@ -609,3 +651,4 @@ abstract class StoreTemplate
         };
     }
 }
+

@@ -1,4 +1,3 @@
-version: '3.8'
 
 networks:
   discount-bandit:
@@ -13,9 +12,14 @@ services:
       - 8080:80
     networks:
       - discount-bandit
+    volumes:
+      - ./database/database.sqlite:/app/database/database.sqlite
+      - ./.env:/app/.env
     environment:
       DB_CONNECTION: sqlite
-      NTFY_CHANNEL_ID: "HnBRDHWX4RXY3EWc"
+      NTFY_CHANNEL_ID: ""
+      TELEGRAM_BOT_TOKEN: ""
+      TELEGRAM_CHANNEL_ID: ""
       DEFAULT_USER: "test"
       DEFAULT_EMAIL: "docker@test.com"
       DEFAULT_PASSWORD: "thisismypassword"

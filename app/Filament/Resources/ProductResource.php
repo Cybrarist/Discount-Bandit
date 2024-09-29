@@ -73,6 +73,12 @@ class ProductResource extends Resource
                     ->nullable()
                     ->numeric(),
 
+                TextInput::make('notify_percentage')
+                    ->nullable()
+                    ->hintIcon("heroicon-o-information-circle", "Get notified when price drops below specified percentage")
+                    ->suffix('%')
+                    ->numeric(),
+
                 Select::make('categories')
                     ->relationship('categories','name')
                     ->createOptionForm([Forms\Components\TextInput::make('name')->required()])
@@ -199,6 +205,7 @@ class ProductResource extends Resource
                         return ProductHelper::prepare_multiple_notify_prices_in_table($record, $currencies, $stores);
                     })->label('Notify at'),
 
+
                 TextColumn::make('product_stores.highest_price')
                     ->label("Highest Price")
                     ->listWithLineBreaks()
@@ -225,9 +232,9 @@ class ProductResource extends Resource
                     ->preload()
                     ->multiple(),
 
-                Filter::make('price_notify_price')->query(function ($query){
+                Filter::make('notify_price')->query(function ($query){
                     $query->whereHas(
-                        'product_store',function($query){
+                        'product_stores',function($query){
                             $query->whereRaw('product_store.price  <= product_store.notify_price');
                         }
                     );})

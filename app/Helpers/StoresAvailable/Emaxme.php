@@ -7,15 +7,12 @@ use App\Models\Currency;
 use Error;
 use Exception;
 use Filament\Notifications\Notification;
-use Illuminate\Support\Facades\Context;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
-class Amazon extends StoreTemplate
+class Emaxme extends StoreTemplate
 {
-    const string MAIN_URL="https://www.store/en/dp/product_id" ;
-    private  $center_column;
-    private $right_column;
+    const string MAIN_URL="https://uae.store/api/catalog-browse/browse/products?productIds=product_id" ;
+    private  $main_schema;
 
     public function __construct(int $product_store_id)
     {
@@ -25,52 +22,43 @@ class Amazon extends StoreTemplate
     //define crawler
     public function crawler(): void
     {
-        if ($this->current_record->store_id==4)
-            parent::crawl_url_chrome();
-        else
-            parent::crawl_url();
+        parent::crawl_url_chrome([
+            "x-context-request"=> '{"applicationId":101,"tenantId":"5DF1363059675161A85F576D"}'
+        ]);
     }
 
     public function prepare_sections_to_crawl(): void
     {
         try {
             //get the center column to get the related data for it
-            $this->center_column=$this->xml->xpath("//div[@id='centerCol']")[0];
-            //get the right column to get the seller and other data
-            $this->right_column=$this->xml->xpath("//div[@id='desktop_buybox']")[0];
+            $this->main_schema=json_decode($this->xml->xpath("//pre")[0]->__toString(), true)['products'][0];
+
+            dump($this->main_schema['options'][3]);
         }catch (Error | Exception $exception) {
-            $this->log_error("Crawling Amazon", $exception->getMessage());
+            dd($exception);
+            $this->log_error("Crawling EMax", $exception->getMessage());
         }
 
     }
+
     /**
      * Get the data from the store
      */
     public function get_name(): void
     {
-
         try {
-            $this->name = explode(":" ,$this->document->getElementsByTagName("title")->item(0)->textContent)[0];
+            $this->name = $this->main_schema['name'];
             return;
         }
         catch (Error | Exception $exception){
             $this->log_error("Product Name First Method", $exception->getMessage());
         }
-        try {
-            $this->name = trim($this->center_column->xpath("//span[@id='productname'][1]")[0]
-                ->__toString());
-        }
-        catch ( Error | Exception $exception) {
-            $this->log_error("Product Name Second Method", $exception->getMessage());
-        }
-
-
     }
 
     public function get_image(): void
     {
         try {
-            $this->image = $this->document->getElementById("landingImage")->getAttribute("data-old-hires");
+            $this->image = $this->main_schema['primaryAsset']["contentUrl"];
         }
         catch ( Error | Exception $exception) {
             $this->log_error("Product Image First Method", $exception->getMessage());
@@ -81,7 +69,15 @@ class Amazon extends StoreTemplate
     public function get_price(): void
     {
         try {
-            $this->price=  (float) Str::replace( Currency::find($this->current_record->currency_id) , "" ,$this->center_column->xpath("(//span[contains(@class, 'apexPriceToPay')])[1]")[0]->span->__toString());
+
+            //original price
+            $this->price=  (float) $this->main_schema['priceInfo']['price']['amount'];
+
+            //check for sale price
+            foreach ($this->main_schema['variants'] as $single_variant)
+                if ($single_variant['productId'] === $this->current_record->key)
+                    $this->price=  (float) $single_variant['priceInfo']['price']['amount'];
+
             return ;
         }
         catch ( Error | Exception $exception  ) {
@@ -90,7 +86,7 @@ class Amazon extends StoreTemplate
 
         //method 2 to return the price of the product
         try {
-            $whole=Str::remove([",","\u{A0}","."] ,
+            $whole=Str::remove([",","\u{A0}"] ,
                 $this->center_column
                     ->xpath("//div[@id='corePriceDisplay_desktop_feature_div']//span[@class='a-price-whole']")[0]
                     ->__toString());
@@ -278,10 +274,6 @@ class Amazon extends StoreTemplate
             [$domain , $product],
             self::MAIN_URL);
     }
+    function is_system_detected_as_robot(): bool { return false;}
 
-
-    function is_system_detected_as_robot(): bool
-    {
-        return sizeof($this->xml->xpath('//input[@id="captchacharacters"]'));
-    }
 }

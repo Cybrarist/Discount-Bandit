@@ -33,9 +33,11 @@ class Store extends Model
         return [
             'status'=>StatusEnum::class,
             'price'=>Money::class,
+            'used_price'=>Money::class,
             'lowest_price'=>Money::class,
             'highest_price'=>Money::class,
             'notify_price'=>Money::class,
+            'notify_percentage'=>Money::class,
             'shipping_price'=>Money::class,
             'pivot.updated_at'=>'datetime',
         ];
@@ -54,6 +56,7 @@ class Store extends Model
             //data
             'price',
             'notify_price',
+            'notify_percentage',
             'rate',
             'number_of_rates',
             'seller',

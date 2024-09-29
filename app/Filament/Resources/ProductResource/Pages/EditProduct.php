@@ -39,7 +39,10 @@ class EditProduct extends EditRecord
 
     protected function mutateFormDataBeforeSave(array $data) : array{
 
-        $extra_data=['notify_price'=>$data['notify_price'] ?? null,];
+        $extra_data=[
+            'notify_price'=>$data['notify_price'] ?? null,
+            'notify_percentage'=>$data['notify_percentage'] ?? null,
+        ];
 
 
        if ($data['url']){

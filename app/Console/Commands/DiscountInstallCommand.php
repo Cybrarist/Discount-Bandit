@@ -166,13 +166,9 @@ class DiscountInstallCommand extends Command
         Artisan::call("migrate:fresh --seed --force" ,[], $this->getOutput());
 
 
-
-
         Artisan::call("optimize:clear", [] , $this->output);
         Artisan::call("icons:clear", [] , $this->output);
         Artisan::call("config:clear", [] , $this->output);
-
-
 
         $name=text(
             label:"What is the Name for the user? ",
@@ -202,6 +198,25 @@ class DiscountInstallCommand extends Command
             required: true,
         );
         File::append(".env" , "NTFY_CHANNEL_ID=\"$ntfy_channel\"\n");
+
+
+
+        $telegram_bot_token=text(
+            label: "What is Telegram bot token?",
+            placeholder: "Not required",
+            required: false,
+        );
+        File::append(".env" , "TELEGRAM_BOT_TOKEN=\"$telegram_bot_token\"\n");
+
+        $telegram_channel_id=text(
+            label: "What is Telegram channel ID?",
+            placeholder: "Not required",
+            required: false,
+        );
+        File::append(".env" , "TELEGRAM_CHANNEL_ID=\"$telegram_channel_id\"\n");
+
+
+
         Artisan::call("config:clear", [] , $this->output);
         \Laravel\Prompts\info("Testing Notification");
         Artisan::call("discount:test-notify" , [] ,  $this->getOutput());

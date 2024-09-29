@@ -4,10 +4,9 @@ namespace App\Notifications;
 
 use App\NotificationsChannels\NtfyChannel;
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\MailMessage;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Str;
+use NotificationChannels\Telegram\TelegramFile;
 
 class ProductDiscounted extends Notification
 {
@@ -35,8 +34,9 @@ class ProductDiscounted extends Notification
 
     public function via(object $notifiable): array
     {
-        return [NtfyChannel::class];
+        return [NtfyChannel::class , 'telegram'];
     }
+
     public function toNtfy(object $notifiable): array {
 
 
@@ -53,5 +53,34 @@ class ProductDiscounted extends Notification
         ;
 
         return ["content" => $content ,"headers"=> $extra_headers  ];
+    }
+
+    public function toTelegram($notifiable){
+
+        try {
+            return TelegramFile::create()
+                ->photo($this->image)
+                ->token(env("TELEGRAM_BOT_TOKEN"))
+                ->to(env('TELEGRAM_CHANNEL_ID'))
+                ->content(
+                    "$this->product_name, is at $this->currency $this->price \n " .
+                    "--------------------------\n" .
+                    "Highest Price: $this->highest_price  \n" .
+                    "Lowest Price: $this->lowest_price \n".
+                    "--------------------------\n" .
+                    $this->tags
+
+                )
+                ->button('View Product', $this->product_url);
+
+        }catch (\Throwable $throwable){
+
+        }
+
+
+
+
+
+
     }
 }

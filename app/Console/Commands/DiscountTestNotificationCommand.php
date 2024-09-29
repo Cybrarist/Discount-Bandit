@@ -36,7 +36,7 @@ class DiscountTestNotificationCommand extends Command
             highest_price: 120,
             lowest_price: 80,
             product_url: "https://cybrarist.com",
-            image: "",
+            image: "https://raw.githubusercontent.com/Cybrarist/Discount-Bandit/refs/heads/master/storage/app/public/bandit.png",
             currency: "$",
             tags: ",New Test Tags",
         ));

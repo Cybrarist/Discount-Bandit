@@ -46,6 +46,11 @@ class StoresRelationManager extends RelationManager
                     ->prefix(fn ($record) => CurrencyHelper::get_currencies($record->currency_id))
                     ->color(fn($record)=> (($record->price <= $record->notify_price) ? "success" :"danger")),
 
+                TextColumn::make('used_price')
+                    ->formatStateUsing(fn($state)=>  Number::format($state ,2))
+                    ->prefix(fn ($record) => CurrencyHelper::get_currencies($record->currency_id))
+                    ->color(fn($record)=> (($record->used_price <= $record->notify_price) ? "success" :"danger")),
+
 
                 TextColumn::make('highest_price')
                     ->formatStateUsing(fn($state)=> Number::format($state ,2))
@@ -59,6 +64,9 @@ class StoresRelationManager extends RelationManager
 
                 TextColumn::make('notify_price')
                     ->prefix(fn ($record) => CurrencyHelper::get_currencies($record->currency_id)),
+
+                TextColumn::make('notify_percentage')
+                    ->prefix('%'),
 
                 TextColumn::make('shipping_price'),
 

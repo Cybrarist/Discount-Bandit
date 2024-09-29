@@ -31,8 +31,9 @@ class AppServiceProvider extends ServiceProvider
     {
 //        URL::forceScheme('https');
 
-        if (config('settings.disable_auth') && ! app()->runningInConsole())
-            Auth::login(User::first());
+//        if (config('settings.disable_auth') && ! app()->runningInConsole())
+//            Auth::login(User::first());
+
 
         Table::configureUsing(function (Table $table): void {
             $table->filtersLayout(FiltersLayout::AboveContentCollapsible)

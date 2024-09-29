@@ -58,7 +58,8 @@ class Wallapop extends StoreTemplate
         $this->check_notification();
 
     }
-    public function prepare_sections_to_crawl(){
+    public function prepare_sections_to_crawl(): void
+    {
 
         //get the center column to get the related data for it
         $scripts=$this->xml->xpath("//script[@type='application/ld+json']");
@@ -232,7 +233,9 @@ class Wallapop extends StoreTemplate
 
     }
 
-    #[\Override] function crawler()
+    function is_system_detected_as_robot(): bool { return false;}
+
+    #[\Override] function crawler(): void
     {
         // TODO: Implement crawler() method.
     }

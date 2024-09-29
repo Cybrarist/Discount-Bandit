@@ -132,5 +132,7 @@ class Mediamarkt extends StoreTemplate
             [$domain , $product , $language],
             self::MAIN_URL);
     }
+    function is_system_detected_as_robot(): bool { return false;}
+
 
 }

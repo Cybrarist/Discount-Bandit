@@ -53,6 +53,7 @@ class Product extends Model
             'highest_price',
             'lowest_price',
             'notify_price',
+            'notify_percentage',
             'rate',
             'number_of_rates',
             'seller',

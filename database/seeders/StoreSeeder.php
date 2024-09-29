@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Enums\StatusEnum;
 use App\Models\Currency;
 use App\Models\Store;
 use Illuminate\Database\Seeder;
@@ -329,8 +330,28 @@ class StoreSeeder extends Seeder
                 'currency_id'=>Currency::firstOrCreate(['code'=>'€'])->id,
                 'slug'=>'mediamarkt_es'
             ],
-
-
+            [
+                'name'=>'Best Buy',
+                'domain'=>'bestbuy.com',
+                'image'=>'bestbuy.png',
+                'currency_id'=>Currency::firstOrCreate(['code'=>'$'])->id,
+                'slug'=>'bestbuy_com'
+            ],
+            [
+                'name'=>'Best Buy Canada',
+                'domain'=>'bestbuy.ca',
+                'image'=>'bestbuy.png',
+                'currency_id'=>Currency::firstOrCreate(['code'=>'$'])->id,
+                'slug'=>'bestbuy_ca'
+            ],
+            [
+                'name'=>'Emax UAE',
+                'domain'=>'emaxme.com',
+                'image'=>'emax.png',
+                'currency_id'=>Currency::firstOrCreate(['code'=>'AED'])->id,
+                'slug'=>'uae_emaxme_com',
+                'status'=>StatusEnum::Disabled
+            ],
         ];
 
 

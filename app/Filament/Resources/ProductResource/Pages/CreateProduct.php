@@ -37,6 +37,7 @@ class CreateProduct extends CreateRecord
             "key"=>$this->product_url->product_unique_key
         ],[
             "notify_price" => $this->data['notify_price'] ?? 0,
+            "notify_percentage" => $this->data['notify_percentage'] ?? 0,
         ]);
 
         $product_store->load([

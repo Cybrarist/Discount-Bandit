@@ -224,4 +224,6 @@ class Argos extends StoreTemplate
     function crawler(): void { parent::crawl_url();}
 
     public function get_condition() {}
+
+    function is_system_detected_as_robot(): bool { return false;}
 }

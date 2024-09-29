@@ -21,13 +21,14 @@ class URLHelper
     public ?Store $store;
 
     public function __construct(private string $url) {
-        Context::add("website" , $this->url);
-
         try {
             //parse the url
             $parsed_url=parse_url($url);
 
-            $this->domain=Str::lower(Str::remove("www.",$parsed_url['host']));
+            $this->domain= Str::lower(Str::remove("www.",$parsed_url['host']));
+
+            if ($this->domain==="uae.emaxme.com")
+                $this->domain=Str::remove("uae.",$parsed_url['host']);
 
             $this->store=Store::whereDomain($this->domain)->first();
 
@@ -43,8 +44,6 @@ class URLHelper
             self::get_key();
         }
         catch (Exception $exception){
-
-
             Notification::make()
                 ->danger()
                 ->title("Wrong Store")
@@ -59,36 +58,17 @@ class URLHelper
 
 
 
-    public  function get_key()
-    {
-        $this->product_unique_key= match (explode("." , $this->domain)[0]){
-            "amazon"=> $this->get_asin(),
-            "ebay"=> $this->get_ebay_item_id(),
-            "walmart"=> $this->get_walmart_ip(),
-            "argos"=> $this->get_argos_product_id(),
-            "fnac"=> $this->get_fnac_key(),
-            "noon"=> $this->get_noon_key(),
-            "costco"=>$this->get_costco_key(),
-            "currys"=>$this->get_currys_key(),
-            "diy"=>$this->get_diy_id(),
-            "canadiantire"=>$this->get_canadiantire_key(),
-            "princessauto"=>$this->get_pricessauto_key(),
-            "mediamarkt"=>$this->get_mediamarket_key(),
-            default=> ""
-        };
-
-    }
-
-
-    public static function get_product_original_url()
+    public function get_key()
     {
 
-    }
+        $function_to_be_called= "self::get_" .  explode("." , $this->domain)[0] ."_key";
+        $this->product_unique_key=call_user_func($function_to_be_called);
 
+    }
 
     //todo move all of the following to the classes as static method
     //methods to collect unique products keys
-    public function  get_asin(): string
+    public function  get_amazon_key(): string
     {
         $this->path=Str::replace( "/gp/product/" , "/dp/" , $this->path , false);
 
@@ -105,6 +85,7 @@ class URLHelper
 
         return Str::remove("/" ,Str::squish( $temp) );
     }
+
     public function  get_diy_id(): string {
 
         $this->path=Str::remove(["/departments/","_BQ.prd"] , $this->path);
@@ -115,15 +96,18 @@ class URLHelper
         else
             return (sizeof($is_two_parts) > 1) ? $is_two_parts[1] : $is_two_parts[0];
     }
-    public function  get_ebay_item_id(){
+
+    public function  get_ebay_key(){
         return explode("/itm/" , $this->path)[1];
     }
-    public function  get_walmart_ip(): string
+
+    public function  get_walmart_key(): string
     {
 //        return Str::remove("/" , Str::squish(  Arr::last(explode("/" , $this->path))) );
         return explode('/ip/' , $this->path)[1];
     }
-    public function  get_argos_product_id(): string
+
+    public function  get_argos_key(): string
     {
         return Str::remove("/" , Str::squish(  Arr::last(explode("/" , $this->path))) );
     }
@@ -173,6 +157,7 @@ class URLHelper
 
         return Str::remove(".html" ,Arr::last($sections));
     }
+
     public function get_canadiantire_key(): string
     {
         $paths= explode("/pdp" , $this->path);
@@ -187,11 +172,26 @@ class URLHelper
         return Str::remove("/" ,Str::squish( $temp) );
     }
 
-    public function get_mediamarket_key()
+    public function get_mediamarket_key(): string
     {
         $temp=explode("-" , $this->path);
         $product_key=explode(".html" ,  end($temp))[0];
 
         return $product_key;
+    }
+
+    public function get_bestbuy_key():string
+    {
+        $temp=explode("/" , $this->path);
+
+        //todo if same after finihsing implementing ca then remove.
+        return match ($this->domain){
+            'bestbuy.com'=>explode("." ,  Arr::last($temp))[0],
+            'bestbuy.ca'=>Arr::last($temp),
+        };
+    }
+    public function get_emaxme_key(): string
+    {
+        return explode("-" , explode("-p-" , $this->path)[1])[0];
     }
 }

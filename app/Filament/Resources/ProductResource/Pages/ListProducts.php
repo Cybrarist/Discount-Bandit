@@ -25,9 +25,8 @@ class ListProducts extends ListRecords
 
         $stores=StoreHelper::get_stores_active_for_tabs();
 
-        if (!$stores->empty()){
+        if (sizeof($stores)){
             $tabs['all'] = Tab::make();
-
             foreach ($stores as $store)
                 $tabs[$store->name]=Tab::make()->modifyQueryUsing(function (Builder $query) use ($store) {
                     $query->whereHas('stores', function ($query) use ($store) {
@@ -37,6 +36,7 @@ class ListProducts extends ListRecords
 
             return $tabs;
         }
+
 
         return  [];
 

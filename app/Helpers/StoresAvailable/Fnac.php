@@ -424,4 +424,6 @@ class Fnac extends StoreTemplate
     {
         // TODO: Implement get_used_price() method.
     }
+    function is_system_detected_as_robot(): bool { return false;}
+
 }

@@ -3,7 +3,9 @@
 namespace App\Observers;
 
 use App\Helpers\StoreHelper;
+use App\Models\PriceHistory;
 use App\Models\Product;
+use App\Models\ProductStore;
 
 class ProductObserver
 {
@@ -28,6 +30,10 @@ class ProductObserver
      */
     public function deleted(Product $product): void
     {
+
+        ProductStore::where('product_id', $product->id)->delete();
+        PriceHistory::where('product_id', $product->id)->delete();
+
         StoreHelper::clear_caches_related_to_stores();
     }
 

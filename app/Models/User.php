@@ -26,7 +26,6 @@ class User extends Authenticatable implements  FilamentUser
         'password',
     ];
 
-//1|Bz5GmtraNUUi7KwmGp5x32j0D4fj3STBjFEqiQtHdacdfd03
 
     /**
      * The attributes that should be hidden for serialization.

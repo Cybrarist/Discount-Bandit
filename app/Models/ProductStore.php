@@ -15,6 +15,7 @@ class ProductStore extends Pivot
         "price",
         "used_price",
         "notify_price",
+        "notify_percentage",
         "rate",
         "number_of_rates",
         "seller",
@@ -39,6 +40,7 @@ class ProductStore extends Pivot
             'lowest_price'=>Money::class,
             'used_price'=>Money::class,
             'notify_price'=>Money::class,
+            'notify_percentage'=>Money::class,
             'shipping_price'=>Money::class,
         ];
     }

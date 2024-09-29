@@ -1,7 +1,9 @@
 #!/bin/sh
 
-cp .env.example .env
-
+if [ ! -f ".env" ]; then
+    cp .env.example .env
+    php artisan key:generate --force
+fi
 
 php artisan storage:link
 php artisan config:clear
@@ -12,8 +14,7 @@ php artisan key:generate --force
 
 printenv > /etc/environment
 
-php artisan migrate --seed --force
-
+php artisan migrate  --force --seed
 
 php artisan discount:fill-supervisor-workers
 
@@ -24,7 +25,6 @@ php artisan make:filament-user --name=$DEFAULT_USER --email=$DEFAULT_EMAIL --pas
 php artisan octane:install --server=frankenphp
 
 Xvfb :99 -screen 0 2000x2000x24 & export DISPLAY=:99
-
 
 supervisord -c  /etc/supervisor/conf.d/supervisord.conf
 

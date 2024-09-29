@@ -189,5 +189,6 @@ class Currys extends StoreTemplate
 
     }
 
+    function is_system_detected_as_robot(): bool { return false;}
 
 }
