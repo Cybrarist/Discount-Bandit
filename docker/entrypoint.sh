@@ -10,8 +10,6 @@ php artisan config:clear
 php artisan cache:clear
 php artisan optimize:clear
 
-php artisan key:generate --force
-
 printenv > /etc/environment
 
 php artisan migrate  --force --seed
