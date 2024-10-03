@@ -101,8 +101,7 @@ class URLHelper
         return explode("/itm/" , $this->path)[1];
     }
 
-    public function  get_walmart_key(): string
-    {
+    public function  get_walmart_key(): string {
 //        return Str::remove("/" , Str::squish(  Arr::last(explode("/" , $this->path))) );
         return explode('/ip/' , $this->path)[1];
     }
@@ -112,18 +111,7 @@ class URLHelper
         return Str::remove("/" , Str::squish(  Arr::last(explode("/" , $this->path))) );
     }
 
-    public function get_fnac_key(): string
-    {
-        $paths=explode("/" , $this->path);
-
-        if (sizeof($paths) > 2 && $paths[2] !="")
-            return Str::lower($paths[2]) ;
-
-        throw new \Exception("wrong formula");
-    }
-
-    public function get_noon_key(): string
-    {
+    public function get_noon_key(): string {
 
         $paths=explode("/" , $this->path);
 
@@ -140,8 +128,7 @@ class URLHelper
         throw new \Exception("wrong formula");
     }
 
-    public function get_costco_key(): string
-    {
+    public function get_costco_key(): string {
         return match ($this->domain)
         {
             "costco.com","costco.ca"=>Str::replace(["." , "html"] , "" , explode(".product" , $this->path)[1]),
@@ -149,8 +136,7 @@ class URLHelper
         };
     }
 
-    public function get_currys_key(): string
-    {
+    public function get_currys_key(): string {
 
         $paths= explode("/" , $this->path);
         $sections=explode("-" , $paths[2]);
@@ -158,30 +144,26 @@ class URLHelper
         return Str::remove(".html" ,Arr::last($sections));
     }
 
-    public function get_canadiantire_key(): string
-    {
+    public function get_canadiantire_key(): string {
         $paths= explode("/pdp" , $this->path);
         $sections=explode("-" , $paths[1]);
 
         return Str::remove(".html" ,Arr::last($sections));
     }
 
-    public function get_pricessauto_key():string
-    {
+    public function get_princessauto_key():string {
         $temp=explode("/product/" , $this->path)[1];
         return Str::remove("/" ,Str::squish( $temp) );
     }
 
-    public function get_mediamarket_key(): string
-    {
+    public function get_mediamarket_key(): string {
         $temp=explode("-" , $this->path);
         $product_key=explode(".html" ,  end($temp))[0];
 
         return $product_key;
     }
 
-    public function get_bestbuy_key():string
-    {
+    public function get_bestbuy_key():string {
         $temp=explode("/" , $this->path);
 
         //todo if same after finihsing implementing ca then remove.
@@ -190,8 +172,19 @@ class URLHelper
             'bestbuy.ca'=>Arr::last($temp),
         };
     }
-    public function get_emaxme_key(): string
-    {
+
+    public function get_emaxme_key(): string {
         return explode("-" , explode("-p-" , $this->path)[1])[0];
     }
+
+    public function get_target_key()
+    {
+        if (Str::contains( $this->url,"preselect", true))
+            return "A-" . explode("#",explode("preselect=", $this->url)[1])[0];
+
+        $paths= explode("/-/" , $this->path);
+        return $paths[1];
+    }
+
+
 }

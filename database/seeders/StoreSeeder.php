@@ -200,7 +200,7 @@ class StoreSeeder extends Seeder
             [
                 'name'=>'Target',
                 'domain'=>'target.com',
-                'image'=>'target.png',
+                'image'=>'target.svg',
                 'currency_id'=>Currency::firstOrCreate(['code'=>'$'])->id,
                 'slug'=>'target_com'
             ],
@@ -312,14 +312,14 @@ class StoreSeeder extends Seeder
             [
                 'name'=>'Canadian Tire',
                 'domain'=>'canadiantire.ca',
-                'image'=>'canadiantire.png',
+                'image'=>'canadiantire.svg',
                 'currency_id'=>Currency::firstOrCreate(['code'=>'$'])->id,
                 'slug'=>'canadiantire_ca'
             ],
             [
                 'name'=>'Princess Auto',
                 'domain'=>'princessauto.com',
-                'image'=>'princessauto.png',
+                'image'=>'princessauto.svg',
                 'currency_id'=>Currency::firstOrCreate(['code'=>'$'])->id,
                 'slug'=>'princessauto_com'
             ],

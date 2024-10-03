@@ -29,6 +29,7 @@ use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
 class ProductResource extends Resource
@@ -254,6 +255,47 @@ class ProductResource extends Resource
                     })
                     ->label('Lower Than Highest Price')
                     ->toggle(),
+
+                Filter::make('lowest_within')
+                    ->form([
+                        TextInput::make('lowest_within_x')
+                            ->label('Price is lowest in X Days'),
+
+                    ])
+                    ->query(function (Builder $query, $data) {
+
+                        if (!$data["lowest_within_x"])
+                            return ;
+
+                        $products_with_lowest_price_within_x=\DB::select("
+                            SELECT p.product_id
+                            FROM product_store p
+                            JOIN (
+                                SELECT price_histories.product_id, price_histories.store_id , MIN(price_histories.price) AS min_price
+                                FROM price_histories
+                                WHERE price_histories.date >= NOW() - INTERVAL {$data['lowest_within_x']} DAY and
+                                      price_histories.price >0
+                                GROUP BY product_id , store_id )
+                                ph ON p.product_id = ph.product_id and p.store_id = ph.store_id
+                            WHERE p.price <= ph.min_price and
+                                  p.price >0
+                            ;
+                            "
+                        );
+
+
+                        $product_ids= Arr::pluck($products_with_lowest_price_within_x , 'product_id');
+
+                      $query->wherein('id', $product_ids);
+                })    ->indicateUsing(function (array $data): ?string {
+                        if (! $data['lowest_within_x']) {
+                            return null;
+                        }
+
+                        return "Lowest in {$data['lowest_within_x']} Days" ;
+                    })
+
+
 
             ])
             ->actions([

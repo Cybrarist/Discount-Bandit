@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 
 class Bestbuy extends StoreTemplate
 {
-    const string MAIN_URL="https://www.bestbuy.com/pricing/v1/price/item?allFinanceOffers=true&catalog=bby&context=offer-list&effectivePlanPaidMemberType=NULL&includeOpenboxPrice=true&paidMemberSkuInCart=false&salesChannel=LargeView&skuId=4901809&useCabo=true&usePriceWithCart=true&visitorId=7e3432cd-6f63-11ef-97ca-12662d3c815b" ;
+    const string MAIN_URL="https://www.bestbuy.com/pricing/v1/price/item?allFinanceOffers=true&catalog=bby&context=offer-list&effectivePlanPaidMemberType=NULL&includeOpenboxPrice=true&paidMemberSkuInCart=false&salesChannel=LargeView&skuId=product_id&useCabo=true&usePriceWithCart=true&visitorId=7e3432cd-6f63-11ef-97ca-12662d3c815b" ;
     const string MAIN_URL_NAME_AND_IMAGE="https://www.store/site/product_id.p?skuId=product_id&intl=nosplash" ;
     const string CANADA_URL="https://www.store/api/offers/v1/products/product_id/offers" ;
     const string CANADA_URL_NAME_AND_IMAGE="https://www.store/en-ca/product/product_id" ;
@@ -110,15 +110,27 @@ class Bestbuy extends StoreTemplate
 
 
 
-    public static function get_variations($url) : array {dump("not supported yet");}
+    public static function get_variations($url) : array {dump("not supported yet"); return [];}
 
 
     public static function prepare_url( $domain, $product, $store = null): string
     {
-        return Str::replace(
-            ["store", "product_id"],
-            [$domain , $product],
-            ($domain=="bestbuy.com") ? self::MAIN_URL : self::CANADA_URL );
+        /*
+         * check the trace, and if it's called from the store relation manager
+         * then show the url where the user can access
+       */
+        $which_class_called_the_function=debug_backtrace()[1]['function'];
+
+        if (Str::contains($which_class_called_the_function, ["notify","call_user_fun"]))
+            return Str::replace(
+                ["store", "product_id"],
+                [$domain , $product],
+                ($domain=="bestbuy.com") ? self::MAIN_URL_NAME_AND_IMAGE : self::CANADA_URL_NAME_AND_IMAGE );
+        else
+            return Str::replace(
+                ["store", "product_id"],
+                [$domain , $product],
+                ($domain=="bestbuy.com") ? self::MAIN_URL : self::CANADA_URL );
     }
 
     private function get_name_and_image()

@@ -30,6 +30,7 @@ class DiscountTestNotificationCommand extends Command
     public function handle(): void
     {
         User::first()->notify(new ProductDiscounted(
+            product_id: 123,
             product_name: "This is a test product",
             store_name: "this is a test store",
             price: 100,

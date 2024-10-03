@@ -220,6 +220,8 @@ abstract class StoreTemplate
      */
     public function check_notification(): bool
     {
+
+
         if ($this->notification_snoozed())
             return false;
 
@@ -347,12 +349,17 @@ abstract class StoreTemplate
 
             $user->notify(
                 new ProductDiscounted(
+                    product_id:  $this->current_record->product_id,
                     product_name: $this->current_record->product->name?? $this->name ,
                     store_name: $this->current_record->store->name,
                     price: $this->price,
                     highest_price: $this->current_record->highest_price,
                     lowest_price: $this->current_record->lowest_price,
-                    product_url: $this->product_url . $this->current_record->store->referral,
+                    product_url: $this->prepare_url(
+                        domain: $this->current_record->store->domain,
+                        product: $this->current_record->key,
+                        store: $this->current_record->store,
+                    ),
                     image: $this->current_record->product->image ?? $this->image,
                     currency: CurrencyHelper::get_currencies($this->current_record->store->currency_id),
                     tags: $this->ntfy_tags));
@@ -480,12 +487,12 @@ abstract class StoreTemplate
 
     public static function get_website_chrome(string $url , array $extra_headers=[]): string {
 
-        $browser_factory = new BrowserFactory('chromium');
-//        $browser_factory = new BrowserFactory();
+//        $browser_factory = new BrowserFactory('chromium');
+        $browser_factory = new BrowserFactory();
 
         $browser = $browser_factory
             ->createBrowser([
-                'headless' => true,
+                'headless' => false,
                 'noSandbox' => true,
                 "headers"=>$extra_headers,
                 'userAgent'=>self::get_random_user_agent(),
@@ -500,10 +507,9 @@ abstract class StoreTemplate
             };
 
             $timeout=match(true){
-                Str::contains($url , "bestbuy", true)=> 20000,
+                Str::contains($url , ["bestbuy" , "canadiantire"], true)=> 20000,
                 default => 10000
             };
-
 
             $page->navigate($url)->waitForNavigation($page_event , $timeout);
 
