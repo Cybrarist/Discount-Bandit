@@ -1,6 +1,6 @@
 #!/bin/sh
 
-if [ ! -f ".env" ]; then
+if [ ! -f ".env" ] ||  ! grep -q . ".env" ; then
     cp .env.example .env
     php artisan key:generate --force
 fi
