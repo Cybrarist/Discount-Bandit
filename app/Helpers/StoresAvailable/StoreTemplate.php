@@ -487,8 +487,8 @@ abstract class StoreTemplate
 
     public static function get_website_chrome(string $url , array $extra_headers=[]): string {
 
-//        $browser_factory = new BrowserFactory('chromium');
-        $browser_factory = new BrowserFactory();
+        $browser_factory = new BrowserFactory('chromium');
+//        $browser_factory = new BrowserFactory();
 
         $browser = $browser_factory
             ->createBrowser([
