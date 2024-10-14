@@ -352,6 +352,13 @@ class StoreSeeder extends Seeder
                 'slug'=>'uae_emaxme_com',
                 'status'=>StatusEnum::Disabled
             ],
+            [
+                'name'=>'Ebay',
+                'domain'=>'ebay.de',
+                'image'=>'ebay.png',
+                'currency_id'=>Currency::firstOrCreate(['code'=>'€'])->id,
+                'slug'=>'ebay_de'
+            ],
         ];
 
 

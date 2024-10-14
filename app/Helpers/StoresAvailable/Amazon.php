@@ -14,8 +14,13 @@ use Illuminate\Support\Str;
 class Amazon extends StoreTemplate
 {
     const string MAIN_URL="https://www.store/en/dp/product_id" ;
+
+    const string OTHER_BUYING_OPTIONS="https://www.store/gp/product/ajax?asin=product_id&m=&sourcecustomerorglistid=&sourcecustomerorglistitemid=&pc=dp&experienceId=aodAjaxMain";
+
     private  $center_column;
     private $right_column;
+
+    private $other_options_column;
 
     public function __construct(int $product_store_id)
     {
@@ -106,7 +111,24 @@ class Amazon extends StoreTemplate
         catch (Error | Exception $exception )  {
             $this->log_error( "Price Second Method",$exception->getMessage());
         }
+        //method 2 to return the price of the product
+        try {
+            $this->get_other_options();
+            $whole=Str::remove([",","\u{A0}","."] ,
+                $this->other_options_column
+                    ->xpath("//span[@class='a-price-whole']")[0]
+                    ->__toString());
 
+            $fraction=Str::remove([",","\u{A0}"] ,
+                $this->other_options_column
+                    ->xpath("//span[@class='a-price-fraction']")[0]
+                    ->__toString());
+
+            $this->price= (float)"$whole.$fraction";
+        }
+        catch (Error | Exception $exception )  {
+            $this->log_error( "Price Second Method",$exception->getMessage());
+        }
     }
 
     public function get_used_price(): void
@@ -283,5 +305,16 @@ class Amazon extends StoreTemplate
     function is_system_detected_as_robot(): bool
     {
         return sizeof($this->xml->xpath('//input[@id="captchacharacters"]'));
+    }
+
+
+    private  function get_other_options(): void
+    {
+        $temp_url=Str::replace(
+            ["store", "product_id"],
+            [$this->current_record->store->domain, $this->current_record->key],
+            self::OTHER_BUYING_OPTIONS);
+
+        self::prepare_dom(parent::get_website_chrome($temp_url) , $other  , $this->other_options_column);
     }
 }
