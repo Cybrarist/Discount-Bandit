@@ -3,11 +3,8 @@
 namespace App\NotificationsChannels;
 
 
-use Exception;
-use GuzzleHttp\Client as HttpClient;
-use GuzzleHttp\Exception\RequestException;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Str;
 use NotificationChannels\Discord\Exceptions\CouldNotSendNotification;
 
 
@@ -33,25 +30,26 @@ class Ntfy
     protected function request( array $notification_title, string $notification_content)
     {
         $auth=[];
-        $url=$this->baseUrl . env('NTFY_CHANNEL_ID');
+
+        $url=env('NTFY_BASE_URL') ?? $this->baseUrl;
 
         if (env("NTFY_USER") && env("NTFY_PASSWORD"))
             $auth["Authorization"] = "Basic " . base64_encode(env("NTFY_USER") .":" . env("NTFY_PASSWORD") );
         elseif (env("NTFY_TOKEN"))
             $auth["Authorization"] = "Bearer " . env("NTFY_TOKEN");
 
-        $response = Http::withHeaders($auth + [
-                "Content-Type"=>"text/markdown",
-                'X-Markdown'=>"1",
-                'Markdown'=>"1",
-                'md'=>"1",
-                "Cache: no",
-            ] + $notification_title)
-            ->post($url, $notification_content);
+        $data = [
+            "topic" => env("NTFY_CHANNEL_ID"),
+            "message" =>  Str::replace("<br>" , "\n" ,  $notification_content),
+            "title" => $notification_title['Title'],
+            "tags" => explode(',' , $notification_title['X-Tags']),
+            "attach" => $notification_title['Attach'],
+            "actions" =>$notification_title['Actions'],
+        ];
 
-        $body = json_decode($response->getBody(), true);
-
-        return $body;
+        Http::asJson()
+            ->withHeaders($auth)
+            ->post($url, $data);
     }
 
 }

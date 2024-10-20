@@ -18,11 +18,13 @@ services:
     environment:
       DB_CONNECTION: sqlite
       NTFY_CHANNEL_ID: ""
+      NTFY_BASE_URL: "https://ntfy.sh"
       TELEGRAM_BOT_TOKEN: ""
       TELEGRAM_CHANNEL_ID: ""
       DEFAULT_USER: "test"
       DEFAULT_EMAIL: "docker@test.com"
       DEFAULT_PASSWORD: "thisismypassword"
+      APPRISE_URL: ""
       APP_TIMEZONE: UTC
       RSS_FEED: 1
       TOP_NAVIGATION: 0
@@ -32,3 +34,4 @@ services:
       DISABLE_AUTH: 1
       THEME_COLOR: Stone
       APP_URL: "http://localhost:8080"
+      ASSET_URL: "http://localhost:8080"

@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\NotificationsChannels\AppriseChannel;
 use App\NotificationsChannels\NtfyChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
@@ -14,6 +15,8 @@ class ProductDiscounted extends Notification
     use Queueable;
 
     public $product_temp_link;
+    public $notification_title;
+    public $notification_text;
     /**
      * Create a new notification instance.
      */
@@ -30,6 +33,12 @@ class ProductDiscounted extends Notification
                                 public $tags,
     ){
         $this->product_temp_link= URL::temporarySignedRoute("products.show" , now()->addMinutes(15) , ['product'=>$this->product_id]);
+
+        $this->notification_title="For Just $this->price -  Discount For " . Str::words($this->product_name , 5);
+        $this->notification_text="{$this->product_name}, is at {$this->currency}{$this->price} <br>" .
+                "----------------<br>".
+                "Highest Price: {$this->highest_price} <br>".
+                "Lowest Price: {$this->lowest_price} <br>";
     }
 
     /**
@@ -40,29 +49,31 @@ class ProductDiscounted extends Notification
 
     public function via(object $notifiable): array
     {
-        return [NtfyChannel::class , "telegram"];
+        return [ AppriseChannel::class , NtfyChannel::class , "telegram"];
     }
 
     public function toNtfy(object $notifiable): array {
-
-
         $extra_headers=[
-            'Title'=>"For Just $this->price -  Discount For " . Str::words($this->product_name , 5),
-            "Actions"=> "view, Open in $this->store_name, $this->product_url  ;view ,  See Trend, " . $this->product_temp_link,
+            'Title'=>$this->notification_title,
+            "Actions"=> [
+                [
+                    "action" => "view",
+                    "label" => "Open in $this->store_name",
+                    "url" => $this->product_url,
+                ],[
+                    "action" => "view",
+                    "label" => "See Trend",
+                    "url" => $this->product_temp_link,
+                ],
+            ],
             "Attach"=>$this->image,
             "X-Tags"=>"money_with_wings" . $this->tags
         ];
 
-        $content="$this->product_name, is at $this->currency $this->price." .
-            "**Highest Price**: $this->highest_price  \n" .
-            "**Lowest Price**: $this->lowest_price \n"
-        ;
-
-        return ["content" => $content ,"headers"=> $extra_headers  ];
+        return ["content" => $this->notification_text ,"headers"=> $extra_headers  ];
     }
 
     public function toTelegram($notifiable){
-
         try {
             return TelegramFile::create()
                 ->photo($this->image)
@@ -83,5 +94,19 @@ class ProductDiscounted extends Notification
 
         }
 
+    }
+
+    public function toApprise(object $notifiable): array {
+
+        $content=[
+            'title'=>"For Just $this->price -  Discount For " . Str::words($this->product_name , 5),
+            'body'=>$this->notification_text .
+                "----------------<br>
+                Product URL: . {$this->product_url}",
+            'attach'=>[$this->image],
+            'format'=>'html'
+        ];
+
+        return ["content" => $content ];
     }
 }
