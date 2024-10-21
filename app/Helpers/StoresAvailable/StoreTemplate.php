@@ -487,12 +487,13 @@ abstract class StoreTemplate
 
     public static function get_website_chrome(string $url , array $extra_headers=[]): string {
 
-        $browser_factory = new BrowserFactory('chromium');
-//        $browser_factory = new BrowserFactory();
+        $browser= app()->isProduction() ? 'chromium' : null;
+
+        $browser_factory = new BrowserFactory($browser);
 
         $browser = $browser_factory
             ->createBrowser([
-                'headless' => true,
+                'headless' => false,
                 'noSandbox' => true,
                 "headers"=>$extra_headers,
                 'userAgent'=>self::get_random_user_agent(),
@@ -502,7 +503,8 @@ abstract class StoreTemplate
 
         try {
             $page_event=match(true){
-                Str::contains($url , ["mediamarket" , "emaxme"], true)=> Page::DOM_CONTENT_LOADED,
+                Str::contains($url , ["mediamarket"], true)=> Page::DOM_CONTENT_LOADED,
+                Str::contains($url , ["emax"], true)=> Page::INTERACTIVE_TIME,
                 default => Page::NETWORK_IDLE
             };
 

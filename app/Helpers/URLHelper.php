@@ -174,7 +174,7 @@ class URLHelper
     }
 
     public function get_emaxme_key(): string {
-        return explode("-" , explode("-p-" , $this->path)[1])[0];
+        return Str::remove(["/",'.html'], $this->path);
     }
 
     public function get_target_key()
