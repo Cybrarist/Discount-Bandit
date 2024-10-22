@@ -86,7 +86,7 @@ class Amazon extends StoreTemplate
     public function get_price(): void
     {
         try {
-            $this->price=  (float) Str::replace( Currency::find($this->current_record->currency_id) , "" ,$this->center_column->xpath("(//span[contains(@class, 'apexPriceToPay')])[1]")[0]->span->__toString());
+            $this->price=  (float) Str::remove( [Currency::find($this->current_record->store->currency_id)->code, ","] ,$this->center_column->xpath("(//span[contains(@class, 'apexPriceToPay')])[1]")[0]->span->__toString());
             return ;
         }
         catch ( Error | Exception $exception  ) {

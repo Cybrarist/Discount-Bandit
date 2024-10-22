@@ -493,7 +493,7 @@ abstract class StoreTemplate
 
         $browser = $browser_factory
             ->createBrowser([
-                'headless' => false,
+                'headless' => true,
                 'noSandbox' => true,
                 "headers"=>$extra_headers,
                 'userAgent'=>self::get_random_user_agent(),
