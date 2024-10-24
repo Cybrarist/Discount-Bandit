@@ -55,7 +55,9 @@ class Amazon extends StoreTemplate
     {
 
         try {
-            $this->name = explode(":" ,$this->document->getElementsByTagName("title")->item(0)->textContent)[0];
+            $title=explode(":" ,$this->document->getElementsByTagName("title")->item(0)->textContent)[0];
+
+            $this->name = (sizeof($title) > 1) ? $title[0] : $title[1];
             return;
         }
         catch (Error | Exception $exception){
@@ -111,7 +113,7 @@ class Amazon extends StoreTemplate
         catch (Error | Exception $exception )  {
             $this->log_error( "Price Second Method",$exception->getMessage());
         }
-        //method 2 to return the price of the product
+        //method 3 to return the price of the product
         try {
             $this->get_other_options();
             $whole=Str::remove([",","\u{A0}","."] ,

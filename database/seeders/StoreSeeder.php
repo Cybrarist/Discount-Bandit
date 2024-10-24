@@ -359,6 +359,20 @@ class StoreSeeder extends Seeder
                 'currency_id'=>Currency::firstOrCreate(['code'=>'€'])->id,
                 'slug'=>'ebay_de'
             ],
+            [
+                'name'=>'FlipKart',
+                'domain'=>'flipkart.com',
+                'image'=>'flipkart.png',
+                'currency_id'=>Currency::firstOrCreate(['code'=>'₹'])->id,
+                'slug'=>'flipkart_com'
+            ],
+            [
+                'name'=>'Myntra',
+                'domain'=>'myntra.com',
+                'image'=>'myntra.png',
+                'currency_id'=>Currency::firstOrCreate(['code'=>'₹'])->id,
+                'slug'=>'myntra_com'
+            ],
         ];
 
 

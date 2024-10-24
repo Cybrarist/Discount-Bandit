@@ -130,11 +130,13 @@ abstract class StoreTemplate
      */
     public function crawl_url(): void {
         $response=self::get_website($this->product_url);
+        file_put_contents('response.html', $response->body());
         self::prepare_dom($response,$this->document , $this->xml);
     }
 
     public function crawl_url_chrome(array $extra_headers=[]): void {
         $response=self::get_website_chrome($this->product_url, $extra_headers);
+        file_put_contents('response.html', $response);
         self::prepare_dom($response,$this->document , $this->xml);
     }
     /**
@@ -658,5 +660,18 @@ abstract class StoreTemplate
             default => Arr::random(self::USER_AGENTS)
         };
     }
+
+
+    public function get_product_schema(string $script_type): array
+    {
+        $scripts=$this->xml->xpath("//script[@type='$script_type']");
+
+        foreach ($scripts as $single_script)
+            if (Str::contains(Str::remove(" ", $single_script->__toString()) , '"@type":"Product"' , true) )
+                return json_decode($single_script->__toString(), true);
+
+        return [];
+    }
+
 }
 
