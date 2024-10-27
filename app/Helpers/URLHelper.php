@@ -71,6 +71,12 @@ class URLHelper
         return Str::remove("/" , Str::squish(  Arr::last(explode("/" , $this->path))) );
     }
 
+    public function get_ajio_key(): string {
+
+        $paths=explode("/p/" , $this->path);
+        return (sizeof($paths) ==1 ) ?  $paths[0] : $paths[1];
+    }
+
     public function  get_amazon_key(): string
     {
         $this->path=Str::replace( "/gp/product/" , "/dp/" , $this->path , false);
@@ -178,9 +184,24 @@ class URLHelper
         throw new \Exception("wrong formula");
     }
 
+
+    public function get_nykaa_key(): string {
+
+        $paths=explode("/p/" , $this->path);
+        return (sizeof($paths) ==1 ) ?  $paths[0] : $paths[1];
+    }
+
+
+
+
     public function get_princessauto_key():string {
         $temp=explode("/product/" , $this->path)[1];
         return Str::remove("/" ,Str::squish( $temp) );
+    }
+
+    public function get_snapdeal_key():string {
+        $temp=explode("/" , $this->path);
+        return Arr::last($temp);
     }
 
     public function get_target_key()
@@ -189,6 +210,12 @@ class URLHelper
             return "A-" . explode("#",explode("preselect=", $this->url)[1])[0];
 
         $paths= explode("/-/" , $this->path);
+        return $paths[1];
+    }
+    public function get_tatacliq_key()
+    {
+
+        $paths= explode("/p-mp" , $this->path);
         return $paths[1];
     }
 

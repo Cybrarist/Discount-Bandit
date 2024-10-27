@@ -673,5 +673,10 @@ abstract class StoreTemplate
         return [];
     }
 
+    public function get_meta_items(): array
+    {
+        return $this->xml->xpath("//meta");
+    }
+
 }
 

@@ -373,6 +373,31 @@ class StoreSeeder extends Seeder
                 'currency_id'=>Currency::firstOrCreate(['code'=>'₹'])->id,
                 'slug'=>'myntra_com'
             ],
+            [
+                'name'=>'Snapdeal',
+                'domain'=>'snapdeal.com',
+                'image'=>'snapdeal.png',
+                'currency_id'=>Currency::firstOrCreate(['code'=>'₹'])->id,
+                'slug'=>'snapdeal_com'
+            ],[
+                'name'=>'Nykaa',
+                'domain'=>'nykaa.com',
+                'image'=>'nykaa.png',
+                'currency_id'=>Currency::firstOrCreate(['code'=>'₹'])->id,
+                'slug'=>'nykaa_com'
+            ],[
+                'name'=>'Tata Cliq',
+                'domain'=>'tatacliq.com',
+                'image'=>'tatacliq.png',
+                'currency_id'=>Currency::firstOrCreate(['code'=>'₹'])->id,
+                'slug'=>'tatacliq_com'
+            ],[
+                'name'=>'Ajio',
+                'domain'=>'ajio.com',
+                'image'=>'ajio.png',
+                'currency_id'=>Currency::firstOrCreate(['code'=>'₹'])->id,
+                'slug'=>'ajio_com'
+            ],
         ];
 
 
