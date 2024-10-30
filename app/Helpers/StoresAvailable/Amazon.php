@@ -110,7 +110,7 @@ class Amazon extends StoreTemplate
             $this->price= (float)"$whole.$fraction";
             return;
         }
-        catch (Error | Exception $exception )  {
+        catch (Exception $exception )  {
             $this->log_error( "Price Second Method",$exception->getMessage());
         }
         //method 3 to return the price of the product
