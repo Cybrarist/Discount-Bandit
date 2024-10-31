@@ -1,4 +1,4 @@
-FROM dunglas/frankenphp:latest-builder-php8.3.7-bookworm
+FROM dunglas/frankenphp:1.2.5-php8.3.13-bookworm
 
 LABEL authors="Cybrarist"
 

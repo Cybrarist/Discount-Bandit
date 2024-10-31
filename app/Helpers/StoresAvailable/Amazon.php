@@ -4,12 +4,10 @@ namespace App\Helpers\StoresAvailable;
 
 use App\Helpers\GeneralHelper;
 use App\Models\Currency;
-use Error;
 use Exception;
 use Filament\Notifications\Notification;
-use Illuminate\Support\Facades\Context;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Throwable;
 
 class Amazon extends StoreTemplate
 {
@@ -43,7 +41,7 @@ class Amazon extends StoreTemplate
             $this->center_column=$this->xml->xpath("//div[@id='centerCol']")[0];
             //get the right column to get the seller and other data
             $this->right_column=$this->xml->xpath("//div[@id='desktop_buybox']")[0];
-        }catch (Error | Exception $exception) {
+        }catch (Throwable $exception) {
             $this->log_error("Crawling Amazon", $exception->getMessage());
         }
 
@@ -60,14 +58,14 @@ class Amazon extends StoreTemplate
             $this->name = (sizeof($title) > 1) ? $title[0] : $title[1];
             return;
         }
-        catch (Error | Exception $exception){
+        catch ( Throwable $exception){
             $this->log_error("Product Name First Method", $exception->getMessage());
         }
         try {
             $this->name = trim($this->center_column->xpath("//span[@id='productname'][1]")[0]
                 ->__toString());
         }
-        catch ( Error | Exception $exception) {
+        catch (  Throwable $exception) {
             $this->log_error("Product Name Second Method", $exception->getMessage());
         }
 
@@ -79,7 +77,7 @@ class Amazon extends StoreTemplate
         try {
             $this->image = $this->document->getElementById("landingImage")->getAttribute("data-old-hires");
         }
-        catch ( Error | Exception $exception) {
+        catch (  Throwable $exception) {
             $this->log_error("Product Image First Method", $exception->getMessage());
         }
 
@@ -91,7 +89,7 @@ class Amazon extends StoreTemplate
             $this->price=  (float) Str::remove( [Currency::find($this->current_record->store->currency_id)->code, ","] ,$this->center_column->xpath("(//span[contains(@class, 'apexPriceToPay')])[1]")[0]->span->__toString());
             return ;
         }
-        catch ( Error | Exception $exception  ) {
+        catch (Throwable $exception  ) {
             $this->log_error("Price First Method",$exception->getMessage());
         }
 
@@ -110,7 +108,7 @@ class Amazon extends StoreTemplate
             $this->price= (float)"$whole.$fraction";
             return;
         }
-        catch (Exception $exception )  {
+        catch (Throwable $exception )  {
             $this->log_error( "Price Second Method",$exception->getMessage());
         }
         //method 3 to return the price of the product
@@ -128,7 +126,7 @@ class Amazon extends StoreTemplate
 
             $this->price= (float)"$whole.$fraction";
         }
-        catch (Error | Exception $exception )  {
+        catch ( Throwable $exception )  {
             $this->log_error( "Price Second Method",$exception->getMessage());
         }
     }
@@ -144,7 +142,7 @@ class Amazon extends StoreTemplate
                 if ($single_price->{"buyingOptionType"} == "USED")
                     $this->price_used=$single_price->{'priceAmount'};
         }
-        catch ( Error | Exception  $exception )
+        catch (  Throwable  $exception )
         {
             $this->log_error("First Method Used Price",$exception->getMessage());
         }
@@ -157,7 +155,7 @@ class Amazon extends StoreTemplate
 
             $this->in_stock = Str::contains($availability_string , "in stock" , true) && Str::length($availability_string) <10;
 
-        }catch (Exception $exception){
+        }catch (Throwable $exception){
             $this->log_error( "Stock Availability First Method",$exception->getMessage());
         }
     }
@@ -168,7 +166,7 @@ class Amazon extends StoreTemplate
             $ratings=$this->center_column->xpath("//span[@id='acrCustomerReviewText']")[0]->__toString();
             $this->no_of_rates= (int) GeneralHelper::get_numbers_only_with_dot($ratings);
         }
-        catch (Error | Exception $exception)
+        catch ( Throwable $exception)
         {
             $this->log_error("No. Of Rates", $exception->getMessage());
         }
@@ -184,7 +182,7 @@ class Amazon extends StoreTemplate
                 $this->center_column->xpath("//div[@id='averageCustomerReviews']//span[@id='acrPopover']//span[@class='a-icon-alt']")[0]->__toString() ,
                 2)[0];
         }
-        catch (Error | Exception $exception )
+        catch ( Throwable $exception )
         {
             $this->log_error("The Rate", $exception->getMessage());
         }
@@ -204,7 +202,7 @@ class Amazon extends StoreTemplate
 
             return;
         }
-        catch (Error | Exception $exception ) {
+        catch ( Throwable $exception ) {
             $this->log_error("The Seller First Method", $exception->getMessage() );
         }
 
@@ -218,7 +216,7 @@ class Amazon extends StoreTemplate
 
             return;
         }
-        catch (Error | Exception $exception ) {
+        catch ( Throwable $exception ) {
             $this->log_error("The Seller Second method", $exception->getMessage() );
         }
 
@@ -237,7 +235,7 @@ class Amazon extends StoreTemplate
 
             return;
         }
-        catch (Error | Exception $exception )
+        catch ( Throwable $exception )
         {
             $this->log_error( "The Seller Third Method" ,   $exception->getMessage());
             $this->seller="";
@@ -251,7 +249,7 @@ class Amazon extends StoreTemplate
             $shipping_price= Str::replace("," , "." , $shipping_price);
             $this->shipping_price= (float) GeneralHelper::get_numbers_only_with_dot($shipping_price);
         }
-        catch (Error  | Exception $exception)
+        catch (Throwable $exception)
         {
             $this->log_error("Shipping Price", $exception->getMessage());
         }
@@ -282,7 +280,7 @@ class Amazon extends StoreTemplate
             }
             return $options ?? [];
 
-        } catch (Exception ){
+        } catch (Throwable ){
             Notification::make()
                 ->danger()
                 ->title("Error")
