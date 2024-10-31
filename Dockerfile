@@ -1,4 +1,4 @@
-FROM dunglas/frankenphp:latest-builder-php8.3.7-bookworm
+FROM dunglas/frankenphp:1.2.5-php8.3.13-bookworm
 
 LABEL authors="Cybrarist"
 
@@ -6,10 +6,10 @@ ENV SERVER_NAME=":80"
 ENV FRANKENPHP_CONFIG="worker /app/public/index.php"
 ENV FRANKEN_HOST="localhost"
 
-RUN apt update && apt install -y supervisor \
-        libmcrypt-dev \
+RUN apt update && apt install -y supervisor  \
         libbz2-dev \
         libzip-dev \
+        libmcrypt-dev \
         libicu-dev \
         gnupg \
         ca-certificates \
@@ -46,7 +46,6 @@ RUN docker-php-ext-install   pcntl \
         intl \
         iconv \
         bcmath \
-        opcache \
         calendar \
         pdo_mysql \
         zip
@@ -54,7 +53,6 @@ RUN docker-php-ext-install   pcntl \
 COPY ./docker/base_supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
 COPY . /app
-
 
 WORKDIR /app
 
