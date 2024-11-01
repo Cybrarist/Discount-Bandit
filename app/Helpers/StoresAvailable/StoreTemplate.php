@@ -31,12 +31,15 @@ abstract class StoreTemplate
     protected ProductStore $current_record;
 
     const array USER_AGENTS = [
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/127.0.2651.105',
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 14.6; rv:129.0) Gecko/20100101 Firefox/129.0',
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 14.6; rv:128.0) Gecko/20100101 Firefox/128.0',
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_6_1) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/17.5 Safari/605.1.15',
-        'Mozilla/5.0 (Macintosh; Intel Mac OS X 14_6_1) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 OPR/113.0.0.0',
+//        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36',
+//         'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0.0.0 Safari/537.36 Edg/127.0.2651.105',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.3',
+        'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/102.0.0.0 Safari/537.3',
+        'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.',
+        'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/129.0.0.0 Safari/537.36',
+        'Mozilla/5.0 (X11; Linux i686; rv:130.0) Gecko/20100101 Firefox/130.0'
+
+
     ];
 
     const array ARGOS_AGENTS=[
@@ -78,12 +81,11 @@ abstract class StoreTemplate
 
         try {
             $this->crawler();
+
+            if ($this->is_system_detected_as_robot())
+                Log::warning("System was detected as bot, but we're continuing to try to get the price at least");
+
             $this->prepare_sections_to_crawl();
-            if ($this->is_system_detected_as_robot()){
-                Context::add('current product', $this->current_record);
-                Log::error('blocked due to robot, system will stop now');
-                return ;
-            }
             $this->get_product_information();
             $this->check_notification();
         }
@@ -128,8 +130,8 @@ abstract class StoreTemplate
      * @return void
      * @throws ConnectionException
      */
-    public function crawl_url(): void {
-        $response=self::get_website($this->product_url);
+    public function crawl_url(array $extra_headers =[]): void {
+        $response=self::get_website($this->product_url, $extra_headers);
         file_put_contents('response.html', $response->body());
         self::prepare_dom($response,$this->document , $this->xml);
     }
@@ -444,6 +446,7 @@ abstract class StoreTemplate
 
     public static function get_website(string $url , array $data=[], array $extra_headers=[]): Response {
 
+        //todo move the the extra headers to single stores files
         $extra_headers=match (true){
             Str::contains( $url , "argos.co.uk"  , true) => [
                 "Accept-Encoding"=> "gzip, deflate, br, zstd"
@@ -453,6 +456,24 @@ abstract class StoreTemplate
             ],
             default => $extra_headers
         };
+
+
+//        $creq = curl_init();
+//
+//
+//        curl_setopt_array($creq, array(
+//            CURLOPT_URL => $url,
+//            CURLOPT_RETURNTRANSFER => true,
+//            CURLOPT_POST => true,
+//            CURLOPT_ENCODING => '',
+//            CURLINFO_HEADER_OUT => true,
+//            CURLOPT_POSTFIELDS => $data,
+//            CURLOPT_FOLLOWLOCATION => false
+//        ));
+//
+//        $output = curl_exec($creq);
+
+//        dd($output);
 
 
         return Http::withUserAgent(self::get_random_user_agent())

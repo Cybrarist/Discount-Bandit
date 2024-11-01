@@ -11,14 +11,13 @@ use Throwable;
 
 class Amazon extends StoreTemplate
 {
-    const string MAIN_URL="https://www.store/en/dp/product_id" ;
+    const string MAIN_URL="https://www.store/dp/product_id" ;
 
-    const string OTHER_BUYING_OPTIONS="https://www.store/gp/product/ajax?asin=product_id&m=&sourcecustomerorglistid=&sourcecustomerorglistitemid=&pc=dp&experienceId=aodAjaxMain";
+    const string OTHER_BUYING_OPTIONS="https://www.store/gp/product/ajax?ref=dp_aod_NEW_mbc&asin=product_id&m=&qid=&smid=&&sourcecustomerorglistid=&sourcecustomerorglistitemid=&sr=&pc=dp&experienceId=aodAjaxMain";
 
     private  $center_column;
     private $right_column;
 
-    private $other_options_column;
 
     public function __construct(int $product_store_id)
     {
@@ -28,10 +27,20 @@ class Amazon extends StoreTemplate
     //define crawler
     public function crawler(): void
     {
-        if ($this->current_record->store_id==4)
-            parent::crawl_url_chrome();
-        else
-            parent::crawl_url();
+//        if ($this->current_record->store_id==4)
+//            parent::crawl_url_chrome();
+//        else
+        parent::crawl_url(extra_headers:
+            [
+            'Accept'=> 'application/json',
+            'DNT'=>1,
+            "Cache-Control"=> "no-cache",
+            'Sec-Fetch-User'=>'1',
+            "Accept-Language"=> "en-US,en;q=0.5",
+            'Connection'=>'keep-alive',
+            "Accept-Encoding"=> "gzip, deflate"
+        ],
+            );
     }
 
     public function prepare_sections_to_crawl(): void
@@ -41,8 +50,17 @@ class Amazon extends StoreTemplate
             $this->center_column=$this->xml->xpath("//div[@id='centerCol']")[0];
             //get the right column to get the seller and other data
             $this->right_column=$this->xml->xpath("//div[@id='desktop_buybox']")[0];
+
+            return;
         }catch (Throwable $exception) {
-            $this->log_error("Crawling Amazon", $exception->getMessage());
+            $this->log_error("Page Structure", $exception->getMessage());
+        }
+
+        try {
+            $this->get_other_options();
+
+        }catch (Throwable $exception) {
+            $this->log_error("Page Structure Second", $exception->getMessage());
         }
 
     }
@@ -69,16 +87,28 @@ class Amazon extends StoreTemplate
             $this->log_error("Product Name Second Method", $exception->getMessage());
         }
 
-
+        try {
+            $this->name = trim($this->document->getElementById("aod-asin-title-text")->textContent);
+        }
+        catch (  Throwable $exception) {
+            $this->log_error("Product Name Third Method", $exception->getMessage());
+        }
     }
 
     public function get_image(): void
     {
         try {
             $this->image = $this->document->getElementById("landingImage")->getAttribute("data-old-hires");
+            return;
         }
         catch (  Throwable $exception) {
             $this->log_error("Product Image First Method", $exception->getMessage());
+        }
+        try {
+            $this->image = $this->document->getElementById("aod-asin-image-id")->getAttribute("src");
+        }
+        catch (  Throwable $exception) {
+            $this->log_error("Product Image Second Method", $exception->getMessage());
         }
 
     }
@@ -113,26 +143,26 @@ class Amazon extends StoreTemplate
         }
         //method 3 to return the price of the product
         try {
-            $this->get_other_options();
             $whole=Str::remove([",","\u{A0}","."] ,
-                $this->other_options_column
+                $this->xml
                     ->xpath("//span[@class='a-price-whole']")[0]
                     ->__toString());
 
             $fraction=Str::remove([",","\u{A0}"] ,
-                $this->other_options_column
+                $this->xml
                     ->xpath("//span[@class='a-price-fraction']")[0]
                     ->__toString());
 
             $this->price= (float)"$whole.$fraction";
         }
         catch ( Throwable $exception )  {
-            $this->log_error( "Price Second Method",$exception->getMessage());
+            $this->log_error( "Price Third Method",$exception->getMessage());
         }
     }
 
     public function get_used_price(): void
     {
+        //todo implemnet used price for the second crawl, needs to get translation of "used" for different languages
 
         //method 1 to return the price of the product
         try {
@@ -158,6 +188,12 @@ class Amazon extends StoreTemplate
         }catch (Throwable $exception){
             $this->log_error( "Stock Availability First Method",$exception->getMessage());
         }
+        try {
+            $this->in_stock = $this->price > 0;
+
+        }catch (Throwable $exception){
+            $this->log_error( "Stock Availability Second Method",$exception->getMessage());
+        }
     }
 
     public function get_no_of_rates(): void
@@ -168,7 +204,14 @@ class Amazon extends StoreTemplate
         }
         catch ( Throwable $exception)
         {
-            $this->log_error("No. Of Rates", $exception->getMessage());
+            $this->log_error("First Method No. Of Rates", $exception->getMessage());
+        }
+        try {
+            $this->no_of_rates= (int) GeneralHelper::get_numbers_only_with_dot($this->document->getElementById("aod-asin-reviews-block")->textContent);
+        }
+        catch ( Throwable $exception)
+        {
+            $this->log_error("Second Method No. Of Rates", $exception->getMessage());
         }
     }
 
@@ -182,11 +225,9 @@ class Amazon extends StoreTemplate
                 $this->center_column->xpath("//div[@id='averageCustomerReviews']//span[@id='acrPopover']//span[@class='a-icon-alt']")[0]->__toString() ,
                 2)[0];
         }
-        catch ( Throwable $exception )
-        {
+        catch ( Throwable $exception ) {
             $this->log_error("The Rate", $exception->getMessage());
         }
-
     }
 
     public function get_seller(): void
@@ -234,6 +275,16 @@ class Amazon extends StoreTemplate
             throw_if(!$this->seller , new Exception());
 
             return;
+        }
+        catch ( Throwable $exception )
+        {
+            $this->log_error( "The Seller Third Method" ,   $exception->getMessage());
+            $this->seller="";
+        }
+
+        //seller method for subscribe and save items
+        try {
+            $this->seller=  Str::remove([" ", "soldby"] , $this->document->getElementById("aod-offer-soldBy")->textContent, false);
         }
         catch ( Throwable $exception )
         {
@@ -304,17 +355,34 @@ class Amazon extends StoreTemplate
 
     function is_system_detected_as_robot(): bool
     {
-        return sizeof($this->xml->xpath('//input[@id="captchacharacters"]'));
+       return sizeof($this->xml->xpath('//input[@id="captchacharacters"]'));
     }
 
 
-    private  function get_other_options(): void
+    private function get_other_options(): void
     {
         $temp_url=Str::replace(
             ["store", "product_id"],
             [$this->current_record->store->domain, $this->current_record->key],
             self::OTHER_BUYING_OPTIONS);
 
-        self::prepare_dom(parent::get_website_chrome($temp_url) , $other  , $this->other_options_column);
+
+        $creq = curl_init();
+
+
+        curl_setopt_array($creq, array(
+            CURLOPT_URL => $temp_url,
+            CURLOPT_RETURNTRANSFER => true,
+            CURLOPT_POST => true,
+            CURLOPT_ENCODING => '',
+            CURLINFO_HEADER_OUT => true,
+            CURLOPT_POSTFIELDS => [],
+            CURLOPT_FOLLOWLOCATION => false
+        ));
+
+        $output = curl_exec($creq);
+        file_put_contents('response.html', $output);
+
+        self::prepare_dom($output, $this->document, $this->xml);
     }
 }
