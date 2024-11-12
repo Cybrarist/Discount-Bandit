@@ -5,9 +5,9 @@ networks:
 
 services:
   discount-bandit:
+    image: ghcr.io/cybrarist/discount-bandit:latest
     build:
       context: .
-#    image: ./
     ports:
       - 8080:80
     networks:
