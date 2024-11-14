@@ -48,6 +48,7 @@ RUN docker-php-ext-install   pcntl \
         bcmath \
         calendar \
         pdo_mysql \
+        sockets \
         zip
 
 COPY ./docker/base_supervisord.conf /etc/supervisor/conf.d/supervisord.conf
