@@ -18,7 +18,8 @@ class GetProductController extends Controller
     public function __invoke(Request $request)
     {
         $request->validate([
-            'url'=>["string","required","url"]
+            'url'=>["string","required","url"],
+            'query'=>["string", 'nullable'],
         ]);
 
         $url = new URLHelper($request->url);
@@ -49,8 +50,6 @@ class GetProductController extends Controller
                 ];
 
         }
-
-
         return [
             "prices"=>$all_stores_current_prices,
             "current_store_id"=> $url->store->id,

@@ -62,14 +62,14 @@ class Ebay extends StoreTemplate
             $this->name = $this->information->name;
             return;
         }
-        catch ( Exception $e) {
+        catch ( Exception $exception) {
             $this->log_error("First Method Name", $exception->getMessage());
         }
 
         try {
             $this->name=$this->right_column->xpath("//h1[@class='x-item-title__mainTitle']//span")[0]->__toString();
         }
-        catch ( Exception $e) {
+        catch ( Exception $exception) {
             $this->log_error("Second Method Name", $exception->getMessage());
             $this->name="NA";
         }
@@ -80,7 +80,7 @@ class Ebay extends StoreTemplate
         try {
             $this->image = $this->information->image ?? "NA";
         }
-        catch ( Exception $e) {
+        catch ( Exception $exception) {
             $this->log_error("Image First Method", $exception->getMessage());
             $this->image = "";
         }
@@ -89,14 +89,14 @@ class Ebay extends StoreTemplate
         try {
             $this->price=(float) $this->information->offers->price;
         }
-        catch (Exception  $e )
+        catch (Exception  $exception )
         {
             $this->log_error("Price First Method", $exception->getMessage());
         }
 
     }
 
-    public function get_used_price(){ $this->price_used=0;}
+    public function get_used_price(){}
     public function get_stock(): void {
         try {
             $schema=Str::lower( Arr::last( explode("/" , $this->information->offers->availability)));
@@ -187,7 +187,7 @@ class Ebay extends StoreTemplate
         try{
             $schema=Arr::last( explode("/" , $this->information->offers->itemCondition));
             $this->condition=Str::squish(Str::replace('condition' , '' ,  Str::headline($schema), false));
-        }  catch (Exception $exception)
+        } catch (Exception $exception)
         {
             $this->log_error("The Condition", $exception->getMessage());
             $this->condition="New";
@@ -195,8 +195,9 @@ class Ebay extends StoreTemplate
     }
 
     function crawler(): void {
-        $this->crawl_url();
+        $this->crawl_url_chrome();
     }
+
     function is_system_detected_as_robot(): bool { return false;}
 
 }

@@ -31,7 +31,7 @@ class RssFeedItem extends Model implements  Feedable
             'summary' => $this->data["summary"],
             'updated' => now(),
             'link' => route("filament.admin.resources.product-stores.edit" , $this->data["product_id"]),
-            'image' => Product::find($this->data["product_id"])->image,
+            'image' => Product::find($this->data["product_id"])?->image ?? "",
             'authorName' => "Discount Bandit",
         ]);
     }

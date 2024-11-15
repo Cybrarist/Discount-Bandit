@@ -359,6 +359,45 @@ class StoreSeeder extends Seeder
                 'currency_id'=>Currency::firstOrCreate(['code'=>'€'])->id,
                 'slug'=>'ebay_de'
             ],
+            [
+                'name'=>'FlipKart',
+                'domain'=>'flipkart.com',
+                'image'=>'flipkart.png',
+                'currency_id'=>Currency::firstOrCreate(['code'=>'₹'])->id,
+                'slug'=>'flipkart_com'
+            ],
+            [
+                'name'=>'Myntra',
+                'domain'=>'myntra.com',
+                'image'=>'myntra.png',
+                'currency_id'=>Currency::firstOrCreate(['code'=>'₹'])->id,
+                'slug'=>'myntra_com'
+            ],
+            [
+                'name'=>'Snapdeal',
+                'domain'=>'snapdeal.com',
+                'image'=>'snapdeal.png',
+                'currency_id'=>Currency::firstOrCreate(['code'=>'₹'])->id,
+                'slug'=>'snapdeal_com'
+            ],[
+                'name'=>'Nykaa',
+                'domain'=>'nykaa.com',
+                'image'=>'nykaa.png',
+                'currency_id'=>Currency::firstOrCreate(['code'=>'₹'])->id,
+                'slug'=>'nykaa_com'
+            ],[
+                'name'=>'Tata Cliq',
+                'domain'=>'tatacliq.com',
+                'image'=>'tatacliq.png',
+                'currency_id'=>Currency::firstOrCreate(['code'=>'₹'])->id,
+                'slug'=>'tatacliq_com'
+            ],[
+                'name'=>'Ajio',
+                'domain'=>'ajio.com',
+                'image'=>'ajio.png',
+                'currency_id'=>Currency::firstOrCreate(['code'=>'₹'])->id,
+                'slug'=>'ajio_com'
+            ],
         ];
 
 
