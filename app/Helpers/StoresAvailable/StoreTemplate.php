@@ -81,13 +81,8 @@ abstract class StoreTemplate
 
         try {
             $this->crawler();
-
-            if ($this->is_system_detected_as_robot())
-                Log::warning("System was detected as bot, but we're continuing to try to get the price at least");
-
             $this->prepare_sections_to_crawl();
             $this->get_product_information();
-            $this->check_notification();
         }
         catch (Exception $exception){
             $this->log_error(part: "Crawling" , exception: $exception->getMessage());
@@ -189,30 +184,39 @@ abstract class StoreTemplate
 
 
 
+        if ($this->price){
 
-        //update the current record
-        $this->current_record->update([
-            'price' => $this->price,
-            'used_price' => $this->price_used,
-            'highest_price' => ($this->price > $this->current_record->highest_price) ? $this->price : $this->current_record->highest_price,
-            'lowest_price' => (($this->price && $this->price < $this->current_record->lowest_price) || !$this->current_record->lowest_price) ? $this->price : $this->current_record->lowest_price,
-            'number_of_rates' => $this->no_of_rates,
-            'seller' => $this->seller,
-            'rate' => $this->rating,
-            'shipping_price' => $this->shipping_price,
-            'condition' => $this->condition,
-            'in_stock'=> $this->in_stock,
-            'notifications_sent' => ($this->check_notification()) ? ++$this->current_record->notifications_sent : $this->current_record->notifications_sent ,
-        ]);
+            Log::info("Old Price: ".$this->current_record->price);
+            Log::info("New Price: ".$this->price);
+            Log::info("Product:" . $this->current_record);
 
+            //update the current record
+            $this->current_record->update([
+                'price' => $this->price,
+                'used_price' => $this->price_used,
+                'highest_price' => ($this->price > $this->current_record->highest_price) ? $this->price : $this->current_record->highest_price,
+                'lowest_price' => (($this->price && $this->price < $this->current_record->lowest_price) || !$this->current_record->lowest_price) ? $this->price : $this->current_record->lowest_price,
+                'number_of_rates' => $this->no_of_rates,
+                'seller' => $this->seller,
+                'rate' => $this->rating,
+                'shipping_price' => $this->shipping_price,
+                'condition' => $this->condition,
+                'in_stock'=> $this->in_stock,
+                'notifications_sent' => ($this->check_notification()) ? ++$this->current_record->notifications_sent : $this->current_record->notifications_sent ,
+            ]);
 
-        self::record_price_history(
-            product_id: $this->current_record->product_id,
-            store_id: $this->current_record->store_id,
-            price:  $this->price,
-            used_price:$this->price_used
-        );
+            self::record_price_history(
+                product_id: $this->current_record->product_id,
+                store_id: $this->current_record->store_id,
+                price:  $this->price,
+                used_price:$this->price_used
+            );
 
+        }else{
+            Log::info("New Price: (not updated) ".$this->price);
+            Log::info("Product:" . $this->current_record);
+            $this->current_record->updateTimestamps();
+        }
     }
 
 
@@ -224,8 +228,6 @@ abstract class StoreTemplate
      */
     public function check_notification(): bool
     {
-
-
         if ($this->notification_snoozed())
             return false;
 
@@ -236,6 +238,10 @@ abstract class StoreTemplate
         }
 
 
+        Log::info('before we compare');
+        Log::info($this->price);
+        Log::info($this->current_record->price);
+
         if (config('settings.notify_any_change') && $this->price_crawled_and_different_from_database()){
             $this->ntfy_tags.=",Any Change";
             $this->notify();
@@ -244,8 +250,6 @@ abstract class StoreTemplate
 
         if (!$this->price_crawled_and_different_from_database())
             return false;
-
-
 
         if ($this->is_official_seller())
             $this->ntfy_tags.=", Official Only";
@@ -301,6 +305,8 @@ abstract class StoreTemplate
     }
     public function price_crawled_and_different_from_database(): bool {
         //check that we have the crawled price, and that is different from the database.
+        Log::info("crawled price: {$this->price} \n current price {$this->current_record->price}");
+        Log::info($this->price &&  ($this->price != $this->current_record->price));
         return  $this->price &&  ($this->price != $this->current_record->price);
     }
     public function is_official_seller(): bool

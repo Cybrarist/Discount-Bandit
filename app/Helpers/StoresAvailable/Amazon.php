@@ -6,6 +6,7 @@ use App\Helpers\GeneralHelper;
 use App\Models\Currency;
 use Exception;
 use Filament\Notifications\Notification;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Throwable;
 
@@ -45,22 +46,26 @@ class Amazon extends StoreTemplate
 
     public function prepare_sections_to_crawl(): void
     {
-        try {
-            //get the center column to get the related data for it
-            $this->center_column=$this->xml->xpath("//div[@id='centerCol']")[0];
-            //get the right column to get the seller and other data
-            $this->right_column=$this->xml->xpath("//div[@id='desktop_buybox']")[0];
+        if (!$this->is_system_detected_as_robot()){
+            try {
+                //get the center column to get the related data for it
+                $this->center_column=$this->xml->xpath("//div[@id='centerCol']")[0];
+                //get the right column to get the seller and other data
+                $this->right_column=$this->xml->xpath("//div[@id='desktop_buybox']")[0];
 
-            return;
-        }catch (Throwable $exception) {
-            $this->log_error("Page Structure", $exception->getMessage());
-        }
+                return;
+            }catch (Throwable $exception) {
+                $this->log_error("Page Structure", $exception->getMessage());
+            }
 
-        try {
-            $this->get_other_options();
+        }else{
+            Log::warning("System was detected as bot, but we're continuing to try to get the price at least");
+            try {
+                $this->get_other_options();
 
-        }catch (Throwable $exception) {
-            $this->log_error("Page Structure Second", $exception->getMessage());
+            }catch (Throwable $exception) {
+                $this->log_error("Page Structure Second", $exception->getMessage());
+            }
         }
 
     }
@@ -141,23 +146,23 @@ class Amazon extends StoreTemplate
         catch (Throwable $exception )  {
             $this->log_error( "Price Second Method",$exception->getMessage());
         }
-        //method 3 to return the price of the product
-        try {
-            $whole=Str::remove([",","\u{A0}","."] ,
-                $this->xml
-                    ->xpath("//span[@class='a-price-whole']")[0]
-                    ->__toString());
+        //method 3 to return the price of the product only when bot is detected
+        if (!$this->center_column)
+            try {
+                $whole=Str::remove([",","\u{A0}","."] ,
+                    $this->xml
+                        ->xpath("//span[@class='a-price-whole']")[0]
+                        ->__toString());
 
-            $fraction=Str::remove([",","\u{A0}"] ,
-                $this->xml
-                    ->xpath("//span[@class='a-price-fraction']")[0]
-                    ->__toString());
+                $fraction=Str::remove([",","\u{A0}"] ,
+                    $this->xml
+                        ->xpath("//span[@class='a-price-fraction']")[0]
+                        ->__toString());
 
-            $this->price= (float)"$whole.$fraction";
-        }
-        catch ( Throwable $exception )  {
-            $this->log_error( "Price Third Method",$exception->getMessage());
-        }
+                $this->price= (float)"$whole.$fraction";
+            }
+            catch ( Throwable $exception )  {
+                $this->log_error( "Price Third Method",$exception->getMessage());}
     }
 
     public function get_used_price(): void
