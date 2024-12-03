@@ -53,5 +53,16 @@ https://discord.gg/VBMHvH8tuR
 ## Docker
 There is no docker image for beta, since i might need the flexibility to push updates or fix bugs.
 
+# docker-compose
+
+If you run docker-compose before creating a .env file, it will have created a '.env'.
+To fix it, just delete the .env folder and make sure you create your own .env file before running:
+```
+rm -rf .env
+cp .env.example .env
+```
+
+Don't forget to also populate the .env file with your own APP_KEY (a random 32 characters string).
+
 ## Sponsors
 ![Jetbrains](https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg)
