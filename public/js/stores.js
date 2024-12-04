@@ -336,6 +336,14 @@ const stores={
             currency:'£',
             color:'blue',
         },
+        {
+            id:43,
+            name:'Mediamarkt es',
+            url:'https://www.mediamarkt.es/fr/product/product_id.html',
+            image:'mediamarkt.png',
+            currency:'€',
+            color:'red',
+        },
 
     ],
 
