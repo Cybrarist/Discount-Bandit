@@ -16,11 +16,7 @@ class ProductHelper
     {
         $prices="";
         foreach ($record->product_stores as $single_product_store){
-            $color_string=($single_product_store->price <= $single_product_store->notify_price) ? "green" :"red";
-
-
-            $prices.= "<p  style='color:$color_string'>" .
-                $currencies[$stores[$single_product_store->store_id]["currency_id"]].
+            $prices.= "<p  style='color:white'>" .
                 \Illuminate\Support\Number::format($single_product_store->price   , maxPrecision: 2) .
                 "</p>";
         }
@@ -62,13 +58,7 @@ class ProductHelper
             })
             ->toArray();
 
-
-        if (env('DB_CONNECTION') == 'mysql')
-            $concat="CONCAT(store_id, '_', date)";
-        else
-            $concat="store_id || '_' || date";
-
-
+        $concat= (env('DB_CONNECTION') == 'mysql') ?  "CONCAT(store_id, '_', date)" : "store_id || '_' || date";
 
         $price_histories= PriceHistory::where("product_id", $product_id)
         ->whereDate("date" , ">=" , today()->subYear())

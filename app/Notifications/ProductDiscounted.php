@@ -2,6 +2,7 @@
 
 namespace App\Notifications;
 
+use App\Models\RssFeedItem;
 use App\NotificationsChannels\AppriseChannel;
 use App\NotificationsChannels\NtfyChannel;
 use Illuminate\Bus\Queueable;
@@ -39,6 +40,21 @@ class ProductDiscounted extends Notification
                 "----------------<br>".
                 "Highest Price: {$this->highest_price} <br>".
                 "Lowest Price: {$this->lowest_price} <br>";
+
+
+        RssFeedItem::create([
+            "data"=> [
+                'title' =>$this->notification_title,
+                'summary' => Str::replace("<br>" , "&#xa;" ,$this->notification_text),
+                'updated' => now()->toDateTimeString(),
+                'product_id' =>  $this->product_id,
+                'image' => $this->image,
+                'name' => $this->product_name,
+                'link' => $this->product_url,
+                'authorName' => "Discount Bandit",
+            ]
+        ]);
+
     }
 
     /**
@@ -49,7 +65,19 @@ class ProductDiscounted extends Notification
 
     public function via(object $notifiable): array
     {
-        return [ AppriseChannel::class , NtfyChannel::class , "telegram"];
+
+        $channels=[];
+        if (env('NTFY_CHANNEL_ID'))
+            $channels[]=NtfyChannel::class;
+
+        if (env('APPRISE_URL'))
+            $channels[]=AppriseChannel::class;
+
+        if (env('TELEGRAM_BOT_TOKEN') && env('TELEGRAM_CHANNEL_ID'))
+            $channels[]='telegram';
+
+
+            return $channels;
     }
 
     public function toNtfy(object $notifiable): array {
@@ -74,7 +102,7 @@ class ProductDiscounted extends Notification
     }
 
     public function toTelegram($notifiable){
-        try {
+
             return TelegramFile::create()
                 ->photo($this->image)
                 ->token(env("TELEGRAM_BOT_TOKEN"))
@@ -89,11 +117,6 @@ class ProductDiscounted extends Notification
                 )
                 ->button('View Product', $this->product_url)
                 ->button('View Trend', $this->product_temp_link);
-
-        }catch (\Exception $exception){
-
-        }
-
     }
 
     public function toApprise(object $notifiable): array {

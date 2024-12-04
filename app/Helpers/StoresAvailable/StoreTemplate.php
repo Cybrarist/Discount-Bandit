@@ -3,6 +3,7 @@
 namespace App\Helpers\StoresAvailable;
 
 use App\Helpers\CurrencyHelper;
+use App\Helpers\StoreHelper;
 use App\Models\PriceHistory;
 use App\Models\Product;
 use App\Models\ProductStore;
@@ -425,6 +426,8 @@ abstract class StoreTemplate
             ],
                 $extra_data
             );
+
+            StoreHelper::clear_caches_related_to_stores();
 
         }
         catch (Exception $e){

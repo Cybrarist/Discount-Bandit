@@ -24,6 +24,8 @@ use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\Layout\Grid;
+use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
@@ -35,7 +37,9 @@ use Illuminate\Support\Str;
 class ProductResource extends Resource
 {
     protected static ?string $model = Product::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+
     protected static ?int $navigationSort=1;
 
     protected static ?string $recordTitleAttribute="name";
@@ -178,52 +182,77 @@ class ProductResource extends Resource
                 ]);
             })
             ->columns([
-                ImageColumn::make('image')->alignCenter(),
+                Grid::make([
+                    'lg' => 10,
+                    ])->schema([
+                        ImageColumn::make('image')
+                            ->height(150)
+                            ->width(150)
+                            ->columnSpan(3)
+                            ->verticallyAlignCenter(),
 
-                TextColumn::make('name')
-                    ->words(5)
-                    ->limit(50)
-                    ->searchable()
-                    ->sortable(),
+                        Stack::make([
+                            Grid::make([
+                                'lg' => 8,
+                            ])->schema([
 
-                TextColumn::make('status')
-                    ->badge()
-                    ->color(fn ($state) => StatusEnum::get_badge($state)),
-
-                TextColumn::make('product_stores.store_id')
-                    ->formatStateUsing(function ($state) use($stores){
-                        return $stores[$state]["name"];
-                    })
-                    ->listWithLineBreaks(),
-
-                TextColumn::make('product_stores.price')
-                    ->formatStateUsing(function ($record) use ($currencies, $stores) {
-                        return ProductHelper::prepare_multiple_prices_in_table($record, $currencies, $stores);
-                    })->label('Prices'),
-
-                TextColumn::make('product_stores.notify_price')
-                    ->formatStateUsing(function ($record) use ($currencies, $stores) {
-                        return ProductHelper::prepare_multiple_notify_prices_in_table($record, $currencies, $stores);
-                    })->label('Notify at'),
+                                TextColumn::make('name')
+                                    ->columnSpan(5)
+                                    ->searchable()
+                                    ->sortable(),
 
 
-                TextColumn::make('product_stores.highest_price')
-                    ->label("Highest Price")
-                    ->listWithLineBreaks()
-                    ->color('danger'),
+                                TextColumn::make('status')
+                                    ->columnSpan(2)
+                                    ->badge()
+                                    ->verticallyAlignCenter()
+                                    ->alignEnd()
+                                    ->color(fn ($state) => StatusEnum::get_badge($state)),
 
-                TextColumn::make('product_stores.lowest_price')
-                    ->label("Lowest Price")
-                    ->listWithLineBreaks()
-                    ->color('success'),
+                                ToggleIconColumn::make('favourite')
+                                    ->columnSpan(1)
+                                    ->alignEnd()
+                                    ->onIcon("heroicon-s-star")
+                                    ->offIcon("heroicon-o-star"),
 
-                ToggleIconColumn::make('favourite')
-                    ->onIcon("heroicon-s-star")
-                    ->offIcon("heroicon-o-star"),
+                            ])
+                                ->columnSpanFull(),
 
-                TextColumn::make('product_stores.updated_at')
-                    ->listWithLineBreaks()
-                    ->label('Last Update'),
+
+                            Tables\Columns\Layout\Panel::make([
+                                    Grid::make([
+                                        'lg'=>4
+                                    ])->schema([
+                                        TextColumn::make('product_stores.store_id')
+                                            ->formatStateUsing(function ($state) use($stores){
+                                                return $stores[$state]["name"];
+                                            })->listWithLineBreaks(),
+
+                                        TextColumn::make('product_stores.highest_price')
+                                            ->listWithLineBreaks()
+                                            ->color('danger'),
+
+                                        TextColumn::make('product_stores.price')
+                                            ->formatStateUsing(function ($record) use ($currencies, $stores) {
+                                                return ProductHelper::prepare_multiple_prices_in_table($record, $currencies, $stores);
+                                            })->label('Prices'),
+
+                                        TextColumn::make('product_stores.lowest_price')
+                                            ->listWithLineBreaks()
+                                            ->color('success'),
+                                    ])
+                                ])
+                                ->columnStart(4)
+                                ->columnSpan(8),
+
+
+                        ])
+                            ->space(3)
+                            ->columnSpan(7),
+                    ]),
+            ])
+            ->contentGrid([
+                'md' => 2,
             ])
             ->defaultSort('favourite' , 'desc')
             ->filters([
@@ -299,9 +328,9 @@ class ProductResource extends Resource
 
             ])
             ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
-            ])
+                Tables\Actions\EditAction::make()->iconButton(),
+                Tables\Actions\DeleteAction::make()->iconButton(),
+            ], Tables\Enums\ActionsPosition::AfterColumns)
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DeleteBulkAction::make(),

@@ -12,6 +12,8 @@ hr {
 
 .post {
     margin-bottom: 2rem;
+    display: flex;
+    flex-direction: column;
 }
 
 .post .title {
@@ -32,6 +34,21 @@ hr {
     color: #666;
 }
 
-img {
-    max-width: 100%;
+
+.title_image{
+    display: flex;
+    flex-direction: row;
+    margin-bottom: 1rem;
+}
+.title{
+    width: 70%;
+}
+.image {
+    width: 30%;
+    img{
+        width: 90%;
+        height: auto;
+        object-fit: contain;
+    }
+
 }
