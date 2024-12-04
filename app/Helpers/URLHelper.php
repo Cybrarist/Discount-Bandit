@@ -152,7 +152,7 @@ class URLHelper
         return Str::after($this->path, 'itm');
     }
 
-    public function get_mediamarket_key(): string {
+    public function get_mediamarkt_key(): string {
         $temp=explode("-" , $this->path);
         $product_key=explode(".html" ,  end($temp))[0];
 
