@@ -30,6 +30,7 @@ RUN apt update && apt install -y supervisor  \
         chromium-driver \
         xvfb \
         xdg-utils \
+        wget \
         && apt-get clean
 
 
@@ -48,7 +49,14 @@ RUN docker-php-ext-install   pcntl \
         bcmath \
         calendar \
         pdo_mysql \
+        sockets \
         zip
+
+ENV GET_COMPOSER_VERSION="76a7060ccb93902cd7576b67264ad91c8a2700e2"
+ENV COMPOSER_VERSION=2.8.2
+
+RUN wget https://raw.githubusercontent.com/composer/getcomposer.org/$GET_COMPOSER_VERSION/web/installer -O - -q | php -- --quiet --version="$COMPOSER_VERSION" \
+	&& mv composer.phar /usr/local/bin/composer
 
 COPY ./docker/base_supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 

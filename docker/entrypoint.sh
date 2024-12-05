@@ -1,5 +1,7 @@
 #!/bin/sh
 
+composer install
+
 if [ ! -f ".env" ] ||  ! grep -q . ".env" ; then
     cp .env.example .env
     php artisan key:generate --force
