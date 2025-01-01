@@ -3,9 +3,13 @@
 namespace App\Providers;
 
 use App\Models\User;
+use Filament\Support\Facades\FilamentView;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Table;
+use Filament\View\PanelsRenderHook;
+use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Health\Checks\Checks\CacheCheck;
 use Spatie\Health\Checks\Checks\DatabaseCheck;
@@ -31,16 +35,25 @@ class AppServiceProvider extends ServiceProvider
     {
 //        URL::forceScheme('https');
 
-        if (config('settings.disable_auth') && !app()->runningInConsole())
+        JsonResource::withoutWrapping();
+
+        if (config('settings.disable_auth') && !app()->runningInConsole() && app()->isProduction())
             Auth::login(User::first());
 
 
         Table::configureUsing(function (Table $table): void {
             $table->filtersLayout(FiltersLayout::AboveContentCollapsible)
-                ->paginationPageOptions([ 25, 50 , 100 , 150 ,200,'all'])
+                ->paginationPageOptions([ 24, 48 , 72 , 96,'all'])
                 ->deferLoading();
         });
 
+
+        FilamentView::registerRenderHook(
+            PanelsRenderHook::SCRIPTS_AFTER,
+            fn (): string => new HtmlString('
+                        <script>document.addEventListener("scroll-to-top", () => window.scrollTo(0, 0))</script>
+            '),
+        );
 
         Health::checks([
             CacheCheck::new(),

@@ -2,17 +2,9 @@
 
 namespace App\Helpers\StoresAvailable;
 
-use App\Helpers\GeneralHelper;
-use App\Models\Currency;
-use App\Models\Product;
-use App\Models\ProductStore;
 use App\Models\Store;
 use Error;
 use Exception;
-use Filament\Notifications\Notification;
-use Illuminate\Support\Facades\Context;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class Costco extends StoreTemplate
@@ -242,7 +234,7 @@ class Costco extends StoreTemplate
     public static function get_variations($url) : array { return []; }
 
 
-    public static function prepare_url($domain, $product , ?Store $store =null ): string
+    public static function prepare_url($domain, $product , $store =null ): string
     {
         return match($domain){
             "costco.com","costco.ca"=>Str::replace(["store", "product_id"], [$domain , Str::upper($product)], self::MAIN_URL),

@@ -2,16 +2,10 @@
 
 namespace App\Helpers\StoresAvailable;
 
-use App\Helpers\GeneralHelper;
-use App\Models\Currency;
-use App\Models\Product;
-use App\Models\ProductStore;
 use App\Models\Store;
 use Error;
 use Exception;
 use Filament\Notifications\Notification;
-use Illuminate\Support\Facades\Context;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class Noon extends StoreTemplate
@@ -172,7 +166,7 @@ class Noon extends StoreTemplate
     }
 
 
-    public static function prepare_url($domain, $product , ?Store $store=null ): string
+    public static function prepare_url($domain, $product , $store=null ): string
     {
 
         return Str::replace(
@@ -180,6 +174,8 @@ class Noon extends StoreTemplate
             [$domain ,explode(" " , $store->name)[1]  , Str::upper($product)],
             self::MAIN_URL);
     }
+
+
     function is_system_detected_as_robot(): bool { return false;}
 
 }

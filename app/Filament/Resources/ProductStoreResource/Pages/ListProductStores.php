@@ -10,6 +10,13 @@ class ListProductStores extends ListRecords
 {
     protected static string $resource = ProductStoreResource::class;
 
+    public function setPage($page, $pageName = 'page'): void
+    {
+        parent::setPage($page, $pageName);
+
+        $this->dispatch('scroll-to-top');
+    }
+
     protected function getHeaderActions(): array
     {
         return [

@@ -2,14 +2,13 @@
 
 namespace App\Http\Controllers;
 
-use App\Filament\Resources\ProductResource;
 use App\Helpers\ProductHelper;
 use App\Helpers\URLHelper;
 use App\Http\Requests\StoreProductRequest;
+use App\Http\Resources\Api\ProductResource;
 use App\Models\Product;
 use App\Models\ProductStore;
 use App\Models\Store;
-use Illuminate\Http\Request;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 
@@ -67,15 +66,14 @@ class ProductController extends Controller
                 "number_of_rates" => $request->number_of_rates,
                 "price" => $request->price,
             ]);
-
             return response([
                 "message"=>"Product Added / Updated Successfully" ,
-                "link"=> ProductResource::getUrl("edit", ["record"=>$product_id])
+                "link"=> \App\Filament\Resources\ProductResource::getUrl("edit", ["record"=>$product_id])
             ] , 200);
 
         } catch (\Exception $e){
             Log::error($e);
-            return response(["message"=>"Something Wrong Happened"] , 500);
+            return response(["message"=>"Something Wrong Happened" . $e->getMessage()] , 500);
         }
     }
 

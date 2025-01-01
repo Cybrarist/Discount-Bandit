@@ -107,7 +107,7 @@ class StoreHelper
     {
         return Cache::remember('stores_with_active_products' , now()->addDay(), function () {
             return Store::whereIn('id' , ProductStore::distinct()->get('store_id')->toArray())
-                ->get(["id","name","currency_id"])
+                ->get(["id","name","currency_id","domain"])
                 ->keyBy("id")
                 ->toArray();
         });

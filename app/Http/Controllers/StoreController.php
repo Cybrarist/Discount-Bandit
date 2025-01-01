@@ -13,7 +13,11 @@ class StoreController extends Controller
      */
     public function index()
     {
-        //
+        return Store::get([
+            "id",
+            "name",
+            "domain",
+        ]);
     }
 
     /**
