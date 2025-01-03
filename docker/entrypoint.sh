@@ -1,6 +1,18 @@
 #!/bin/sh
 
-composer install
+if [ ! -f "vendor/autoload.php" ]; then
+    echo "Installing Composer"
+    composer install --no-interaction --no-progress
+else
+    composer dump-autoload
+    composer update --no-interaction --no-progress
+fi
+
+
+if [ ! -f "/logs" ]; then
+    mkdir /logs
+fi
+
 
 if [ ! -f ".env" ] ||  ! grep -q . ".env" ; then
     cp .env.example .env

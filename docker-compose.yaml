@@ -13,7 +13,7 @@ services:
     networks:
       - discount-bandit
     volumes:
-      - ./database/:/app/database/
+      - ./database/database.sqlite:/app/database/database.sqlite
       - ./.env:/app/.env
       - ./logs:/logs
     environment:
