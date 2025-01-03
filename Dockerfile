@@ -30,7 +30,6 @@ RUN apt update && apt install -y supervisor  \
         chromium-driver \
         xvfb \
         xdg-utils \
-        wget \
         && apt-get clean
 
 
