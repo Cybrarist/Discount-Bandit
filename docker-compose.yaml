@@ -13,8 +13,9 @@ services:
     networks:
       - discount-bandit
     volumes:
-      - ./database/database.sqlite:/app/database/database.sqlite
+      - ./database/:/app/database/
       - ./.env:/app/.env
+      - ./logs:/logs
     environment:
       DB_CONNECTION: sqlite
       NTFY_CHANNEL_ID: ""

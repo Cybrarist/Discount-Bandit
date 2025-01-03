@@ -53,5 +53,16 @@ If you are coming outside github or don't like to use it, feel free to join [Dis
 ## Docker
 Please check the docker repos to pull the image you prefer [Docker](https://hub.docker.com/r/cybrarist/discount-bandit)
 
+# docker-compose
+
+If you run docker-compose before creating a .env file, it will have created a '.env'.
+To fix it, just delete the .env folder and make sure you create your own .env file before running:
+```
+rm -rf .env
+cp .env.example .env
+```
+
+Don't forget to also populate the .env file with your own APP_KEY (a random 32 characters string).
+
 ## Sponsors
 ![Jetbrains](https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg)
