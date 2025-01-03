@@ -382,9 +382,14 @@ class ProductResource extends Resource
                         }
 
                         return "Lowest in {$data['lowest_within_x']} Days" ;
-                    })
+                    }),
 
 
+                SelectFilter::make('category')
+                    ->relationship('categories','name')
+                    ->multiple()
+                    ->searchable()
+                    ->preload(),
 
             ])
             ->bulkActions([
