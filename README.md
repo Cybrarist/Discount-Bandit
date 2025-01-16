@@ -8,13 +8,13 @@ Feel free to access the up-to-date documentation from [Here](https://discount-ba
 
 ## Deployment
 Discount Bandit uses a web interface, so you need to install some dependencies first:
-- php (https://www.php.net)
-- composer (https://getcomposer.org)
+- [php](https://www.php.net)
+- [composer](https://getcomposer.org)
 - apache or nginx (https://httpd.apache.org , https://www.nginx.com)
-- mysql (https://www.mysql.com)
+- [mysql](https://www.mysql.com)
 - sqlite (Default Option)
 
-or you can install something like MAMP instead of installing each one alone. (https://www.mamp.info/en/windows/)
+or you can install something like [MAMP](https://www.mamp.info/en/windows/) instead of installing each one alone. 
 
 
 first, you need to install the packages with composer
@@ -47,11 +47,22 @@ If you want to update the code, after installing the new version run the followi
 php artisan discount:update
 ```
 ## Connect
-If you are coming outside github or don't like to use it, feel free to join my discord.
-https://discord.gg/VBMHvH8tuR
+If you are coming outside github or don't like to use it, feel free to join [Discord](https://discord.gg/VBMHvH8tuR).
+
 
 ## Docker
-There is no docker image for beta, since i might need the flexibility to push updates or fix bugs.
+Please check the docker repos to pull the image you prefer [Docker](https://hub.docker.com/r/cybrarist/discount-bandit)
+
+# docker-compose
+
+If you run docker-compose before creating a .env file, it will have created a '.env'.
+To fix it, just delete the .env folder and make sure you create your own .env file before running:
+```
+rm -rf .env
+cp .env.example .env
+```
+
+Don't forget to also populate the .env file with your own APP_KEY (a random 32 characters string).
 
 ## Sponsors
 ![Jetbrains](https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg)

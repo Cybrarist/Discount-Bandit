@@ -21,6 +21,14 @@ class ListProducts extends ListRecords
         ];
     }
 
+    public function setPage($page, $pageName = 'page'): void
+    {
+        parent::setPage($page, $pageName);
+
+        $this->dispatch('scroll-to-top');
+    }
+
+
     public function getTabs() : array {
 
         $stores=StoreHelper::get_stores_active_for_tabs();

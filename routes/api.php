@@ -1,12 +1,11 @@
 <?php
 
 use App\Http\Controllers\ProductController;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 
 
 
-
+//todo migrate to api controller
 Route::middleware('auth:sanctum')
     ->prefix("products")
     ->name('products.')
@@ -18,4 +17,15 @@ Route::middleware('auth:sanctum')
 
         //preparing to change to controller.
         Route::resource("products" , ProductController::class)->only(["store"]);
+});
+
+
+//
+//new controller to handle all api calls
+Route::middleware('auth:sanctum')
+    ->prefix("mobile/")
+    ->name('mobile.')
+    ->group(function (){
+        Route::resource("stores" , \App\Http\Controllers\StoreController::class);
+        Route::resource("products" , \App\Http\Controllers\Api\ProductController::class);
 });

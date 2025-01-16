@@ -4,7 +4,6 @@ namespace Tests\Unit;
 
 use App\Enums\StatusEnum;
 use App\Helpers\StoresAvailable\Ajio;
-use App\Helpers\StoresAvailable\Myntra;
 use App\Helpers\URLHelper;
 use App\Models\Product;
 use App\Models\ProductStore;

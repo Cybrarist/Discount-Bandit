@@ -3,25 +3,18 @@
 namespace App\Helpers\StoresAvailable;
 
 use App\Helpers\GeneralHelper;
-use App\Models\Currency;
-use App\Models\Product;
-use App\Models\ProductStore;
-use App\Models\Store;
 use Error;
 use Exception;
 use Filament\Notifications\Notification;
-use Illuminate\Support\Facades\Context;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
-use Override;
 
 class Walmart extends StoreTemplate
 {
-    const MAIN_URL="https://www.store/ip/product_id" ;
+    const string MAIN_URL="https://www.store/ip/product_id";
+
+    const string API_URL="https://www.store/orchestra/pdp/graphql/ItemByIdBtf/5ee7e3830d84d432276cdec384e8a3c65f926886f1667a4ff49364e453c9b200/ip/product_id";
 
     private $information;
-
-
 
     public function __construct(private int $product_store_id) {
         parent::__construct($this->product_store_id);
@@ -29,7 +22,20 @@ class Walmart extends StoreTemplate
 
     public function crawler(): void
     {
-        parent::crawl_url();
+        parent::crawl_url_chrome(
+//            extra_headers: [
+//                "Content-Type"=> "application/json",
+//                "Accept"=> "application/json",
+//                "Accept-Language"=> "en-US",
+//                "Accept-Encoding"=> "gzip, deflate, br, zstd",
+//                "x-o-segment"=> "oaoh",
+//                "x-o-platform-version"=> "us-web-1.171.4-22e8dcfe70ac4c2a97ebec1ee1cf1bdff5c8ff5d-112018",
+//                "x-o-gql-query"=> "query ItemByIdBtf",
+//                "X-APOLLO-OPERATION-NAME"=> "ItemByIdBtf",
+//                "baggage"=> "trafficType=customer,deviceType=desktop,renderScope=SSR,webRequestSource=Browser,pageName=itemPage,isomorphicSessionId=-NbuNCXPPg5FO_So7UqMY",
+//                "x-o-platform"=> "rweb"
+//            ]
+        );
     }
 
 
@@ -243,11 +249,10 @@ class Walmart extends StoreTemplate
 
     public static function prepare_url($domain, $product, $store=null ): string
     {
-
         return Str::replace(
             ["store", "product_id"],
             [$domain , $product],
-            self::MAIN_URL);
+            self::MAIN_URL );
     }
 
 

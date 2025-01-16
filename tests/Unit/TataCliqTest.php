@@ -3,7 +3,6 @@
 namespace Tests\Unit;
 
 use App\Enums\StatusEnum;
-use App\Helpers\StoresAvailable\Nykaa;
 use App\Helpers\StoresAvailable\Tatacliq;
 use App\Helpers\URLHelper;
 use App\Models\Product;

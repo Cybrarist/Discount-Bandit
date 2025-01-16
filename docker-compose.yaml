@@ -5,9 +5,9 @@ networks:
 
 services:
   discount-bandit:
-    build:
-      context: .
-#    image: ./
+    image: cybrarist/discount-bandit:latest
+#    build:
+#      context: .
     ports:
       - 8080:80
     networks:
@@ -15,6 +15,7 @@ services:
     volumes:
       - ./database/database.sqlite:/app/database/database.sqlite
       - ./.env:/app/.env
+      - ./logs:/logs
     environment:
       DB_CONNECTION: sqlite
       NTFY_CHANNEL_ID: ""

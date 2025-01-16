@@ -25,6 +25,7 @@
     @endforeach
     @foreach($items as $item)
         <entry>
+            <media  src="{{$item->image}}"></media>
             <title>{!! \Spatie\Feed\Helpers\Cdata::out($item->title) !!}</title>
             <link rel="alternate" href="{{ url($item->link) }}" />
             <id>{{ url($item->id) }}</id>

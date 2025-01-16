@@ -56,19 +56,30 @@
                     <hr/>
                     <xsl:for-each select="/atom:feed/atom:entry">
                         <div class="post">
-                            <div class="title">
-                                <a>
-                                    <xsl:attribute name="href">
-                                        <xsl:value-of select="atom:link/@href"/>
-                                    </xsl:attribute>
-                                    <xsl:value-of select="atom:title"/>
-                                </a>
-                            </div>
+                                <div class="title_image">
+                                    <div class="image">
+                                        <img>
+                                            <xsl:attribute name="src">
+                                                <xsl:value-of select="atom:media/@src"/>
+                                            </xsl:attribute>
+                                        </img>
+                                    </div>
+                                    <div class="title">
+                                        <a target="_blank">
+                                            <xsl:attribute name="href">
+                                                <xsl:value-of select="atom:link/@href"/>
+                                            </xsl:attribute>
+                                            <xsl:value-of select="atom:title"/>
+                                        </a>
+                                    </div>
 
-                            <div class="summary">
-                                <xsl:value-of select="atom:summary" disable-output-escaping="yes"/>
-                            </div>
+                                </div>
 
+
+
+                            <div class="summary" >
+                                    <xsl:value-of  select="atom:summary" disable-output-escaping="yes"/>
+                            </div>
                             <div class="published-info">
                                 Published on
                                 <xsl:value-of select="substring(atom:updated, 0, 11)" /> by <xsl:value-of select="atom:author/atom:name"/>

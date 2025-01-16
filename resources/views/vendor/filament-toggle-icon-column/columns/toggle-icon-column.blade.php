@@ -40,7 +40,7 @@
     ]);
 @endphp
 
-<div 
+<div
     wire:key="{{ $this->getId() }}.table.record.{{ $recordKey }}.column.{{ $getName() }}.toggle-column.{{ $state ? 'true' : 'false' }}"
 >
     <div
@@ -50,7 +50,7 @@
             isLoading: false,
         }"
         wire:ignore
-        {{ 
+        {{
             $attributes
                 ->merge($getExtraAttributes(), escape: false)
                 ->class(['filament-toggle-icon-column'])
@@ -83,7 +83,7 @@
             }"
             @disabled($isDisabled())
             type="button"
-            class="items-center justify-center inline-flex shrink-0 h-10 w-10 border-transparent cursor-pointer outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none"
+            class="items-start justify-center inline-flex shrink-0 h-10 w-10 border-transparent cursor-pointer outline-none disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none"
         >
             <span
                 {{
@@ -100,7 +100,7 @@
                         :icon="$stateIcon"
                         :size="$iconSize"
                         :class="$iconClasses . ' ' . $iconSize"
-                    />                    
+                    />
                 @endif
             </span>
         </button>

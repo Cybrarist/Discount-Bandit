@@ -2,15 +2,11 @@
 
 namespace App\Helpers\StoresAvailable;
 
-use App\Models\Product;
-use App\Models\ProductStore;
 use App\Models\Store;
 use Error;
 use Exception;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Context;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class Argos extends StoreTemplate
@@ -216,7 +212,7 @@ class Argos extends StoreTemplate
     }
 
 
-    public static function prepare_url($domain, $product , ?Store $store = null): string {
+    public static function prepare_url($domain, $product , $store = null): string {
         return Str::replace(["store", "product_id"], [$domain , Str::upper($product)], self::MAIN_URL);
     }
 

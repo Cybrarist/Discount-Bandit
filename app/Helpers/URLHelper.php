@@ -9,6 +9,7 @@ use Filament\Notifications\Notification;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Context;
 use Illuminate\Support\Str;
+use Illuminate\Support\Stringable;
 
 class URLHelper
 {
@@ -25,20 +26,21 @@ class URLHelper
             //parse the url
             $parsed_url=parse_url($url);
 
-            $this->domain= Str::lower(Str::remove("www.",$parsed_url['host']));
+            $this->domain= Str::of($parsed_url['host'])->lower()->remove(['www.' , 'uae.']);
 
-            if ($this->domain==="uae.emaxme.com")
-                $this->domain=Str::remove("uae.",$parsed_url['host']);
+
+//            Str::lower(Str::remove("www.",$parsed_url['host']));
+
+//            if ($this->domain==="uae.emaxme.com")
+//                $this->domain=Str::remove("uae.",$parsed_url['host']);
 
             $this->store=Store::whereDomain($this->domain)->first();
 
             //check the store exists
             throw_if(!$this->store , new \Exception("This store doesn't exist in the database, please check the url"));
-
             $remove_ref_if_exists=explode("/ref" , $parsed_url['path'] ?? "");
             $this->path= $remove_ref_if_exists[0] ?? "";
             $this->final_url="https://$this->domain$this->path";
-
             $this->top_host= explode('.', $parsed_url["host"])[0];
 
             self::get_key();
@@ -152,7 +154,7 @@ class URLHelper
         return Str::after($this->path, 'itm');
     }
 
-    public function get_mediamarket_key(): string {
+    public function get_mediamarkt_key(): string {
         $temp=explode("-" , $this->path);
         $product_key=explode(".html" ,  end($temp))[0];
 

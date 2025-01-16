@@ -2,8 +2,6 @@
 
 namespace App\Helpers\StoresAvailable;
 
-use App\Models\Product;
-use App\Models\ProductStore;
 use App\Models\Store;
 use Error;
 use Exception;

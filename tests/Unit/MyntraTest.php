@@ -3,7 +3,6 @@
 namespace Tests\Unit;
 
 use App\Enums\StatusEnum;
-use App\Helpers\StoresAvailable\Amazon;
 use App\Helpers\StoresAvailable\Myntra;
 use App\Helpers\TestHelpers;
 use App\Helpers\URLHelper;

@@ -12,6 +12,10 @@ class GeneralHelper
         return preg_replace('/[^0-9.]/', '', $string);
     }
 
+    public static function get_numbers_only($string): array|string|null
+    {
+        return preg_replace('/[^0-9]/', '', $string);
+    }
 
     public static function get_value_from_meta_tag(array $meta_items, string $key , string $attribute): string
     {

@@ -326,9 +326,16 @@ class StoreSeeder extends Seeder
             [
                 'name'=>'Media Market Spain',
                 'domain'=>'mediamarkt.es',
-                'image'=>'mediamarket.png',
+                'image'=>'mediamarkt.png',
                 'currency_id'=>Currency::firstOrCreate(['code'=>'€'])->id,
                 'slug'=>'mediamarkt_es'
+            ],
+            [
+                'name'=>'Media Markt Belgium',
+                'domain'=>'mediamarkt.be',
+                'image'=>'mediamarkt.png',
+                'currency_id'=>Currency::firstOrCreate(['code'=>'€'])->id,
+                'slug'=>'mediamarkt_be'
             ],
             [
                 'name'=>'Best Buy',

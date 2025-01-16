@@ -7,15 +7,11 @@ use App\Filament\Resources\ProductResource\Widgets\PriceHistoryChart;
 use App\Helpers\StoreHelper;
 use App\Helpers\StoresAvailable\StoreTemplate;
 use App\Helpers\URLHelper;
-use App\Models\Product;
 use App\Models\ProductStore;
 use App\Models\Store;
 use Filament\Actions;
-use Filament\Notifications\Notification;
 use Filament\Resources\Pages\EditRecord;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Str;
 use Livewire\Attributes\On;
 
 class EditProduct extends EditRecord

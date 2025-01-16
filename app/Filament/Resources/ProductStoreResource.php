@@ -70,7 +70,7 @@ class ProductStoreResource extends Resource
         return $table
             ->modifyQueryUsing(function ($query){
                 $query->with([
-                    "product:id,name,image,status,notify_price,favourite",
+                    "product:id,name,image,status,favourite",
                 ]);
             })
             ->recordAction(ViewAction::class)

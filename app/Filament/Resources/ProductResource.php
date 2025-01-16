@@ -11,8 +11,10 @@ use App\Filament\Resources\ProductResource\RelationManagers;
 use App\Helpers\CurrencyHelper;
 use App\Helpers\ProductHelper;
 use App\Helpers\StoreHelper;
+use App\Helpers\StoresAvailable\Noon;
 use App\Helpers\URLHelper;
 use App\Models\Product;
+use App\Models\Store;
 use Archilex\ToggleIconColumn\Columns\ToggleIconColumn;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
@@ -23,23 +25,26 @@ use Filament\Forms\Form;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
+use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\Layout\Grid;
+use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
+use Illuminate\Support\Collection;
+use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 
 class ProductResource extends Resource
 {
     protected static ?string $model = Product::class;
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
     protected static ?int $navigationSort=1;
-
     protected static ?string $recordTitleAttribute="name";
-
     protected static bool $isGloballySearchable=true;
 
     public static function form(Form $form): Form
@@ -171,59 +176,145 @@ class ProductResource extends Resource
 
         $stores=StoreHelper::get_stores_with_active_products();
         $currencies=CurrencyHelper::get_currencies();
+
+
         return $table
             ->modifyQueryUsing(function ($query){
                 $query->with([
-                    "product_stores:id,product_id,store_id,price,notify_price,updated_at,highest_price,lowest_price",
+                    "product_stores:id,product_id,store_id,price,notify_price,updated_at,highest_price,lowest_price,key,updated_at",
                 ]);
             })
+            ->recordUrl( null)
             ->columns([
-                ImageColumn::make('image')->alignCenter(),
+                Grid::make([
+                    'lg' => 10,
+                    ])
+                    ->schema([
+                        ImageColumn::make('image')
+                            ->verticallyAlignCenter()
+                            ->alignCenter()
+                            ->height('100%')
+                            ->width('100%')
+                            ->extraImgAttributes(['style'=>'max-height:200px; '])
+                            ->columnSpan(3)
+                            ->url(fn ($record): string =>
+                                route('filament.admin.resources.products.edit',
+                                ['record' => $record])
+                            ),
 
-                TextColumn::make('name')
-                    ->words(5)
-                    ->limit(50)
-                    ->searchable()
-                    ->sortable(),
+                        Grid::make([
+                            'lg' => 8,
+                            'md'=>4
+                        ])
+                            ->schema([
 
-                TextColumn::make('status')
-                    ->badge()
-                    ->color(fn ($state) => StatusEnum::get_badge($state)),
+                                TextColumn::make('name')
+                                    ->columnSpan(4)
+                                    ->searchable()
+                                    ->words(10)
+                                    ->url(fn ($record): string =>
+                                    route('filament.admin.resources.products.edit',
+                                        ['record' => $record])
+                                    )
+                                    ->sortable(),
 
-                TextColumn::make('product_stores.store_id')
-                    ->formatStateUsing(function ($state) use($stores){
-                        return $stores[$state]["name"];
-                    })
-                    ->listWithLineBreaks(),
+                                TextColumn::make('status')
+                                    ->columnSpan(2)
+                                    ->badge()
+                                    ->verticallyAlignCenter()
+                                    ->alignEnd()
+                                    ->color(fn ($state) => StatusEnum::get_badge($state)),
 
-                TextColumn::make('product_stores.price')
-                    ->formatStateUsing(function ($record) use ($currencies, $stores) {
-                        return ProductHelper::prepare_multiple_prices_in_table($record, $currencies, $stores);
-                    })->label('Prices'),
-
-                TextColumn::make('product_stores.notify_price')
-                    ->formatStateUsing(function ($record) use ($currencies, $stores) {
-                        return ProductHelper::prepare_multiple_notify_prices_in_table($record, $currencies, $stores);
-                    })->label('Notify at'),
+                                ToggleIconColumn::make('favourite')
+                                    ->columnSpan(1)
+                                    ->alignEnd()
+                                    ->onIcon("heroicon-s-star")
+                                    ->offIcon("heroicon-o-star"),
 
 
-                TextColumn::make('product_stores.highest_price')
-                    ->label("Highest Price")
-                    ->listWithLineBreaks()
-                    ->color('danger'),
 
-                TextColumn::make('product_stores.lowest_price')
-                    ->label("Lowest Price")
-                    ->listWithLineBreaks()
-                    ->color('success'),
+                                IconColumn::make('delete')
+                                    ->getStateUsing(fn() => true)
+                                    ->columnSpan(1)
 
-                ToggleIconColumn::make('favourite')
-                    ->onIcon("heroicon-s-star")
-                    ->offIcon("heroicon-o-star"),
+                                    ->alignEnd()
+                                    ->icon(fn(bool $state): string => 'heroicon-m-trash')
+                                    ->color('danger')
+                                    ->action(Tables\Actions\DeleteAction::make()),
 
-                TextColumn::make('product_stores.updated_at')
-                    ->listWithLineBreaks()
-                    ->label('Last Update'),
+
+                            ])->columnSpan(7),
+
+                        Stack::make([
+
+                            Tables\Columns\Layout\Panel::make([
+                                Grid::make([
+                                    'lg'=> 7,
+                                    'sm'=>1
+                                ])->schema([
+                                    TextColumn::make('product_stores')
+                                        ->formatStateUsing(function ($state, $record) use($stores){
+
+                                            $store = new Store();
+                                            $store->fill($stores[$state->store_id]);
+
+                                            $final_class_name="App\Helpers\StoresAvailable\\" . Str::ucfirst( explode(".", $store->domain)[0]);
+                                            $url= call_user_func($final_class_name . '::prepare_url' , $store->domain, $state->key , $store );
+
+                                            return new HtmlString("<a class='underline text-primary-400' href='$url' target='_blank'>{$stores[$state->store_id]["name"]}</a>");
+                                        })
+                                        ->columnSpan([
+                                            'md'=> 2,
+                                            'sm'=> 7
+                                        ])
+                                        ->html()
+                                        ->listWithLineBreaks(),
+
+                                    TextColumn::make('product_stores.highest_price')
+                                        ->listWithLineBreaks()
+                                        ->columnSpan([
+                                            'md'=> 1,
+                                            'sm'=> 7
+                                        ])
+                                        ->color('danger'),
+
+                                    TextColumn::make('product_stores.price')
+                                        ->columnSpan([
+                                            'md'=> 1,
+                                            'sm'=> 2
+                                        ])
+                                        ->formatStateUsing(function ($record) use ($currencies, $stores) {
+                                            return ProductHelper::prepare_multiple_prices_in_table($record, $currencies, $stores);
+                                        })
+                                        ->label('Prices'),
+
+                                    TextColumn::make('product_stores.lowest_price')
+                                        ->columnSpan([
+                                            'md'=> 1,
+                                            'sm'=> 2
+                                        ])
+                                        ->listWithLineBreaks()
+                                        ->color('success'),
+
+                                    TextColumn::make('product_stores.updated_at')
+                                        ->columnSpan([
+                                            'md'=> 2,
+                                            'sm'=> 3
+                                        ])
+                                        ->listWithLineBreaks(),
+                                ])
+                            ])
+                                ->columnSpanFull(),
+
+
+                        ])
+                            ->space(3)
+                            ->columnSpanFull(),
+
+                  ])
+            ])
+            ->contentGrid([
+                'md' => 2,
             ])
             ->defaultSort('favourite' , 'desc')
             ->filters([
@@ -283,24 +374,23 @@ class ProductResource extends Resource
                             "
                         );
 
-
                         $product_ids= Arr::pluck($products_with_lowest_price_within_x , 'product_id');
-
                       $query->wherein('id', $product_ids);
-                })    ->indicateUsing(function (array $data): ?string {
+                })->indicateUsing(function (array $data): ?string {
                         if (! $data['lowest_within_x']) {
                             return null;
                         }
 
                         return "Lowest in {$data['lowest_within_x']} Days" ;
-                    })
+                    }),
 
 
+                SelectFilter::make('category')
+                    ->relationship('categories','name')
+                    ->multiple()
+                    ->searchable()
+                    ->preload(),
 
-            ])
-            ->actions([
-                Tables\Actions\EditAction::make(),
-                Tables\Actions\DeleteAction::make(),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([

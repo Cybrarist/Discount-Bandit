@@ -29,6 +29,7 @@ class Product extends Model
     ];
     protected $casts=[
         'status'=>StatusEnum::class,
+        'favourite' => 'boolean'
 //        'stores.pivot.price'=>Money::class,
 //        'stores.pivot.price'=>Money::class,
 //        'stores.pivot.price'=>Money::class,

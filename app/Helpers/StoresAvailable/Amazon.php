@@ -130,34 +130,41 @@ class Amazon extends StoreTemplate
 
         //method 2 to return the price of the product
         try {
-            $whole=Str::remove([",","\u{A0}","."] ,
+            $whole=GeneralHelper::get_numbers_only(
                 $this->center_column
                     ->xpath("//div[@id='corePriceDisplay_desktop_feature_div']//span[@class='a-price-whole']")[0]
-                    ->__toString());
+                    ->__toString()
+            );
 
-            $fraction=Str::remove([",","\u{A0}"] ,
+            $fraction=GeneralHelper::get_numbers_only(
                 $this->center_column
                     ->xpath("//div[@id='corePriceDisplay_desktop_feature_div']//span[@class='a-price-fraction']")[0]
-                    ->__toString());
+                    ->__toString()
+            );
 
-            $this->price= (float)"$whole.$fraction";
+            $this->price= (float) "$whole.$fraction";
+
             return;
         }
         catch (Throwable $exception )  {
             $this->log_error( "Price Second Method",$exception->getMessage());
         }
+
         //method 3 to return the price of the product only when bot is detected
         if (!$this->center_column)
             try {
-                $whole=Str::remove([",","\u{A0}","."] ,
+
+                $whole=GeneralHelper::get_numbers_only(
                     $this->xml
                         ->xpath("//span[@class='a-price-whole']")[0]
-                        ->__toString());
+                        ->__toString()
+                );
 
-                $fraction=Str::remove([",","\u{A0}"] ,
+                $fraction=GeneralHelper::get_numbers_only(
                     $this->xml
                         ->xpath("//span[@class='a-price-fraction']")[0]
-                        ->__toString());
+                        ->__toString()
+                );
 
                 $this->price= (float)"$whole.$fraction";
             }

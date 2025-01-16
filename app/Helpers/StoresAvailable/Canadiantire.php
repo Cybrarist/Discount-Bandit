@@ -137,7 +137,7 @@ class Canadiantire extends StoreTemplate
         }
     }
 
-    public static function prepare_url($domain, $product, ?Store $store = null): string
+    public static function prepare_url($domain, $product, $store = null): string
     {
         return Str::replace(
             ["store", "product_id"],

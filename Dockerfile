@@ -38,6 +38,8 @@ RUN apt update && apt install -y supervisor  \
 ENV CHROME_BIN="/usr/bin/chromium-browser"
 ENV CHROME_OPTS=" --disable-dev-shm-usage --headless --disable-gpu --no-sandbox --enable-features=ConversionMeasurement --remote-debugging-port=9222 "
 
+RUN install-php-extensions @composer
+
 RUN docker-php-ext-install   pcntl \
         opcache \
         pdo_mysql \
@@ -48,7 +50,9 @@ RUN docker-php-ext-install   pcntl \
         bcmath \
         calendar \
         pdo_mysql \
+        sockets \
         zip
+
 
 COPY ./docker/base_supervisord.conf /etc/supervisor/conf.d/supervisord.conf
 
@@ -58,12 +62,11 @@ WORKDIR /app
 
 EXPOSE 80 443 2019 8080
 
+
 RUN chmod +x /app/*
 
 RUN mkdir -p /config/chromium
 
-
 ENV DISPLAY=:99
-
 
 ENTRYPOINT ["docker/entrypoint.sh"]

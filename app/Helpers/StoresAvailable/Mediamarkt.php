@@ -2,11 +2,8 @@
 
 namespace App\Helpers\StoresAvailable;
 
-use App\Helpers\GeneralHelper;
-use App\Models\Currency;
 use Error;
 use Exception;
-use Filament\Notifications\Notification;
 use Illuminate\Support\Str;
 
 class Mediamarkt extends StoreTemplate
@@ -72,7 +69,7 @@ class Mediamarkt extends StoreTemplate
     public function get_price(): void
     {
         try {
-            $this->price=  (float) $this->schema_script->object->offers[0]->price;
+            $this->price=  (float) $this->schema_script->object->offers->price;
             return ;
         }
         catch ( Error | \Exception  $e ) {
@@ -86,7 +83,7 @@ class Mediamarkt extends StoreTemplate
     {
         try {
 
-            $this->in_stock = Str::contains($this->schema_script->object->offers[0]->availability , "instock" , true);
+            $this->in_stock = Str::contains($this->schema_script->object->offers->availability , "instock" , true);
 
         }catch (\Exception $e){
             $this->log_error( "Stock Availability First Method");
