@@ -367,7 +367,8 @@ class Amazon extends StoreTemplate
 
     function is_system_detected_as_robot(): bool
     {
-       return sizeof($this->xml->xpath('//input[@id="captchacharacters"]'));
+       return sizeof($this->xml->xpath('//input[@id="captchacharacters"]')) ||
+           sizeof($this->xml->xpath('//label[@for="captchacharacters"]'));
     }
 
 

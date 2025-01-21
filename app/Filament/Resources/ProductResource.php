@@ -184,7 +184,9 @@ class ProductResource extends Resource
                     "product_stores:id,product_id,store_id,price,notify_price,updated_at,highest_price,lowest_price,key,updated_at",
                 ]);
             })
-            ->recordUrl( null)
+            ->recordUrl( function ($record){
+                return (!$record->name) ?  route('filament.admin.resources.products.edit', ['record' => $record]) : null;
+            })
             ->columns([
                 Grid::make([
                     'lg' => 10,
@@ -209,6 +211,7 @@ class ProductResource extends Resource
                             ->schema([
 
                                 TextColumn::make('name')
+                                    ->default("Fetching....")
                                     ->columnSpan(4)
                                     ->searchable()
                                     ->words(10)
