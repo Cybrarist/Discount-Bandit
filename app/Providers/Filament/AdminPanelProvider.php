@@ -9,12 +9,10 @@ use Croustibat\FilamentJobsMonitor\Resources\QueueMonitorResource;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Pages;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
 use Filament\Support\Enums\MaxWidth;
-use Filament\Widgets;
 use FilipFonal\FilamentLogManager\FilamentLogManager;
 use GeoSot\FilamentEnvEditor\FilamentEnvEditorPlugin;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -23,7 +21,6 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\AuthenticateSession;
 use Illuminate\Session\Middleware\StartSession;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Jeffgreco13\FilamentBreezy\BreezyCore;
 use Leandrocfe\FilamentApexCharts\FilamentApexChartsPlugin;
@@ -47,14 +44,15 @@ class AdminPanelProvider extends PanelProvider
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->plugins([
                 FilamentApexChartsPlugin::make(),
-                FilamentSpatieLaravelHealthPlugin::make(),
+                FilamentSpatieLaravelHealthPlugin::make()
+                    ->navigationGroup('Settings'),
                 SpotlightPlugin::make(),
                 FilamentLogManager::make(),
                 FilamentJobsMonitorPlugin::make(),
                 QuickCreatePlugin::make()
                     ->excludes([
                         StoreResource::class,
-                        QueueMonitorResource::class
+                        QueueMonitorResource::class,
                     ]),
                 FilamentEnvEditorPlugin::make()
                     ->navigationGroup('Settings'),
@@ -62,7 +60,7 @@ class AdminPanelProvider extends PanelProvider
                     ->myProfile()
                     ->enableTwoFactorAuthentication()
                     ->enableSanctumTokens(
-                        permissions: ['get_product','create_product','delete_product'] // optional, customize the permissions (default = ["create", "view", "update", "delete"])
+                        permissions: ['get_product', 'create_product', 'delete_product'] // optional, customize the permissions (default = ["create", "view", "update", "delete"])
                     ),
             ])
             ->middleware([

@@ -33,26 +33,23 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-//        URL::forceScheme('https');
+        //        URL::forceScheme('https');
 
         JsonResource::withoutWrapping();
 
-        if (config('settings.disable_auth') && !app()->runningInConsole() && app()->isProduction())
+        if (config('settings.disable_auth') && ! app()->runningInConsole() && app()->isProduction()) {
             Auth::login(User::first());
-
+        }
 
         Table::configureUsing(function (Table $table): void {
             $table->filtersLayout(FiltersLayout::AboveContentCollapsible)
-                ->paginationPageOptions([ 24, 48 , 72 , 96,'all'])
+                ->paginationPageOptions([24, 48, 72, 96, 'all'])
                 ->deferLoading();
         });
 
-
         FilamentView::registerRenderHook(
             PanelsRenderHook::SCRIPTS_AFTER,
-            fn (): string => new HtmlString('
-                        <script>document.addEventListener("scroll-to-top", () => window.scrollTo(0, 0))</script>
-            '),
+            fn (): string => new HtmlString('<script>document.addEventListener("scroll-to-top", () => window.scrollTo(0, 0))</script>'),
         );
 
         Health::checks([

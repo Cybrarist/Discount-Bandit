@@ -24,7 +24,7 @@ return [
     |
     */
 
-    'disable_top_bar' => env("TOP_BAR" , true),
+    'disable_top_bar' => env("TOP_BAR", true),
 
     /*
     |--------------------------------------------------------------------------
@@ -35,7 +35,7 @@ return [
     |
     */
 
-    'breadcrumbs' => env("BREADCRUMBS" , false),
+    'breadcrumbs' => env("BREADCRUMBS", false),
 
     /*
     |--------------------------------------------------------------------------
@@ -46,8 +46,7 @@ return [
     |
     */
 
-    'spa' => env("SPA" , false),
-
+    'spa' => env("SPA", false),
 
     /*
     |--------------------------------------------------------------------------
@@ -58,7 +57,7 @@ return [
     |
     */
 
-    'disable_auth' => env("DISABLE_AUTH" , false),
+    'disable_auth' => env("DISABLE_AUTH", false),
 
     /*
     |--------------------------------------------------------------------------
@@ -69,8 +68,7 @@ return [
     |
     */
 
-    'theme_color' => env("THEME_COLOR" , 'Blue'),
-
+    'theme_color' => env("THEME_COLOR", 'Blue'),
 
     /*
     |--------------------------------------------------------------------------
@@ -81,7 +79,6 @@ return [
     |
     */
 
-    'notify_any_change' => env("NOTIFY_ON_ANY_PRICE_CHANGE" , 'false'),
-
+    'notify_any_change' => env("NOTIFY_ON_ANY_PRICE_CHANGE", 'false'),
 
 ];

@@ -11,19 +11,20 @@ class Group extends Model
 {
     use HasFactory;
 
-    protected $guarded=["id"];
+    protected $guarded = ["id"];
 
-    protected $casts=[
-        "notify_price"=>Money::class,
-        "status"=>StatusEnum::class
+    protected $casts = [
+        "notify_price" => Money::class,
+        "status" => StatusEnum::class,
     ];
 
-    public function currency (){
+    public function currency()
+    {
         return $this->belongsTo(Currency::class);
     }
 
-    public function products(){
+    public function products()
+    {
         return $this->belongsToMany(Product::class)->withTimestamps()->withPivot("key");
     }
-
 }

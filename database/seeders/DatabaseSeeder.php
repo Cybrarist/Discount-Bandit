@@ -15,21 +15,20 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
 
-        if (app()->isLocal())
+        if (app()->isLocal()) {
             User::create([
                 'email' => 'test@test.com',
                 'password' => 'password',
                 'name' => 'password',
             ]);
+        }
 
         $this->call([
             StoreSeeder::class,
         ]);
 
-
-
-        Store::whereIn('domain',[
-            'fnac.com'
+        Store::whereIn('domain', [
+            'fnac.com',
         ])->delete();
     }
 }
