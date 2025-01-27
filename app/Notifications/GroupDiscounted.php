@@ -2,7 +2,7 @@
 
 namespace App\Notifications;
 
-use App\Models\RssFeedItem;
+use App\Models\Group;
 use App\NotificationsChannels\AppriseChannel;
 use App\NotificationsChannels\NtfyChannel;
 use Illuminate\Bus\Queueable;
@@ -11,51 +11,31 @@ use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use NotificationChannels\Telegram\TelegramFile;
 
-class ProductDiscounted extends Notification
+class GroupDiscounted extends Notification
 {
     use Queueable;
 
-    public string $product_temp_link;
+    public string $group_temp_link;
 
     public string $notification_title;
 
     public string $notification_text;
-
-    /**
-     * Create a new notification instance.
-     */
     public function __construct(
-        public $product_id,
-        public $product_name,
-        public $store_name,
+        public Group $group,
         public $price,
         public $highest_price,
         public $lowest_price,
         public $product_url,
-        public $image,
         public $currency,
         public $tags,
     ) {
-        $this->product_temp_link = URL::temporarySignedRoute("products.show", now()->addMinutes(15), ['product' => $this->product_id]);
+        $this->group_temp_link = URL::temporarySignedRoute("groups.show", now()->addMinutes(15), ['group' => $this->group->id]);
 
-        $this->notification_title = "For Just $this->price -  Discount For ".Str::words($this->product_name, 5);
+        $this->notification_title = "Group {$this->group->name} reached the price you like";
         $this->notification_text = "{$this->product_name}, is at {$this->currency}{$this->price} <br>".
                 "----------------<br>".
                 "Highest Price: {$this->highest_price} <br>".
                 "Lowest Price: {$this->lowest_price} <br>";
-
-        RssFeedItem::create([
-            "data" => [
-                'title' => $this->notification_title,
-                'summary' => Str::replace("<br>", "&#xa;", $this->notification_text),
-                'updated' => now()->toDateTimeString(),
-                'product_id' => $this->product_id,
-                'image' => $this->image,
-                'name' => $this->product_name,
-                'link' => $this->product_url,
-                'authorName' => "Discount Bandit",
-            ],
-        ]);
 
     }
 

@@ -8,6 +8,21 @@ use Illuminate\Support\Str;
 
 class GroupHelper
 {
+    public static function sync_products_available_with_group(Group $group, array $products_available)
+    {
+
+        foreach ($products_available as $key => $product_available) {
+
+            DB::table('group_product')
+                ->where('group_id', $group->id)
+                ->where('key', $key)
+                ->whereNotIn('product_id', $products_available)
+                ->get();
+
+        }
+
+    }
+
     public static function update_products_records($group_id, $products_repeater_fields): void
     {
 

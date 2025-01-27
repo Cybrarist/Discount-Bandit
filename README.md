@@ -63,6 +63,3 @@ cp .env.example .env
 ```
 
 Don't forget to also populate the .env file with your own APP_KEY (a random 32 characters string).
-
-## Sponsors
-![Jetbrains](https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg)
