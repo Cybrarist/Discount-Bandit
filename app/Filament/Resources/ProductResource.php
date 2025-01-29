@@ -62,7 +62,7 @@ class ProductResource extends Resource
                     ->autofocus(fn ($operation) => $operation == "create")
                     ->url()
                     ->label('URL of product')
-                    ->live(onBlur: true)
+                    ->live(debounce: '300ms')
                     ->afterStateUpdated(function ($state) {
                         if ($state) {
                             $url = new URLHelper($state);
@@ -72,7 +72,6 @@ class ProductResource extends Resource
                             }
                         }
                     }),
-
 
                 Select::make('status')
                     ->options(StatusEnum::class)
@@ -96,7 +95,6 @@ class ProductResource extends Resource
                             ->suffix('%')
                             ->numeric(),
                     ]),
-
 
                 Select::make('categories')
                     ->relationship('categories', 'name')
