@@ -66,11 +66,13 @@ class ProductResource extends Resource
                     ->afterStateUpdated(function ($state) {
                         if ($state) {
                             $url = new URLHelper($state);
+
                             if ($url->store) {
                                 StoreHelper::is_unique($url);
                             }
                         }
                     }),
+
 
                 Select::make('status')
                     ->options(StatusEnum::class)
@@ -78,15 +80,23 @@ class ProductResource extends Resource
                     ->preload()
                     ->native(false),
 
-                TextInput::make('notify_price')
-                    ->nullable()
-                    ->numeric(),
+                Forms\Components\Fieldset::make()
+                    ->label('These field is for new store addition')
+                    ->columnSpan(1)
+                    ->hidden(fn ($operation, $get) => $operation == "edit" && ! $get('url'))
+                    ->schema([
+                        TextInput::make('notify_price')
+                            ->hint('')
+                            ->nullable()
+                            ->numeric(),
 
-                TextInput::make('notify_percentage')
-                    ->nullable()
-                    ->hintIcon("heroicon-o-information-circle", "Get notified when price drops below specified percentage")
-                    ->suffix('%')
-                    ->numeric(),
+                        TextInput::make('notify_percentage')
+                            ->nullable()
+                            ->hintIcon("heroicon-o-information-circle", "Get notified when price drops below specified percentage")
+                            ->suffix('%')
+                            ->numeric(),
+                    ]),
+
 
                 Select::make('categories')
                     ->relationship('categories', 'name')
@@ -348,10 +358,10 @@ class ProductResource extends Resource
 
                 Filter::make('lowest_within')
                     ->form([
-                    TextInput::make('lowest_within_x')
-                        ->label('Price is lowest in X Days'),
+                        TextInput::make('lowest_within_x')
+                            ->label('Price is lowest in X Days'),
 
-                ])
+                    ])
                     ->query(function (Builder $query, $data) {
 
                         if (! $data["lowest_within_x"]) {
