@@ -22,11 +22,13 @@ fi
 php artisan storage:link
 php artisan config:clear
 php artisan cache:clear
-php artisan optimize:clear
+
 
 printenv > /etc/environment
 
 php artisan migrate  --force --seed
+
+php artisan optimize:clear
 
 php artisan discount:fill-supervisor-workers
 

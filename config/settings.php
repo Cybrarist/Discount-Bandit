@@ -81,4 +81,15 @@ return [
 
     'notify_any_change' => env("NOTIFY_ON_ANY_PRICE_CHANGE", 'false'),
 
+
+
+    /*
+    |--------------------------------------------------------------------------
+    | Select the time you want the crawler to run for all stors
+    |--------------------------------------------------------------------------
+    |
+    |
+    */
+
+    'cron' => env("CRON", '*/5 * * * *'),
 ];
