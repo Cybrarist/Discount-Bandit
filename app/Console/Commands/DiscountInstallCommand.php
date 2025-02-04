@@ -192,6 +192,13 @@ class DiscountInstallCommand extends Command
         );
         File::append(".env", "NTFY_CHANNEL_ID=\"$ntfy_channel\"\n");
 
+        $gotify_token=text(
+            label: "What is the gotify token? ",
+            placeholder: "example : https://gotify.net/docs/pushmsg",
+            required: true,
+        );
+        File::append(".env" , "GOTIY_TOKEN=\"$gotify_token\"\n");
+
         $telegram_bot_token = text(
             label: "What is Telegram bot token?",
             placeholder: "Not required",
