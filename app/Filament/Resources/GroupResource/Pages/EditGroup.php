@@ -26,6 +26,7 @@ class EditGroup extends EditRecord
 
         $products_to_add_to_group = [];
 
+
         // products that are already available in the system.
         foreach ($this->data['products_available'] as $available_products) {
             foreach ($available_products['product_id'] as $available_product) {
@@ -38,7 +39,7 @@ class EditGroup extends EditRecord
         // check if all stores links have the same currency as the current group
         // otherwise stop the process
 
-        $count = 1;
+        $product_row = 1;
         $products_to_add_to_app = [];
         foreach ($this->data['url_products'] as $new_product_url) {
             $url = new \App\Helpers\URLHelper($new_product_url['url']);
@@ -46,12 +47,12 @@ class EditGroup extends EditRecord
             if ($url->store->currency_id != $this->data['currency_id']) {
                 Notification::make()
                     ->title('store with different currency is not allowed')
-                    ->body("please remove product ({$count}) with link {$new_product_url['url']}")
+                    ->body("please remove product ( Row:{$product_row} ) with link {$new_product_url['url']}")
                     ->danger()
                     ->send();
                 $this->halt();
             }
-            $count++;
+            $product_row++;
 
             $products_to_add_to_app[] = [
                 'key' => $new_product_url['key'],
@@ -99,5 +100,6 @@ class EditGroup extends EditRecord
                     ]);
             }
         }
+
     }
 }

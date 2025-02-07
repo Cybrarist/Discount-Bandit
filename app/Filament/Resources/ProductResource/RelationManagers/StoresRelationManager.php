@@ -18,7 +18,6 @@ use Filament\Tables\Table;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Number;
 use Illuminate\Support\Str;
-use Livewire\Attributes\On;
 
 class StoresRelationManager extends RelationManager
 {
@@ -26,7 +25,7 @@ class StoresRelationManager extends RelationManager
 
     protected static bool $isLazy = false;
 
-    protected $listeners =['refresh'=>'$refresh'];
+    protected $listeners = ['refresh' => '$refresh'];
 
     public function table(Table $table): Table
     {
@@ -36,29 +35,29 @@ class StoresRelationManager extends RelationManager
             ->columns([
                 TextColumn::make('name')
                     ->color("warning")
-                    ->url( function ($record) {
-                        $final_class_name="App\Helpers\StoresAvailable\\" . Str::ucfirst( explode(".",$record->domain)[0]);
-                        return call_user_func($final_class_name . '::prepare_url' , $record->domain, $record->key , $record );
-                    } ,true),
+                    ->url(function ($record) {
+                        $final_class_name = "App\Helpers\StoresAvailable\\".Str::ucfirst(explode(".", $record->domain)[0]);
+
+                        return call_user_func($final_class_name.'::prepare_url', $record->domain, $record->key, $record);
+                    }, true),
 
                 TextColumn::make('price')
-                    ->formatStateUsing(fn($state)=>  Number::format($state ,2))
+                    ->formatStateUsing(fn ($state) => Number::format($state, 2))
                     ->prefix(fn ($record) => CurrencyHelper::get_currencies($record->currency_id))
-                    ->color(fn($record)=> (($record->price <= $record->notify_price) ? "success" :"danger")),
+                    ->color(fn ($record) => (($record->price <= $record->notify_price) ? "success" : "danger")),
 
                 TextColumn::make('used_price')
-                    ->formatStateUsing(fn($state)=>  Number::format($state ,2))
+                    ->formatStateUsing(fn ($state) => Number::format($state, 2))
                     ->prefix(fn ($record) => CurrencyHelper::get_currencies($record->currency_id))
-                    ->color(fn($record)=> (($record->used_price <= $record->notify_price) ? "success" :"danger")),
-
+                    ->color(fn ($record) => (($record->used_price <= $record->notify_price) ? "success" : "danger")),
 
                 TextColumn::make('highest_price')
-                    ->formatStateUsing(fn($state)=> Number::format($state ,2))
+                    ->formatStateUsing(fn ($state) => Number::format($state, 2))
                     ->prefix(fn ($record) => CurrencyHelper::get_currencies($record->currency_id))
                     ->color("danger"),
 
                 TextColumn::make('lowest_price')
-                    ->formatStateUsing(fn($state)=> Number::format($state ,2))
+                    ->formatStateUsing(fn ($state) => Number::format($state, 2))
                     ->prefix(fn ($record) => CurrencyHelper::get_currencies($record->currency_id))
                     ->color("success"),
 
@@ -86,27 +85,26 @@ class StoresRelationManager extends RelationManager
                 TextColumn::make('seller'),
             ])
             ->headerActions([
-                Tables\Actions\AttachAction::make()->form(fn(Tables\Actions\AttachAction $action): array=>[
-                    $action->recordSelectOptionsQuery(function($query){
-                        $available_stores=DB::table('product_store')
-                                ->where('product_id', $this->ownerRecord->id)
-                                ->select('store_id')
-                                ->pluck('store_id');
+                Tables\Actions\AttachAction::make()->form(fn (Tables\Actions\AttachAction $action): array => [
+                    $action->recordSelectOptionsQuery(function ($query) {
+                        $available_stores = DB::table('product_store')
+                            ->where('product_id', $this->ownerRecord->id)
+                            ->select('store_id')
+                            ->pluck('store_id');
 
                         return $query->whereIn('status', [
                             StatusEnum::Published,
                             StatusEnum::Silenced,
                         ])->whereNotIn('stores.id', $available_stores);
                     })->getRecordSelect()
-                    ->native(false)
-                    ->reactive()
-                    ->afterStateUpdated(function ($state, callable $set){
-                            $store=Store::find($state);
+                        ->native(false)
+                        ->reactive()
+                        ->afterStateUpdated(function ($state, callable $set) {
+                            $store = Store::find($state);
 
-                            if ($store)
-                            {
+                            if ($store) {
                                 $set('currency', CurrencyHelper::get_currencies($store->currency_id));
-//                                $set('price', $store->);
+                                //                                $set('price', $store->);
                             }
                         }),
 
@@ -122,67 +120,64 @@ class StoresRelationManager extends RelationManager
 
                     TextInput::make('currency')
                         ->dehydrated(false)
-                        ->disabled()
+                        ->disabled(),
                 ])->preloadRecordSelect()
-                    ->mutateFormDataUsing(function ($data){
-                        $data['notify_price']*=100;
+                    ->mutateFormDataUsing(function ($data) {
+                        $data['notify_price'] *= 100;
+
                         return $data;
                     }),
             ])
             ->actions([
-                Tables\Actions\EditAction::make()->form(fn(Tables\Actions\EditAction $action): array=>[
+                Tables\Actions\EditAction::make()->form(fn (Tables\Actions\EditAction $action): array => [
                     Forms\Components\Checkbox::make('add_shipping')
                         ->label('Shipping'),
 
-                        Forms\Components\TextInput::make('price')
-                            ->disabled()
-                            ->dehydrated(false)
-                            ->label('Current Price')
-                            ->suffix(CurrencyHelper::get_currencies(currency_id: $action->getRecord()->currency_id)),
+                    Forms\Components\TextInput::make('price')
+                        ->disabled()
+                        ->dehydrated(false)
+                        ->label('Current Price')
+                        ->suffix(CurrencyHelper::get_currencies(currency_id: $action->getRecord()->currency_id)),
 
-                        Forms\Components\TextInput::make('notify_price')
-                            ->numeric()
-                            ->step(0.01)
-                            ->label('Notify when cheaper than')
-                            ->suffix(CurrencyHelper::get_currencies(currency_id: $action->getRecord()->currency_id)),
+                    Forms\Components\TextInput::make('notify_price')
+                        ->numeric()
+                        ->step(0.01)
+                        ->label('Notify when cheaper than')
+                        ->suffix(CurrencyHelper::get_currencies(currency_id: $action->getRecord()->currency_id)),
 
-                    ])->using(function ($record, array $data) {
-                    $record->products()->updateExistingPivot($this->ownerRecord->id , [
-                        'notify_price'=>$data['notify_price'] * 100,
-                        'add_shipping'=>$data['add_shipping'],
+                ])->using(function ($record, array $data) {
+                    $record->products()->updateExistingPivot($this->ownerRecord->id, [
+                        'notify_price' => $data['notify_price'] * 100,
+                        'add_shipping' => $data['add_shipping'],
                     ]);
 
                     return $record;
                 }),
 
-                Tables\Actions\DetachAction::make()->label("Remove")->after(function ($record){
+                Tables\Actions\DetachAction::make()->label("Remove")->after(function ($record) {
                     if (ProductStore::where([
                         "store_id" => $record->store_id,
-                        "product_id" => $record->product_id
-                    ])->count() ==0)
+                        "product_id" => $record->product_id,
+                    ])->count() == 0) {
                         PriceHistory::where([
                             "store_id" => $record->store_id,
                             "product_id" => $record->product_id,
                         ])->delete();
-
+                    }
 
                 }),
 
                 Tables\Actions\Action::make('Fetch')
                     ->color('primary')
-                    ->action(fn($record)=> StoreHelper::fetch_product_store(ProductStore::find($record->pivot_id)))
+                    ->action(fn ($record) => StoreHelper::fetch_product_store(ProductStore::find($record->pivot_id)))
                     ->after(fn ($livewire) => $livewire->dispatch('refresh'))
-                    ->color('primary')
+                    ->color('primary'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
                     Tables\Actions\DetachBulkAction::make(),
                     Tables\Actions\DeleteBulkAction::make(),
                 ]),
-            ])
-
-            ;
+            ]);
     }
-
-
 }

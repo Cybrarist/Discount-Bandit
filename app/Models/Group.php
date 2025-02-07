@@ -31,6 +31,7 @@ class Group extends Model
     protected function casts(): array
     {
         return [
+            "snoozed_until" => "date:Y-m-d",
             "notify_price" => Money::class,
             "current_price" => Money::class,
             "lowest_price" => Money::class,

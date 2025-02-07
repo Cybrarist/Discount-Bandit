@@ -106,4 +106,11 @@ class StoreHelper
                 ->toArray();
         });
     }
+
+    public static function get_stores_with_same_currency(int $currency_id)
+    {
+        return Cache::remember("store_currency_{$currency_id}", now()->addDay(), function () use ($currency_id) {
+            return Store::where("currency_id", $currency_id)->get(['id','name']);
+        });
+    }
 }

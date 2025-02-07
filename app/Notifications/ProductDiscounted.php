@@ -66,17 +66,16 @@ class ProductDiscounted extends Notification
      */
     public function via(object $notifiable): array
     {
-
         $channels = [];
-        if (env('NTFY_CHANNEL_ID')) {
+        if (config('settings.ntfy_channel_id')) {
             $channels[] = NtfyChannel::class;
         }
 
-        if (env('APPRISE_URL')) {
+        if (config('settings.apprise_url')) {
             $channels[] = AppriseChannel::class;
         }
 
-        if (env('TELEGRAM_BOT_TOKEN') && env('TELEGRAM_CHANNEL_ID')) {
+        if (config('settings.telegram_bot_token') && config('settings.telegram_channel')) {
             $channels[] = 'telegram';
         }
 
@@ -110,8 +109,8 @@ class ProductDiscounted extends Notification
 
         return TelegramFile::create()
             ->photo($this->image)
-            ->token(env("TELEGRAM_BOT_TOKEN"))
-            ->to(env('TELEGRAM_CHANNEL_ID'))
+            ->token(config('settings.telegram_bot_token'))
+            ->to(config('settings.telegram_channel'))
             ->content(
                 "$this->product_name, is at $this->currency $this->price \n ".
                 "--------------------------\n".

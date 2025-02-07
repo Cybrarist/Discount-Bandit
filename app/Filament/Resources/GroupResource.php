@@ -5,10 +5,9 @@ namespace App\Filament\Resources;
 use App\Enums\StatusEnum;
 use App\Filament\Resources\GroupResource\Pages;
 use App\Filament\Resources\GroupResource\RelationManagers;
+use App\Helpers\StoreHelper;
 use App\Models\Group;
 use App\Models\Product;
-use App\Models\ProductStore;
-use App\Models\Store;
 use Filament\Forms;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Repeater;
@@ -16,7 +15,6 @@ use Filament\Forms\Components\Section;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
-use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Table;
@@ -30,23 +28,15 @@ class GroupResource extends Resource
 
     protected static ?int $navigationSort = 3;
 
-    public static array $stores_with_same_currency = [];
-
     public static function form(Form $form): Form
     {
-        if ($form->getRecord()) {
-            self::$stores_with_same_currency = Store::where('currency_id', $form->getRecord()->currency_id)->pluck('id')->toArray();
-        }
-
         return $form
             ->schema([
                 Forms\Components\TextInput::make("name")
                     ->string()
-                    ->required()
-                    ->default('hi'),
+                    ->required(),
 
                 Forms\Components\TextInput::make("notify_price")
-                    ->default(0)
                     ->numeric()
                     ->required(),
 
@@ -67,15 +57,7 @@ class GroupResource extends Resource
                     ->required()
                     ->relationship("currency", "code")
                     ->preload()
-                    ->afterStateUpdated(function ($state, $record) {
-                        if ($state ||
-                            (int) $state != $record?->currency_id
-                        ) {
-                            self::$stores_with_same_currency = Store::where('currency_id', $state)->pluck('id')->toArray();
-                            dump(self::$stores_with_same_currency);
-                        }
-                    })
-                    ->live()
+                    ->default(2)
                     ->native(false),
 
                 DatePicker::make('snoozed_until')
@@ -103,15 +85,9 @@ class GroupResource extends Resource
                                     ->multiple()
                                     ->options(function ($record, $get, $state, $component) {
 
-                                        dump(self::$stores_with_same_currency);
-                                        if (! $get('../../currency_id')) {
-                                            Notification::make()
-                                                ->danger()
-                                                ->title('Please select a currency')
-                                                ->send();
+                                        $stores_for_the_same_group_currency = StoreHelper::get_stores_with_same_currency($get('../../currency_id'));
 
-                                            return [];
-                                        }
+                                        // remove the current selected products
 
                                         $current_parent_id = $component->getContainer()->getStatePath(false);
 
@@ -125,13 +101,9 @@ class GroupResource extends Resource
                                         $all_products_across_fields = Arr::collapse($all_products_across_fields);
 
                                         $available_products = Product::whereNotNull("name")
-                                            ->whereIn("products.id",
-                                                ProductStore::whereIn('store_id', self::$stores_with_same_currency)
-                                                    ->distinct()
-                                                    ->pluck("product_id")
-                                                    ->toArray()
-                                            )
-                                            ->whereNotIn("id", $all_products_across_fields);
+                                            ->join('product_store', 'product_store.product_id', '=', 'products.id')
+                                            ->whereIn('store_id', $stores_for_the_same_group_currency->pluck('id')->toArray())
+                                            ->whereNotIn("products.id", $all_products_across_fields);
 
                                         if ($record) {
                                             $available_products->whereNotIn("products.id",
@@ -142,11 +114,9 @@ class GroupResource extends Resource
                                             );
                                         }
 
-                                        return $available_products->pluck("name", "id");
+                                        return $available_products->pluck("products.name", "products.id");
                                     })
                                     ->live()
-                                    ->preload()
-                                    ->distinct()
                                     ->native(false),
 
                                 TextInput::make('key')

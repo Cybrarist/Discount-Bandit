@@ -81,8 +81,6 @@ return [
 
     'notify_any_change' => env("NOTIFY_ON_ANY_PRICE_CHANGE", 'false'),
 
-
-
     /*
     |--------------------------------------------------------------------------
     | Select the time you want the crawler to run for all stors
@@ -92,4 +90,28 @@ return [
     */
 
     'cron' => env("CRON", '*/5 * * * *'),
+
+    'group_cron' => env("GROUP_CRON", '*/5 * * * *'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Notification Settings
+    |--------------------------------------------------------------------------
+    |
+    |
+    */
+
+    'apprise_url' => env('APPRISE_URL'),
+
+    'ntfy_user' => env("NTFY_USER"),
+    'ntfy_password' => env("NTFY_PASSWORD"),
+    'ntfy_base_url' => env("NTFY_BASE_URL", "https://ntfy.sh/"),
+    'ntfy_token' => env("NTFY_TOKEN"),
+    'ntfy_channel_id' => env("NTFY_CHANNEL_ID"),
+
+    'rss_feed' => env("RSS_FEED", false),
+
+    'telegram_bot_token' => env("TELEGRAM_BOT_TOKEN"),
+    'telegram_channel' => env("TELEGRAM_CHANNEL_ID"),
+
 ];

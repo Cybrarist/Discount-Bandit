@@ -38,5 +38,7 @@ Schedule::call(function () {
     }
 })->cron(config('settings.cron'));
 
+Schedule::job(\App\Jobs\CheckGroupPriceJob::class)->cron(config('settings.group_cron'));
+
 Schedule::command(ClearNotificationCount::class)->dailyAt("23:59");
 Schedule::command(ScheduleCheckHeartbeatCommand::class)->everyMinute();

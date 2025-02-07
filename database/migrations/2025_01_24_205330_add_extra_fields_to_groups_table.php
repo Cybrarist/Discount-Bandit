@@ -12,6 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('groups', function (Blueprint $table) {
+            $table->unsignedInteger('notify_price')->nullable()->change();
             $table->unsignedInteger("current_price")->nullable();
             $table->unsignedInteger("highest_price")->nullable();
             $table->unsignedInteger("lowest_price")->nullable();

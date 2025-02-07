@@ -376,7 +376,7 @@ abstract class StoreTemplate
                     currency: CurrencyHelper::get_currencies($this->current_record->store->currency_id),
                     tags: $this->ntfy_tags));
 
-            if (env('RSS_FEED')) {
+            if (config('settings.rss_feed')) {
                 RssFeedItem::create([
                     "data" => [
                         'title' => "For Just $this->price -  Discount For ".Str::words($this->current_record->product->name),

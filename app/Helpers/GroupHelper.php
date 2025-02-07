@@ -49,27 +49,18 @@ class GroupHelper
         ]);
     }
 
-    public static function get_current_price(Group $group): float|int
+    public static function get_current_price(Group $group): int | float
     {
 
-        $records = DB::table("group_product")->where("group_id", $group->id)
-            ->join("products", "group_product.product_id", "=", "products.id")
-            ->groupBy([
-                "group_product.key",
-                "products.id",
-            ])
-            ->select([
-                "products.id as product_id",
-                "group_product.key as key",
-            ])->get();
-
-        $product_stores = DB::table("product_store")
-            ->whereIn("product_id", $records->pluck("product_id")->toArray())
-            ->join("stores", "stores.id", "=", "product_store.store_id")
-            ->where("currency_id", "=", $group->currency_id)
-            ->get(["product_id", "store_id", "price"])->sum("price");
-
-        return $product_stores / 100;
+        return Group::where("groups.id", $group->id)
+            ->join('group_product', 'group_product.group_id', '=', 'groups.id')
+            ->join("products", "group_product.product_id", "products.id")
+            ->join('product_store', 'products.id', '=', 'product_store.product_id')
+            ->whereIn('product_store.store_id', StoreHelper::get_stores_with_same_currency($group->currency_id)->pluck("id")->toArray())
+            ->select(["group_product.key", DB::raw('MIN(product_store.price)/100 as min_price')])
+            ->groupBy(["group_product.key"])
+            ->get()
+            ->sum("min_price");
 
     }
 
