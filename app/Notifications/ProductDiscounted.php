@@ -5,6 +5,7 @@ namespace App\Notifications;
 use App\Models\RssFeedItem;
 use App\NotificationsChannels\AppriseChannel;
 use App\NotificationsChannels\NtfyChannel;
+use App\NotificationsChannels\GotifyChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\URL;
@@ -79,6 +80,10 @@ class ProductDiscounted extends Notification
             $channels[] = 'telegram';
         }
 
+        if (env('GOTIFY_TOKEN')) {
+            $channels[] = GotifyChannel::class;
+        }
+
         return $channels;
     }
 
@@ -136,5 +141,13 @@ class ProductDiscounted extends Notification
         ];
 
         return ["content" => $content];
+    }
+
+    public function toGotify(object $notifiable): array
+    {
+        return [
+            "title" => $this->notification_title,
+            "message" => Str::replace("<br>", "\n", $this->notification_text)
+        ];
     }
 }
