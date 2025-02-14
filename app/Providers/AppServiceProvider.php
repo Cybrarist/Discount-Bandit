@@ -37,7 +37,9 @@ class AppServiceProvider extends ServiceProvider
 
         JsonResource::withoutWrapping();
 
-        if (config('settings.disable_auth') && ! app()->runningInConsole() && app()->isProduction()) {
+        if (config('settings.disable_auth') &&
+            ! app()->runningInConsole() &&
+            app()->isProduction()) {
             Auth::login(User::first());
         }
 

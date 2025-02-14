@@ -29,7 +29,7 @@ class ProductObserver
     /**
      * Handle the Product "deleted" event.
      */
-    public function deleted(Product $product): void
+    public function deleting(Product $product): void
     {
 
         ProductStore::where('product_id', $product->id)->delete();

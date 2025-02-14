@@ -102,4 +102,12 @@ class EditGroup extends EditRecord
         }
 
     }
+
+
+    protected function getFooterWidgets(): array
+    {
+        return [
+            GroupResource\Widgets\GroupPriceHistoryChart::class,
+        ];
+    }
 }

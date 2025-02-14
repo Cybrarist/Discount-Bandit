@@ -11,27 +11,26 @@ class Gotify
 
     public function __construct()
     {
-        $this->httpClient = new Http();
+        $this->httpClient = new Http;
     }
 
     public function send(array $notification_title, string $notification_content)
     {
-        return $this->request($notification_title, $notification_content);
+        $this->request($notification_title, $notification_content);
     }
 
-    protected function request(array $notification_title, string $notification_content)
+    protected function request(array $notification_title, string $notification_content): void
     {
-        $baseUrl = env('GOTIFY_BASE_URL', $this->baseUrl);
-        $token = env('GOTIFY_TOKEN');
-        
+        $baseUrl = config('settings.gotify_base_url');
+        $token = config('settings.gotify_token');
+
         $url = "{$baseUrl}/message?token={$token}";
 
         $data = [
             "title" => $notification_title['Title'],
-            "message" => Str::replace("<br>", "\n", $this->notification_text)
+            "message" => Str::replace("<br>", "\n", $notification_content),
         ];
 
-        Http::asJson()
-            ->post($url, $data);
+        Http::asJson()->post($url, $data);
     }
 }

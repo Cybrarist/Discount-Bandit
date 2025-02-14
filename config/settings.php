@@ -114,4 +114,7 @@ return [
     'telegram_bot_token' => env("TELEGRAM_BOT_TOKEN"),
     'telegram_channel' => env("TELEGRAM_CHANNEL_ID"),
 
+
+    'gotify_base_url' => env("GOTIFY_BASE_URL"),
+    'gotify_token' => env("GOTIFY_TOKEN"),
 ];

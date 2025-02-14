@@ -28,7 +28,7 @@ class GroupTest extends TestCase
         User::create([
             'name' => 'John Doe',
             'email' => 'john@doe.com',
-            'password'=> Str::password()
+            'password' => Str::password(),
         ]);
 
         $products = Product::factory(10)->create();
@@ -101,10 +101,10 @@ class GroupTest extends TestCase
         $this->prepare_group_with_products();
 
         $group = Group::create([
-                'name' => 'Test Group snoozed',
-                'currency_id' => 1,
-                'snoozed_until' => today()->addDay(),
-            ]);
+            'name' => 'Test Group snoozed',
+            'currency_id' => 1,
+            'snoozed_until' => today()->addDay(),
+        ]);
 
         $group->products()->sync(Product::pluck('id')->toArray(), ['key' => 'single']);
 
@@ -131,10 +131,8 @@ class GroupTest extends TestCase
 
         $group->products()->sync(Product::pluck('id')->toArray(), ['key' => 'single']);
 
-
         $job = new CheckGroupPriceJob;
         $job->handle();
-
 
         $group->refresh();
 
@@ -186,5 +184,4 @@ class GroupTest extends TestCase
         assertEquals(1, $group->notifications_sent);
 
     }
-
 }

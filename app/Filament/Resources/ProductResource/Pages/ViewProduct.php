@@ -10,18 +10,15 @@ use Filament\Resources\Pages\ViewRecord;
 
 class ViewProduct extends ViewRecord
 {
-
     protected static string $resource = ProductResource::class;
-
-
 
     protected function getHeaderActions(): array
     {
-       return  [
+        return [
             Action::make('Fetch')->color('primary')
-                ->action(fn()=> StoreHelper::fetch_product($this->record))
+                ->action(fn () => StoreHelper::fetch_product($this->record)),
 
-       ];
+        ];
     }
 
     protected function getFooterWidgets(): array
@@ -30,6 +27,4 @@ class ViewProduct extends ViewRecord
             PriceHistoryChart::class,
         ];
     }
-
-
 }

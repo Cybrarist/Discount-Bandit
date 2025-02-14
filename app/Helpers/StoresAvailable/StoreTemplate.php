@@ -229,9 +229,6 @@ abstract class StoreTemplate
             return true;
         }
 
-        Log::info('before we compare');
-        Log::info($this->price);
-        Log::info($this->current_record->price);
 
         if (config('settings.notify_any_change') && $this->price_crawled_and_different_from_database()) {
             $this->ntfy_tags .= ",Any Change";

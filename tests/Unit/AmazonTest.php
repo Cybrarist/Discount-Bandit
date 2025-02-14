@@ -94,4 +94,6 @@ class AmazonTest extends TestCase
         $this->assertNotNull($product_store->lowest_price);
         $this->assertNotNull($product_store->highest_price);
     }
+
+
 }

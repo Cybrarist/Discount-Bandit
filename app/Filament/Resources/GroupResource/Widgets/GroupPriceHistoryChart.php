@@ -1,13 +1,14 @@
 <?php
 
-namespace App\Filament\Resources\ProductResource\Widgets;
+namespace App\Filament\Resources\GroupResource\Widgets;
 
 use App\Helpers\ProductHelper;
+use App\Models\GroupPriceHistory;
 use Filament\Support\RawJs;
 use Illuminate\Database\Eloquent\Model;
 use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
-class PriceHistoryChart extends ApexChartWidget
+class GroupPriceHistoryChart extends ApexChartWidget
 {
     public ?Model $record = null;
 
@@ -16,7 +17,7 @@ class PriceHistoryChart extends ApexChartWidget
     /**
      * Chart Idcreate
      */
-    protected static ?string $chartId = "priceHistoryChart";
+    protected static ?string $chartId = "groupPriceHistoryChart";
 
     /**
      * Widget Title
@@ -36,15 +37,30 @@ class PriceHistoryChart extends ApexChartWidget
     protected function getOptions(): array
     {
         try {
-
             $price_histories_per_store = ProductHelper::get_product_history_per_store($this->record->id);
+
+            $group_price_histories = GroupPriceHistory::whereDate('date', '>=', today()->subYear())
+                ->where('group_id', $this->record->id)
+                ->get(['price', 'date'])
+                ->map(function ($item) {
+                    return [
+                        'x' => $item->date,
+                        'y' => $item->price,
+                    ];
+                })->toArray();
+
 
             return [
                 'chart' => [
                     'type' => 'area',
                     'height' => 300,
                 ],
-                'series' => array_values($price_histories_per_store),
+                'series' => [
+                    [
+                        'name' => 'Group History',
+                        'data' => $group_price_histories,
+                    ]
+                ],
                 'theme' => [
                     "palette" => 'palette1',
                 ],

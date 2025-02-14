@@ -37,8 +37,8 @@ class DiscountInstallCommand extends Command
     private function setup_cron_linux($path, $project): void
     {
         \Laravel\Prompts\info("Schedule Automation");
-        \Laravel\Prompts\info("*/5 * * * * $path $project/artisan schedule:run >> /dev/null 2>&1\"");
-        \Laravel\Prompts\info("*/1 * * * * $path $project/artisan queue:work --max-time=300 --sleep=1  --queue=groups >> /dev/null 2>&1");
+        \Laravel\Prompts\info(config('settings.cron')." $path $project/artisan schedule:run >> /dev/null 2>&1\"");
+        \Laravel\Prompts\info("*/1 * * * * $path $project/artisan queue:work --max-time=300 --sleep=1   >> /dev/null 2>&1");
 
         $stores = Store::all();
         foreach ($stores as $store) {
@@ -51,7 +51,7 @@ class DiscountInstallCommand extends Command
         \Laravel\Prompts\info("Schedule Automation");
         \Laravel\Prompts\info("schtasks /create /sc minute /mo 5 /tn \"DiscountScheduleTask\" /tr \"$path $project\\artisan schedule:run\"");
 
-        \Laravel\Prompts\info("schtasks /create /sc minute /mo 1 /tn \"CrawlJobForGroups\" /tr \"$path $project\\artisan queue:work --max-time=300 --sleep=1  --queue=groups\"");
+        \Laravel\Prompts\info("schtasks /create /sc minute /mo 1 /tn \"CrawlJobForGroups\" /tr \"$path $project\\artisan queue:work --max-time=300 --sleep=1  \"");
 
         $stores = Store::all();
         foreach ($stores as $store) {
@@ -65,7 +65,7 @@ class DiscountInstallCommand extends Command
 
         \Laravel\Prompts\info("Schedule Automation");
 
-        $final_string = "$path $project/artisan schedule:work >> /dev/null 2>&1 & $path $project/artisan queue:listen --queue=groups >> /dev/null 2>&1 ";
+        $final_string = "$path $project/artisan schedule:work >> /dev/null 2>&1 & $path $project/artisan queue:listen  >> /dev/null 2>&1 ";
 
         $stores = Store::all();
         foreach ($stores as $store) {
@@ -80,7 +80,7 @@ class DiscountInstallCommand extends Command
 
         \Laravel\Prompts\info("Schedule Automation");
 
-        $final_string="start /B $path $project\\artisan schedule:work > nul 2>&1  & start /B $path $project\\artisan queue:listen --queue=groups > nul 2>&1";
+        $final_string = "start /B $path $project\\artisan schedule:work > nul 2>&1  & start /B $path $project\\artisan queue:listen  > nul 2>&1";
 
         $stores = Store::all();
         foreach ($stores as $store) {
@@ -190,14 +190,15 @@ class DiscountInstallCommand extends Command
             placeholder: "example : https://ntfy.sh/random_value only random_value is needed.",
             required: true,
         );
+
         File::append(".env", "NTFY_CHANNEL_ID=\"$ntfy_channel\"\n");
 
-        $gotify_token=text(
+        $gotify_token = text(
             label: "What is the gotify token? ",
             placeholder: "example : https://gotify.net/docs/pushmsg",
             required: true,
         );
-        File::append(".env" , "GOTIY_TOKEN=\"$gotify_token\"\n");
+        File::append(".env", "GOTIY_TOKEN=\"$gotify_token\"\n");
 
         $telegram_bot_token = text(
             label: "What is Telegram bot token?",

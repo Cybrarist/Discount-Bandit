@@ -1,12 +1,13 @@
 <?php
 
 namespace App\NotificationsChannels;
+
 use Illuminate\Notifications\Notification;
 
 class NtfyChannel
 {
+    protected $ntfy;
 
-    protected  $ntfy;
     public function __construct(Ntfy $ntfy)
     {
         $this->ntfy = $ntfy;
@@ -19,6 +20,6 @@ class NtfyChannel
     {
         $message = $notification->toNtfy($notifiable);
 
-       return $this->ntfy->send(notification_title: $message["headers"] , notification_content: $message["content"]);
+        return $this->ntfy->send(notification_title: $message["headers"], notification_content: $message["content"]);
     }
 }

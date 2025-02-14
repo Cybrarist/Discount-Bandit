@@ -8,6 +8,19 @@ else
     composer update --no-interaction --no-progress
 fi
 
+# if the directory was created by the docker image, then remove it
+# the system will copy .env.example later on.
+if [ -d ".env" ]; then
+    rm .env
+fi
+
+#if the database file was created by docker, then remove it and create new one.
+if [ -d "/database/database.sqlite" ]; then
+    rm database/database.sqlite
+fi
+
+touch database/database.sqlite
+
 
 if [ ! -f "/logs" ]; then
     mkdir /logs
@@ -23,18 +36,23 @@ php artisan storage:link
 php artisan config:clear
 php artisan cache:clear
 
+php artisan key:generate
 
 printenv > /etc/environment
 
-php artisan migrate  --force --seed
+php artisan migrate --force --seed
 
 php artisan optimize:clear
 
 php artisan discount:fill-supervisor-workers
 
 php artisan icons:cache
+
 php artisan config:cache
+
 php artisan make:filament-user --name=$DEFAULT_USER --email=$DEFAULT_EMAIL --password=$DEFAULT_PASSWORD
+
+php artisan optimize
 
 php artisan octane:install --server=frankenphp
 

@@ -4,11 +4,15 @@ namespace App\Models;
 
 use App\Casts\Money;
 use App\Enums\StatusEnum;
+use App\Observers\GroupObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
+
+#[ObservedBy(GroupObserver::class)]
 class Group extends Model
 {
     use HasFactory;

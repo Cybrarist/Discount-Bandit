@@ -4,8 +4,8 @@ namespace App\Notifications;
 
 use App\Models\RssFeedItem;
 use App\NotificationsChannels\AppriseChannel;
-use App\NotificationsChannels\NtfyChannel;
 use App\NotificationsChannels\GotifyChannel;
+use App\NotificationsChannels\NtfyChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\URL;
@@ -80,11 +80,34 @@ class ProductDiscounted extends Notification
             $channels[] = 'telegram';
         }
 
-        if (env('GOTIFY_TOKEN')) {
+        if (config('settings.gotify_token')) {
             $channels[] = GotifyChannel::class;
         }
 
         return $channels;
+    }
+
+    public function toApprise(object $notifiable): array
+    {
+
+        $content = [
+            'title' => "For Just $this->price -  Discount For ".Str::words($this->product_name, 5),
+            'body' => $this->notification_text.
+                "----------------<br>
+                Product URL: . {$this->product_url}",
+            'attach' => [$this->image],
+            'format' => 'html',
+        ];
+
+        return ["content" => $content];
+    }
+
+    public function toGotify(object $notifiable): array
+    {
+        return [
+            "title" => $this->notification_title,
+            "message" => Str::replace("<br>", "\n", $this->notification_text),
+        ];
     }
 
     public function toNtfy(object $notifiable): array
@@ -128,26 +151,7 @@ class ProductDiscounted extends Notification
             ->button('View Trend', $this->product_temp_link);
     }
 
-    public function toApprise(object $notifiable): array
-    {
 
-        $content = [
-            'title' => "For Just $this->price -  Discount For ".Str::words($this->product_name, 5),
-            'body' => $this->notification_text.
-                "----------------<br>
-                Product URL: . {$this->product_url}",
-            'attach' => [$this->image],
-            'format' => 'html',
-        ];
 
-        return ["content" => $content];
-    }
 
-    public function toGotify(object $notifiable): array
-    {
-        return [
-            "title" => $this->notification_title,
-            "message" => Str::replace("<br>", "\n", $this->notification_text)
-        ];
-    }
 }

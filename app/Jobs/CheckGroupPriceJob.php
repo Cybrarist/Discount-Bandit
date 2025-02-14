@@ -6,6 +6,7 @@ use App\Enums\StatusEnum;
 use App\Helpers\CurrencyHelper;
 use App\Helpers\GroupHelper;
 use App\Models\Group;
+use App\Models\GroupPriceHistory;
 use App\Models\RssFeedItem;
 use App\Models\User;
 use App\Notifications\GroupDiscounted;
@@ -41,7 +42,20 @@ class CheckGroupPriceJob implements ShouldQueue
                     'lowest_price' => ($current_price > $group->lowest_price) ?: $current_price,
                     'notifications_sent' => ($this->check_notification($group, $current_price)) ? ++$group->notifications_sent : $group->notifications_sent,
                 ]);
+            }
 
+
+            if ($current_price) {
+                $group_price_history = GroupPriceHistory::firstOrCreate([
+                    'group_id'=> $group->id,
+                    'date' => today()->toDateString(),
+                ], ['price' => $current_price]);
+
+                if ($group_price_history->price > $current_price) {
+                    $group_price_history->update([
+                        'price' => $current_price,
+                    ]);
+                }
             }
 
         }
@@ -63,6 +77,7 @@ class CheckGroupPriceJob implements ShouldQueue
 
         if ($group->notify_price && $current_price && $current_price <= $group->notify_price) {
             $this->notify($group, $current_price);
+
             return true;
         }
         if ($current_price &&
@@ -70,6 +85,7 @@ class CheckGroupPriceJob implements ShouldQueue
             (($group->current_price - $current_price) / $group->current_price) * 100 >= $group->notify_percentage
         ) {
             $this->notify($group, $current_price);
+
             return true;
         }
 
