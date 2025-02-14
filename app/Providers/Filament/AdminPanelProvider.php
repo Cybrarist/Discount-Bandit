@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Resources\StoreResource;
+use App\Http\Middleware\DisableAuthMiddleware;
 use Awcodes\FilamentQuickCreate\QuickCreatePlugin;
 use Croustibat\FilamentJobsMonitor\FilamentJobsMonitorPlugin;
 use Croustibat\FilamentJobsMonitor\Resources\QueueMonitorResource;
@@ -73,6 +74,7 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+                DisableAuthMiddleware::class,
             ])
             ->authMiddleware([
                 Authenticate::class,

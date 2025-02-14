@@ -33,8 +33,6 @@ if [ ! -f ".env" ] ||  ! grep -q . ".env" ; then
 fi
 
 php artisan storage:link
-php artisan config:clear
-php artisan cache:clear
 
 php artisan key:generate
 
@@ -48,11 +46,9 @@ php artisan discount:fill-supervisor-workers
 
 php artisan icons:cache
 
-php artisan config:cache
+php artisan optimize
 
 php artisan make:filament-user --name=$DEFAULT_USER --email=$DEFAULT_EMAIL --password=$DEFAULT_PASSWORD
-
-php artisan optimize
 
 php artisan octane:install --server=frankenphp
 

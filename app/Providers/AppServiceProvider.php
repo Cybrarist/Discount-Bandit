@@ -2,13 +2,11 @@
 
 namespace App\Providers;
 
-use App\Models\User;
 use Filament\Support\Facades\FilamentView;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Table;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Health\Checks\Checks\CacheCheck;
@@ -36,12 +34,6 @@ class AppServiceProvider extends ServiceProvider
         //        URL::forceScheme('https');
 
         JsonResource::withoutWrapping();
-
-        if (config('settings.disable_auth') &&
-            ! app()->runningInConsole() &&
-            app()->isProduction()) {
-            Auth::login(User::first());
-        }
 
         Table::configureUsing(function (Table $table): void {
             $table->filtersLayout(FiltersLayout::AboveContentCollapsible)
