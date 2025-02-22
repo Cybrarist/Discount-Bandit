@@ -79,7 +79,7 @@ return [
     |
     */
 
-    'notify_any_change' => env("NOTIFY_ON_ANY_PRICE_CHANGE", 'false'),
+    'notify_any_change' => env("NOTIFY_ON_ANY_PRICE_CHANGE", false),
 
     /*
     |--------------------------------------------------------------------------
