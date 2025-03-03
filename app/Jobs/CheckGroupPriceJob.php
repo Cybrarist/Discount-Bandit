@@ -38,16 +38,15 @@ class CheckGroupPriceJob implements ShouldQueue
             } else {
                 $group->update([
                     'current_price' => $current_price,
-                    'highest_price' => ($current_price < $group->highest_price) ?: $current_price,
-                    'lowest_price' => ($current_price > $group->lowest_price) ?: $current_price,
+                    'highest_price' => ($current_price < $group->highest_price) ? $group->highest_price : $current_price,
+                    'lowest_price' => ($current_price > $group->lowest_price) ? $group->lowest_price : $current_price,
                     'notifications_sent' => ($this->check_notification($group, $current_price)) ? ++$group->notifications_sent : $group->notifications_sent,
                 ]);
             }
 
-
             if ($current_price) {
                 $group_price_history = GroupPriceHistory::firstOrCreate([
-                    'group_id'=> $group->id,
+                    'group_id' => $group->id,
                     'date' => today()->toDateString(),
                 ], ['price' => $current_price]);
 

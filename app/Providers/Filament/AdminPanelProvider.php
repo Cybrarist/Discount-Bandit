@@ -7,6 +7,7 @@ use App\Http\Middleware\DisableAuthMiddleware;
 use Awcodes\FilamentQuickCreate\QuickCreatePlugin;
 use Croustibat\FilamentJobsMonitor\FilamentJobsMonitorPlugin;
 use Croustibat\FilamentJobsMonitor\Resources\QueueMonitorResource;
+use Devonab\FilamentEasyFooter\EasyFooterPlugin;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
@@ -48,6 +49,9 @@ class AdminPanelProvider extends PanelProvider
                 FilamentSpatieLaravelHealthPlugin::make()
                     ->navigationGroup('Settings'),
                 SpotlightPlugin::make(),
+                EasyFooterPlugin::make()
+                    ->withGithub()
+                    ->withLogo(asset("storage/bandit.png"), "https://discount-bandit.cybrarist.com", "v3.4"),
                 FilamentLogManager::make(),
                 FilamentJobsMonitorPlugin::make(),
                 QuickCreatePlugin::make()

@@ -2,7 +2,6 @@
 
 namespace App\Filament\Resources\GroupResource\Widgets;
 
-use App\Helpers\ProductHelper;
 use App\Models\GroupPriceHistory;
 use Filament\Support\RawJs;
 use Illuminate\Database\Eloquent\Model;
@@ -37,8 +36,6 @@ class GroupPriceHistoryChart extends ApexChartWidget
     protected function getOptions(): array
     {
         try {
-            $price_histories_per_store = ProductHelper::get_product_history_per_store($this->record->id);
-
             $group_price_histories = GroupPriceHistory::whereDate('date', '>=', today()->subYear())
                 ->where('group_id', $this->record->id)
                 ->get(['price', 'date'])
@@ -49,7 +46,6 @@ class GroupPriceHistoryChart extends ApexChartWidget
                     ];
                 })->toArray();
 
-
             return [
                 'chart' => [
                     'type' => 'area',
@@ -59,7 +55,7 @@ class GroupPriceHistoryChart extends ApexChartWidget
                     [
                         'name' => 'Group History',
                         'data' => $group_price_histories,
-                    ]
+                    ],
                 ],
                 'theme' => [
                     "palette" => 'palette1',

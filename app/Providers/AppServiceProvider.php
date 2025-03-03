@@ -53,5 +53,8 @@ class AppServiceProvider extends ServiceProvider
             PingCheck::new()->url('https://google.com')->failureMessage("Couldn't access the internet"),
             ScheduleCheck::new(),
         ]);
+
+
+
     }
 }

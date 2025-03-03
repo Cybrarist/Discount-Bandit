@@ -14,6 +14,7 @@
         "awcodes/filament-quick-create": "^3.4",
         "chrome-php/chrome": "^1.11",
         "croustibat/filament-jobs-monitor": "^2.4",
+        "devonab/filament-easy-footer": "^1.0",
         "filament/filament": "^3.2",
         "filipfonal/filament-log-manager": "^2.0",
         "geo-sot/filament-env-editor": "^0.0.4",

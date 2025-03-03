@@ -3,28 +3,25 @@
 namespace App\Enums;
 
 use Filament\Support\Contracts\HasLabel;
-use Illuminate\Support\Arr;
 
-enum StatusEnum : string implements HasLabel
+enum StatusEnum: string implements HasLabel
 {
-    case Published='p';
-    case Disabled='d';
-    case Silenced='s';
-    case Archived='a';
-
+    case Published = 'p';
+    case Disabled = 'd';
+    case Silenced = 's';
+    case Archived = 'a';
 
     public static function get_badge($value)
     {
 
-        return match ($value){
-            self::Published=>"success",
-            self::Disabled=>"danger",
-            self::Silenced=>"warning",
-            self::Archived=>"info",
+        return match ($value) {
+            self::Published => "success",
+            self::Disabled => "danger",
+            self::Silenced => "warning",
+            self::Archived => "info",
         };
 
     }
-
 
     public static function names(): array
     {
@@ -38,10 +35,11 @@ enum StatusEnum : string implements HasLabel
 
     public static function to_array(): array
     {
+        //        return array_map(fn($enum) => $enum->toArray(), static::cases());
         return array_combine(self::values(), self::names());
     }
 
-    public static function ignored():array
+    public static function ignored(): array
     {
         return [
             self::Disabled,

@@ -14,7 +14,7 @@ rm storage/logs/*
 
 
 docker build --platform linux/amd64,linux/arm64 -t "$image:v$version" .
-docker build --platform linux/amd64,linux/arm64 -t "$image:latest" .
+#docker build --platform linux/amd64,linux/arm64 -t "$image:latest" .
 
 
 
