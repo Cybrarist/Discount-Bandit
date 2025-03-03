@@ -15,7 +15,6 @@ class ProductFactory extends Factory
         return [
             'created_at' => Carbon::now(),
             'updated_at' => Carbon::now(),
-            'asin' => $this->faker->word(),
             'name' => $this->faker->name(),
             'image' => $this->faker->word(),
             'favourite' => $this->faker->boolean(),
@@ -24,8 +23,6 @@ class ProductFactory extends Factory
             'max_notifications' => $this->faker->randomNumber(),
             'lowest_within' => $this->faker->randomNumber(),
             'only_official' => $this->faker->boolean(),
-            'walmart_ip' => $this->faker->ipv4(),
-            'argos_id' => $this->faker->word(),
         ];
     }
 }

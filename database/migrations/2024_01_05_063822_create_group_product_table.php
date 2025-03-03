@@ -15,8 +15,8 @@ return new class extends Migration
             $table->id();
             $table->timestamps();
             $table->string("key")->nullable();
-            $table->foreignIdFor(\App\Models\Group::class);
-            $table->foreignIdFor(\App\Models\Product::class);
+            $table->foreignIdFor(\App\Models\Group::class)->constrained();
+            $table->foreignIdFor(\App\Models\Product::class)->constrained();
         });
     }
 

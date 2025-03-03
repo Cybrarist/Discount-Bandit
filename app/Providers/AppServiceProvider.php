@@ -2,13 +2,11 @@
 
 namespace App\Providers;
 
-use App\Models\User;
 use Filament\Support\Facades\FilamentView;
 use Filament\Tables\Enums\FiltersLayout;
 use Filament\Tables\Table;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Http\Resources\Json\JsonResource;
-use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\ServiceProvider;
 use Spatie\Health\Checks\Checks\CacheCheck;
@@ -33,26 +31,19 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-//        URL::forceScheme('https');
+        //        URL::forceScheme('https');
 
         JsonResource::withoutWrapping();
 
-        if (config('settings.disable_auth') && !app()->runningInConsole() && app()->isProduction())
-            Auth::login(User::first());
-
-
         Table::configureUsing(function (Table $table): void {
             $table->filtersLayout(FiltersLayout::AboveContentCollapsible)
-                ->paginationPageOptions([ 24, 48 , 72 , 96,'all'])
+                ->paginationPageOptions([24, 48, 72, 96, 'all'])
                 ->deferLoading();
         });
 
-
         FilamentView::registerRenderHook(
             PanelsRenderHook::SCRIPTS_AFTER,
-            fn (): string => new HtmlString('
-                        <script>document.addEventListener("scroll-to-top", () => window.scrollTo(0, 0))</script>
-            '),
+            fn (): string => new HtmlString('<script>document.addEventListener("scroll-to-top", () => window.scrollTo(0, 0))</script>'),
         );
 
         Health::checks([
@@ -62,5 +53,8 @@ class AppServiceProvider extends ServiceProvider
             PingCheck::new()->url('https://google.com')->failureMessage("Couldn't access the internet"),
             ScheduleCheck::new(),
         ]);
+
+
+
     }
 }

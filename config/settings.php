@@ -24,7 +24,7 @@ return [
     |
     */
 
-    'disable_top_bar' => env("TOP_BAR" , true),
+    'disable_top_bar' => env("TOP_BAR", true),
 
     /*
     |--------------------------------------------------------------------------
@@ -35,7 +35,7 @@ return [
     |
     */
 
-    'breadcrumbs' => env("BREADCRUMBS" , false),
+    'breadcrumbs' => env("BREADCRUMBS", false),
 
     /*
     |--------------------------------------------------------------------------
@@ -46,8 +46,7 @@ return [
     |
     */
 
-    'spa' => env("SPA" , false),
-
+    'spa' => env("SPA", false),
 
     /*
     |--------------------------------------------------------------------------
@@ -58,7 +57,7 @@ return [
     |
     */
 
-    'disable_auth' => env("DISABLE_AUTH" , false),
+    'disable_auth' => env("DISABLE_AUTH", false),
 
     /*
     |--------------------------------------------------------------------------
@@ -69,8 +68,7 @@ return [
     |
     */
 
-    'theme_color' => env("THEME_COLOR" , 'Blue'),
-
+    'theme_color' => env("THEME_COLOR", 'Blue'),
 
     /*
     |--------------------------------------------------------------------------
@@ -81,7 +79,42 @@ return [
     |
     */
 
-    'notify_any_change' => env("NOTIFY_ON_ANY_PRICE_CHANGE" , 'false'),
+    'notify_any_change' => env("NOTIFY_ON_ANY_PRICE_CHANGE", false),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Select the time you want the crawler to run for all stors
+    |--------------------------------------------------------------------------
+    |
+    |
+    */
+
+    'cron' => env("CRON", '*/5 * * * *'),
+
+    'group_cron' => env("GROUP_CRON", '*/5 * * * *'),
+
+    /*
+    |--------------------------------------------------------------------------
+    | Notification Settings
+    |--------------------------------------------------------------------------
+    |
+    |
+    */
+
+    'apprise_url' => env('APPRISE_URL'),
+
+    'ntfy_user' => env("NTFY_USER"),
+    'ntfy_password' => env("NTFY_PASSWORD"),
+    'ntfy_base_url' => env("NTFY_BASE_URL", "https://ntfy.sh/"),
+    'ntfy_token' => env("NTFY_TOKEN"),
+    'ntfy_channel_id' => env("NTFY_CHANNEL_ID"),
+
+    'rss_feed' => env("RSS_FEED", false),
+
+    'telegram_bot_token' => env("TELEGRAM_BOT_TOKEN"),
+    'telegram_channel' => env("TELEGRAM_CHANNEL_ID"),
 
 
+    'gotify_base_url' => env("GOTIFY_BASE_URL"),
+    'gotify_token' => env("GOTIFY_TOKEN"),
 ];

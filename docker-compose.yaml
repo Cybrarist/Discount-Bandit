@@ -3,6 +3,10 @@ networks:
   discount-bandit:
     driver: bridge
 
+volumes:
+  discount-bandit:
+  discount-bandit-logs:
+
 services:
   discount-bandit:
     image: cybrarist/discount-bandit:latest
@@ -12,6 +16,9 @@ services:
       - 8080:80
     networks:
       - discount-bandit
+#    volumes:
+#      - discount-bandit:/app
+#      - discount-bandit-logs:/logs
     volumes:
       - ./database/database.sqlite:/app/database/database.sqlite
       - ./.env:/app/.env

@@ -11,7 +11,6 @@ use App\Filament\Resources\ProductResource\RelationManagers;
 use App\Helpers\CurrencyHelper;
 use App\Helpers\ProductHelper;
 use App\Helpers\StoreHelper;
-use App\Helpers\StoresAvailable\Noon;
 use App\Helpers\URLHelper;
 use App\Models\Product;
 use App\Models\Store;
@@ -35,17 +34,20 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Arr;
-use Illuminate\Support\Collection;
 use Illuminate\Support\HtmlString;
 use Illuminate\Support\Str;
 
 class ProductResource extends Resource
 {
     protected static ?string $model = Product::class;
+
     protected static ?string $navigationIcon = 'heroicon-o-shopping-bag';
-    protected static ?int $navigationSort=1;
-    protected static ?string $recordTitleAttribute="name";
-    protected static bool $isGloballySearchable=true;
+
+    protected static ?int $navigationSort = 1;
+
+    protected static ?string $recordTitleAttribute = "name";
+
+    protected static bool $isGloballySearchable = true;
 
     public static function form(Form $form): Form
     {
@@ -56,16 +58,18 @@ class ProductResource extends Resource
                     ->hiddenOn(CreateProduct::class),
 
                 TextInput::make('url')
-                    ->required(fn($operation)=> $operation=="create")
-                    ->autofocus(fn($operation)=> $operation=="create")
+                    ->required(fn ($operation) => $operation == "create")
+                    ->autofocus(fn ($operation) => $operation == "create")
                     ->url()
                     ->label('URL of product')
-                    ->live(onBlur: true )
-                    ->afterStateUpdated(function ($state){
-                        if($state){
-                            $url=new URLHelper($state);
-                            if ($url->store )
+                    ->live(debounce: '300ms')
+                    ->afterStateUpdated(function ($state) {
+                        if ($state) {
+                            $url = new URLHelper($state);
+
+                            if ($url->store) {
                                 StoreHelper::is_unique($url);
+                            }
                         }
                     }),
 
@@ -75,18 +79,25 @@ class ProductResource extends Resource
                     ->preload()
                     ->native(false),
 
-                TextInput::make('notify_price')
-                    ->nullable()
-                    ->numeric(),
+                Forms\Components\Fieldset::make()
+                    ->label('These field is for new store addition')
+                    ->columnSpan(1)
+                    ->hidden(fn ($operation, $get) => $operation == "edit" && ! $get('url'))
+                    ->schema([
+                        TextInput::make('notify_price')
+                            ->hint('')
+                            ->nullable()
+                            ->numeric(),
 
-                TextInput::make('notify_percentage')
-                    ->nullable()
-                    ->hintIcon("heroicon-o-information-circle", "Get notified when price drops below specified percentage")
-                    ->suffix('%')
-                    ->numeric(),
+                        TextInput::make('notify_percentage')
+                            ->nullable()
+                            ->hintIcon("heroicon-o-information-circle", "Get notified when price drops below specified percentage")
+                            ->suffix('%')
+                            ->numeric(),
+                    ]),
 
                 Select::make('categories')
-                    ->relationship('categories','name')
+                    ->relationship('categories', 'name')
                     ->createOptionForm([Forms\Components\TextInput::make('name')->required()])
                     ->multiple()
                     ->nullable()
@@ -94,7 +105,6 @@ class ProductResource extends Resource
 
                 DatePicker::make('snoozed_until')
                     ->label("Snooze Notification Until"),
-
 
                 Section::make("Cross Stores Notification Settings")
                     ->columns(4)
@@ -128,7 +138,6 @@ class ProductResource extends Resource
                     ])
                     ->collapsible(),
 
-
                 Section::make("Variants")
                     ->hiddenOn(["view", "edit"])
                     ->columns(4)
@@ -138,19 +147,20 @@ class ProductResource extends Resource
                             ->label("choose other variations to include")
                             ->inline(false)
                             ->reactive()
-                            ->afterStateUpdated(function ($component, $get , $state){
-                                if (!$get('url')){
+                            ->afterStateUpdated(function ($component, $get, $state) {
+                                if (! $get('url')) {
                                     Notification::make()
                                         ->danger()
                                         ->title("URL Field is empty")
                                         ->send();
-                                    return ;
+
+                                    return;
                                 }
 
-                                if ($state  ){
-                                    $url=new URLHelper($get('url'));
-                                    $final_class_name="App\Helpers\StoresAvailable\\" . Str::ucfirst( explode(".",$url->store->domain)[0]);
-                                    $variations = call_user_func($final_class_name . '::get_variations' , $url->final_url  );
+                                if ($state) {
+                                    $url = new URLHelper($get('url'));
+                                    $final_class_name = "App\Helpers\StoresAvailable\\".Str::ucfirst(explode(".", $url->store->domain)[0]);
+                                    $variations = call_user_func($final_class_name.'::get_variations', $url->final_url);
                                     $component->getContainer()
                                         ->getComponent('variation_options')
                                         ->options($variations)
@@ -165,8 +175,8 @@ class ProductResource extends Resource
                             ->key('variation_options')
                             ->preload()
                             ->disabled()
-                            ->placeholder("choose variation")
-                 ]),
+                            ->placeholder("choose variation"),
+                    ]),
             ]);
 
     }
@@ -174,46 +184,46 @@ class ProductResource extends Resource
     public static function table(Table $table): Table
     {
 
-        $stores=StoreHelper::get_stores_with_active_products();
-        $currencies=CurrencyHelper::get_currencies();
-
+        $stores = StoreHelper::get_stores_with_active_products();
+        $currencies = CurrencyHelper::get_currencies();
 
         return $table
-            ->modifyQueryUsing(function ($query){
+            ->modifyQueryUsing(function ($query) {
                 $query->with([
                     "product_stores:id,product_id,store_id,price,notify_price,updated_at,highest_price,lowest_price,key,updated_at",
                 ]);
             })
-            ->recordUrl( null)
+            ->recordUrl(function ($record) {
+                return (! $record->name) ? route('filament.admin.resources.products.edit', ['record' => $record]) : null;
+            })
             ->columns([
                 Grid::make([
                     'lg' => 10,
-                    ])
+                ])
                     ->schema([
                         ImageColumn::make('image')
                             ->verticallyAlignCenter()
                             ->alignCenter()
                             ->height('100%')
                             ->width('100%')
-                            ->extraImgAttributes(['style'=>'max-height:200px; '])
+                            ->extraImgAttributes(['style' => 'max-height:200px; '])
                             ->columnSpan(3)
-                            ->url(fn ($record): string =>
-                                route('filament.admin.resources.products.edit',
+                            ->url(fn ($record): string => route('filament.admin.resources.products.edit',
                                 ['record' => $record])
                             ),
 
                         Grid::make([
                             'lg' => 8,
-                            'md'=>4
+                            'md' => 4,
                         ])
                             ->schema([
 
                                 TextColumn::make('name')
+                                    ->default("Fetching....")
                                     ->columnSpan(4)
                                     ->searchable()
                                     ->words(10)
-                                    ->url(fn ($record): string =>
-                                    route('filament.admin.resources.products.edit',
+                                    ->url(fn ($record): string => route('filament.admin.resources.products.edit',
                                         ['record' => $record])
                                     )
                                     ->sortable(),
@@ -231,17 +241,14 @@ class ProductResource extends Resource
                                     ->onIcon("heroicon-s-star")
                                     ->offIcon("heroicon-o-star"),
 
-
-
                                 IconColumn::make('delete')
-                                    ->getStateUsing(fn() => true)
+                                    ->getStateUsing(fn () => true)
                                     ->columnSpan(1)
 
                                     ->alignEnd()
-                                    ->icon(fn(bool $state): string => 'heroicon-m-trash')
+                                    ->icon(fn (bool $state): string => 'heroicon-m-trash')
                                     ->color('danger')
                                     ->action(Tables\Actions\DeleteAction::make()),
-
 
                             ])->columnSpan(7),
 
@@ -249,23 +256,23 @@ class ProductResource extends Resource
 
                             Tables\Columns\Layout\Panel::make([
                                 Grid::make([
-                                    'lg'=> 7,
-                                    'sm'=>1
+                                    'lg' => 7,
+                                    'sm' => 1,
                                 ])->schema([
                                     TextColumn::make('product_stores')
-                                        ->formatStateUsing(function ($state, $record) use($stores){
+                                        ->formatStateUsing(function ($state, $record) use ($stores) {
 
-                                            $store = new Store();
+                                            $store = new Store;
                                             $store->fill($stores[$state->store_id]);
 
-                                            $final_class_name="App\Helpers\StoresAvailable\\" . Str::ucfirst( explode(".", $store->domain)[0]);
-                                            $url= call_user_func($final_class_name . '::prepare_url' , $store->domain, $state->key , $store );
+                                            $final_class_name = "App\Helpers\StoresAvailable\\".Str::ucfirst(explode(".", $store->domain)[0]);
+                                            $url = call_user_func($final_class_name.'::prepare_url', $store->domain, $state->key, $store);
 
                                             return new HtmlString("<a class='underline text-primary-400' href='$url' target='_blank'>{$stores[$state->store_id]["name"]}</a>");
                                         })
                                         ->columnSpan([
-                                            'md'=> 2,
-                                            'sm'=> 7
+                                            'md' => 2,
+                                            'sm' => 7,
                                         ])
                                         ->html()
                                         ->listWithLineBreaks(),
@@ -273,15 +280,15 @@ class ProductResource extends Resource
                                     TextColumn::make('product_stores.highest_price')
                                         ->listWithLineBreaks()
                                         ->columnSpan([
-                                            'md'=> 1,
-                                            'sm'=> 7
+                                            'md' => 1,
+                                            'sm' => 7,
                                         ])
                                         ->color('danger'),
 
                                     TextColumn::make('product_stores.price')
                                         ->columnSpan([
-                                            'md'=> 1,
-                                            'sm'=> 2
+                                            'md' => 1,
+                                            'sm' => 2,
                                         ])
                                         ->formatStateUsing(function ($record) use ($currencies, $stores) {
                                             return ProductHelper::prepare_multiple_prices_in_table($record, $currencies, $stores);
@@ -290,33 +297,32 @@ class ProductResource extends Resource
 
                                     TextColumn::make('product_stores.lowest_price')
                                         ->columnSpan([
-                                            'md'=> 1,
-                                            'sm'=> 2
+                                            'md' => 1,
+                                            'sm' => 2,
                                         ])
                                         ->listWithLineBreaks()
                                         ->color('success'),
 
                                     TextColumn::make('product_stores.updated_at')
                                         ->columnSpan([
-                                            'md'=> 2,
-                                            'sm'=> 3
+                                            'md' => 2,
+                                            'sm' => 3,
                                         ])
                                         ->listWithLineBreaks(),
-                                ])
+                                ]),
                             ])
                                 ->columnSpanFull(),
-
 
                         ])
                             ->space(3)
                             ->columnSpanFull(),
 
-                  ])
+                    ]),
             ])
             ->contentGrid([
                 'md' => 2,
             ])
-            ->defaultSort('favourite' , 'desc')
+            ->defaultSort('favourite', 'desc')
             ->filters([
 
                 SelectFilter::make('status')
@@ -324,26 +330,27 @@ class ProductResource extends Resource
                     ->preload()
                     ->multiple(),
 
-                Filter::make('notify_price')->query(function ($query){
+                Filter::make('notify_price')->query(function ($query) {
                     $query->whereHas(
-                        'product_stores',function($query){
+                        'product_stores', function ($query) {
                             $query->whereRaw('product_store.price  <= product_store.notify_price');
                         }
-                    );})
+                    );
+                })
                     ->label('Price Met Target')
                     ->toggle(),
 
                 Filter::make('favourite')->query(function (Builder $query) {
                     $query->where('favourite', 1);
-                    })
+                })
                     ->label('Favourite product')
                     ->toggle(),
 
                 Filter::make('highest_price')->query(function (Builder $query) {
-                        return $query->whereHas('product_stores', function ($query){
-                            $query->whereColumn('price' , '<=' , 'highest_price');
-                        });
-                    })
+                    return $query->whereHas('product_stores', function ($query) {
+                        $query->whereColumn('price', '<=', 'highest_price');
+                    });
+                })
                     ->label('Lower Than Highest Price')
                     ->toggle(),
 
@@ -355,10 +362,11 @@ class ProductResource extends Resource
                     ])
                     ->query(function (Builder $query, $data) {
 
-                        if (!$data["lowest_within_x"])
-                            return ;
+                        if (! $data["lowest_within_x"]) {
+                            return;
+                        }
 
-                        $products_with_lowest_price_within_x=\DB::select("
+                        $products_with_lowest_price_within_x = \DB::select("
                             SELECT p.product_id
                             FROM product_store p
                             JOIN (
@@ -374,19 +382,18 @@ class ProductResource extends Resource
                             "
                         );
 
-                        $product_ids= Arr::pluck($products_with_lowest_price_within_x , 'product_id');
-                      $query->wherein('id', $product_ids);
-                })->indicateUsing(function (array $data): ?string {
+                        $product_ids = Arr::pluck($products_with_lowest_price_within_x, 'product_id');
+                        $query->wherein('id', $product_ids);
+                    })->indicateUsing(function (array $data): ?string {
                         if (! $data['lowest_within_x']) {
                             return null;
                         }
 
-                        return "Lowest in {$data['lowest_within_x']} Days" ;
+                        return "Lowest in {$data['lowest_within_x']} Days";
                     }),
 
-
                 SelectFilter::make('category')
-                    ->relationship('categories','name')
+                    ->relationship('categories', 'name')
                     ->multiple()
                     ->searchable()
                     ->preload(),
@@ -399,12 +406,10 @@ class ProductResource extends Resource
             ]);
     }
 
-
-
     public static function getRelations(): array
     {
         return [
-            RelationManagers\StoresRelationManager::class
+            RelationManagers\StoresRelationManager::class,
         ];
     }
 
@@ -414,7 +419,7 @@ class ProductResource extends Resource
             'index' => ListProducts::route('/'),
             'create' => CreateProduct::route('/create'),
             'edit' => EditProduct::route('/{record}/edit'),
-            'view' =>ViewProduct::route('/{record}'),
+            'view' => ViewProduct::route('/{record}'),
         ];
     }
 }

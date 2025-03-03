@@ -6,6 +6,7 @@ use App\Helpers\StoreHelper;
 use App\Models\PriceHistory;
 use App\Models\Product;
 use App\Models\ProductStore;
+use Illuminate\Support\Facades\DB;
 
 class ProductObserver
 {
@@ -28,11 +29,12 @@ class ProductObserver
     /**
      * Handle the Product "deleted" event.
      */
-    public function deleted(Product $product): void
+    public function deleting(Product $product): void
     {
 
         ProductStore::where('product_id', $product->id)->delete();
         PriceHistory::where('product_id', $product->id)->delete();
+        DB::table('group_product')->where('product_id', $product->id)->delete();
 
         StoreHelper::clear_caches_related_to_stores();
     }

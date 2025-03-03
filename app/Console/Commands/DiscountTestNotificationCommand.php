@@ -2,9 +2,9 @@
 
 namespace App\Console\Commands;
 
+use App\Models\Group;
 use App\Models\User;
-use App\Notifications\GroupDiscount;
-use App\Notifications\ProductDiscount;
+use App\Notifications\GroupDiscounted;
 use App\Notifications\ProductDiscounted;
 use Illuminate\Console\Command;
 
@@ -40,6 +40,19 @@ class DiscountTestNotificationCommand extends Command
             image: "https://raw.githubusercontent.com/Cybrarist/Discount-Bandit/refs/heads/master/storage/app/public/bandit.png",
             currency: "$",
             tags: ",New Test Tags",
+        ));
+
+        $group = new Group([
+            'name' => "Test Group",
+            'currency_id' => 2,
+        ]);
+
+        User::first()->notify(new GroupDiscounted(
+            group: $group,
+            price: 100,
+            highest_price: 120,
+            lowest_price: 80,
+            currency: "$",
         ));
     }
 }

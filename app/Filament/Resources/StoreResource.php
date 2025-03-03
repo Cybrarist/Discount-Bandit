@@ -10,6 +10,7 @@ use Filament\Forms;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Form;
+use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Tables;
 use Filament\Tables\Columns\ImageColumn;
@@ -24,11 +25,10 @@ class StoreResource extends Resource
 
     protected static ?string $navigationIcon = 'heroicon-o-building-storefront';
 
-    protected static ?int $navigationSort=4;
+    protected static ?int $navigationSort = 4;
 
     public static function form(Form $form): Form
     {
-
 
         return $form
             ->schema([
@@ -43,7 +43,7 @@ class StoreResource extends Resource
                 Forms\Components\Section::make('settings')
                     ->columns(4)
                     ->schema([
-                         Forms\Components\Toggle::make('tabs')
+                        Forms\Components\Toggle::make('tabs')
                             ->inline(false)
                             ->label('Display As Tab on Products'),
                     ]),
@@ -51,18 +51,22 @@ class StoreResource extends Resource
             ]);
     }
 
-
     public static function table(Table $table): Table
     {
         return $table
             ->columns([
-                ImageColumn::make('image')->disk('store')->height(50),
-                TextColumn::make('name')->searchable()->sortable(),
-                TextColumn::make('status')
-                    ->badge()
-                    ->color(fn ($state): string => StatusEnum::get_badge($state)),
+                ImageColumn::make('image')
+                    ->disk('store')
+                    ->height(50),
+                TextColumn::make('name')
+                    ->searchable()
+                    ->sortable(),
+                SelectColumn::make('status')
+                    ->options(StatusEnum::class),
                 ToggleColumn::make('tabs'),
-                TextColumn::make("products_count")->counts('products')->label("Total Products")
+                TextColumn::make("products_count")
+                    ->counts('products')
+                    ->label("Total Products"),
             ])
             ->filters([
                 Tables\Filters\SelectFilter::make('status')
@@ -72,6 +76,40 @@ class StoreResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+            ])->bulkActions([
+
+                Tables\Actions\BulkActionGroup::make([
+                    Tables\Actions\BulkAction::make('disable')
+                        ->color('danger')
+                        ->requiresConfirmation()
+                        ->action(function ($records) {
+                            Store::whereIn('id', $records->pluck('id')->toArray())
+                                ->update([
+                                    'status' => StatusEnum::Disabled,
+                                ]);
+
+                            Notification::make()
+                                ->title('Stores Disabled Successfully')
+                                ->success()
+                                ->send();
+                        }),
+                    Tables\Actions\BulkAction::make('enable')
+                        ->color('success')
+                        ->requiresConfirmation()
+                        ->action(function ($records) {
+                            Store::whereIn('id', $records->pluck('id')->toArray())
+                                ->update([
+                                    'status' => StatusEnum::Published,
+                                ]);
+
+                            Notification::make()
+                                ->title('Stores Enabled Successfully')
+                                ->success()
+                                ->send();
+                        }),
+                ]),
+
+
             ]);
     }
 
@@ -90,5 +128,4 @@ class StoreResource extends Resource
             'edit' => Pages\EditStore::route('/{record}/edit'),
         ];
     }
-
 }

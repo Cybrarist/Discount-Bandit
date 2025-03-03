@@ -2,54 +2,47 @@
 
 namespace App\NotificationsChannels;
 
-
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
-use NotificationChannels\Discord\Exceptions\CouldNotSendNotification;
-
 
 class Ntfy
 {
-    protected string $baseUrl = 'https://ntfy.sh/';
-
     protected $httpClient;
-
 
     public function __construct()
     {
-        $this->httpClient = new Http();
+        $this->httpClient = new Http;
     }
 
-
-    public function send( array $notification_title , string $notification_content )
+    public function send(array $notification_title, string $notification_content)
     {
-        return $this->request($notification_title , $notification_content);
+        $this->request($notification_title, $notification_content);
     }
 
-
-    protected function request( array $notification_title, string $notification_content)
+    protected function request(array $notification_title, string $notification_content): void
     {
-        $auth=[];
+        $auth = [];
 
-        $url=env('NTFY_BASE_URL') ?? $this->baseUrl;
+        $url = config('settings.ntfy_base_url');
 
-        if (env("NTFY_USER") && env("NTFY_PASSWORD"))
-            $auth["Authorization"] = "Basic " . base64_encode(env("NTFY_USER") .":" . env("NTFY_PASSWORD") );
-        elseif (env("NTFY_TOKEN"))
-            $auth["Authorization"] = "Bearer " . env("NTFY_TOKEN");
+        if (config('settings.ntfy_user') && config('settings.ntfy_password')) {
+            $auth["Authorization"] = "Basic ".base64_encode(config('settings.ntfy_user').":".config('settings.ntfy_password'));
+        } elseif (config('settings.ntfy_token')) {
+            $auth["Authorization"] = "Bearer ".config('settings.ntfy_token');
+        }
+
 
         $data = [
-            "topic" => env("NTFY_CHANNEL_ID"),
-            "message" =>  Str::replace("<br>" , "\n" ,  $notification_content),
+            "topic" => config('settings.ntfy_channel_id'),
+            "message" => Str::replace("<br>", "\n", $notification_content),
             "title" => $notification_title['Title'],
-            "tags" => explode(',' , $notification_title['X-Tags']),
+            "tags" => explode(',', $notification_title['X-Tags']),
             "attach" => $notification_title['Attach'],
-            "actions" =>$notification_title['Actions'],
+            "actions" => $notification_title['Actions'],
         ];
 
         Http::asJson()
             ->withHeaders($auth)
             ->post($url, $data);
     }
-
 }

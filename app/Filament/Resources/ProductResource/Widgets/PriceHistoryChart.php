@@ -15,20 +15,15 @@ class PriceHistoryChart extends ApexChartWidget
 
     /**
      * Chart Idcreate
-     *
-     * @var string
      */
     protected static ?string $chartId = "priceHistoryChart";
 
     /**
      * Widget Title
-     *
-     * @var string|null
      */
     protected static ?string $heading = 'Price History';
 
-
-    protected int | string | array $columnSpan = 'full';
+    protected int|string|array $columnSpan = 'full';
 
     /**
      * Chart options (series, labels, types, size, animations...)
@@ -36,27 +31,25 @@ class PriceHistoryChart extends ApexChartWidget
      *
      * @return array
      */
-
-    protected static ?string $pollingInterval='300s';
+    protected static ?string $pollingInterval = '300s';
 
     protected function getOptions(): array
     {
         try {
 
-            $price_histories_per_store=ProductHelper::get_product_history_per_store($this->record->id);
-
+            $price_histories_per_store = ProductHelper::get_product_history_per_store($this->record->id);
 
             return [
                 'chart' => [
                     'type' => 'area',
                     'height' => 300,
                 ],
-                'series'=>array_values($price_histories_per_store),
-                'theme'=>[
-                    "palette"=> 'palette1'
+                'series' => array_values($price_histories_per_store),
+                'theme' => [
+                    "palette" => 'palette1',
                 ],
                 'xaxis' => [
-                    "type"=> 'datetime',
+                    "type" => 'datetime',
                     'categories' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
                     'labels' => [
                         'style' => [
@@ -65,7 +58,7 @@ class PriceHistoryChart extends ApexChartWidget
                     ],
                 ],
                 'yaxis' => [
-                    "decimalsInFloat"=>2,
+                    "decimalsInFloat" => 2,
                 ],
 
                 'stroke' => [
@@ -76,11 +69,12 @@ class PriceHistoryChart extends ApexChartWidget
                 ],
             ];
 
-        }catch (\Exception $e){
+        } catch (\Exception $e) {
             return [];
         }
 
     }
+
     protected function extraJsOptions(): ?\Filament\Support\RawJs
     {
         return RawJs::make(<<<'JS'
@@ -95,6 +89,4 @@ class PriceHistoryChart extends ApexChartWidget
         }
         JS);
     }
-
-
 }
