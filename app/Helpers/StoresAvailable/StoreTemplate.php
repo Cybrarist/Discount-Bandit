@@ -177,11 +177,6 @@ abstract class StoreTemplate
         $this->get_condition();
 
         if ($this->price) {
-
-            Log::info("Old Price: ".$this->current_record->price);
-            Log::info("New Price: ".$this->price);
-            Log::info("Product:".$this->current_record);
-
             // update the current record
             $this->current_record->update([
                 'price' => $this->price,
@@ -207,7 +202,7 @@ abstract class StoreTemplate
         } else {
             Log::info("New Price: (not updated) ".$this->price);
             Log::info("Product:".$this->current_record);
-            $this->current_record->updateTimestamps();
+            $this->current_record->update(['updated_at' => now()]);
         }
     }
 
