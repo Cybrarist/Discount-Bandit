@@ -535,7 +535,8 @@ abstract class StoreTemplate
             return $page->getHtml();
             // too long to load
         } catch (Exception $exception) {
-            self::log_error("Crawling using chrome", $exception->getMessage());
+            Log::error("Crawling using chrome");
+            Log::error($exception->getMessage());
         }
 
         return "";
@@ -631,7 +632,8 @@ abstract class StoreTemplate
             }
             $history->update($to_update);
         } catch (Exception $exception) {
-            self::log_error("Couldn't update the price history", $exception->getMessage());
+            Log::error("Couldn't update the price history");
+            Log::error($exception->getMessage());
         }
     }
 

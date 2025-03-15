@@ -21,7 +21,7 @@ class URLHelper
 
     public string $product_unique_key = "";
 
-    public ?Store $store=null;
+    public ?Store $store = null;
 
     public function __construct(private string $url)
     {
@@ -190,6 +190,51 @@ class URLHelper
         return Str::lower($paths[count($paths) - 3]);
 
         throw new \Exception("wrong formula");
+    }
+
+    public function get_newegg_key(): string
+    {
+
+        $country = explode("/global/", $this->path);
+
+        $stores_without_global = [
+            'newegg.com' => "$",
+            'newegg.ca' => "$",
+        ];
+
+        if (array_key_exists($this->domain, $stores_without_global) && count($country) < 2) {
+            $this->store = Store::where('domain', $this->domain)
+                ->where('currency_id', Currency::where("code", "$")->first()->id)
+                ->first();
+        } else {
+
+            $without_global_path = explode("/global/", $this->path)[1];
+            $global_path = explode("/", $without_global_path)[0];
+            $country_shortcut = explode("-", $global_path)[0];
+
+            $this->store = match ($country_shortcut) {
+                "ar" => Store::where('name', "Newegg Argentina")->first(),
+                "au" => Store::where('name', "Newegg Australia")->first(),
+                "bh" => Store::where('name', "Newegg Bahrain")->first(),
+                "hk" => Store::where('name', "Newegg Hong Kong")->first(),
+                "il" => Store::where('name', "Newegg Occupied Palestine")->first(),
+                "jp" => Store::where('name', "Newegg Japan")->first(),
+                "kw" => Store::where('name', "Newegg Kuwait")->first(),
+                "mx" => Store::where('name', "Newegg Mexico")->first(),
+                "nz" => Store::where('name', "Newegg New Zealand")->first(),
+                "om" => Store::where('name', "Newegg Oman")->first(),
+                "ph" => Store::where('name', "Newegg Philippines")->first(),
+                "qa" => Store::where('name', "Newegg Qatar")->first(),
+                "sa" => Store::where('name', "Newegg Saudi Arabia")->first(),
+                "sg" => Store::where('name', "Newegg Singapore")->first(),
+                "kr" => Store::where('name', "Newegg South Korea")->first(),
+                "ae" => Store::where('name', "Newegg UAE")->first(),
+                "uk" => Store::where('name', "Newegg UK")->first(),
+            };
+        }
+
+
+        return explode("/p/", $this->path)[1];
     }
 
     public function get_nykaa_key(): string
