@@ -524,6 +524,18 @@ class StoreSeeder extends Seeder
                 'image' => 'newegg.svg',
                 'currency_id' => Currency::firstOrCreate(['code' => '£'])->id,
                 'slug' => 'newegg_com',
+            ], [
+                'name' => 'Microless UAE',
+                'domain' => 'microless.com',
+                'image' => 'microless.svg',
+                'currency_id' => Currency::firstOrCreate(['code' => 'AED'])->id,
+                'slug' => 'microless_com',
+            ], [
+                'name' => 'Microless Global',
+                'domain' => 'microless.com',
+                'image' => 'microless.svg',
+                'currency_id' => Currency::firstOrCreate(['code' => '$'])->id,
+                'slug' => 'microless_com',
             ],
         ];
 

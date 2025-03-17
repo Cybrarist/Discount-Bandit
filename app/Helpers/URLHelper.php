@@ -23,21 +23,23 @@ class URLHelper
 
     public ?Store $store = null;
 
+    private array $parsed_url = [];
+
     public function __construct(private string $url)
     {
         try {
             // parse the url
-            $parsed_url = parse_url($url);
+            $this->parsed_url = parse_url($url);
 
-            $this->domain = Str::of($parsed_url['host'])->lower()->remove(['www.', 'uae.']);
+            $this->domain = Str::of($this->parsed_url['host'])->lower()->remove(['www.', 'uae.']);
 
             $this->store = Store::whereDomain($this->domain)->firstOrFail();
 
             // check the store exists
-            $remove_ref_if_exists = explode("/ref", $parsed_url['path'] ?? "");
+            $remove_ref_if_exists = explode("/ref", $this->parsed_url['path'] ?? "");
             $this->path = $remove_ref_if_exists[0] ?? "";
             $this->final_url = "https://$this->domain$this->path";
-            $this->top_host = explode('.', $parsed_url["host"])[0];
+            $this->top_host = explode('.', $this->parsed_url["host"])[0];
 
             self::get_key();
         } catch (Exception $exception) {
@@ -166,6 +168,18 @@ class URLHelper
         return $product_key;
     }
 
+    public function get_microless_key(): array|string
+    {
+        $subdomain = explode(".", $this->parsed_url['host'])[0];
+
+        $this->store = match ($subdomain) {
+            'uae' => Store::where('name', 'Microless UAE')->first(),
+            default => Store::where('name', 'Microless Global')->first(),
+        };
+
+        return str_replace("/", "", explode("product/", $this->path)[1]);
+    }
+
     public function get_myntra_key(): string
     {
         $temp = explode("/", $this->path);
@@ -232,7 +246,6 @@ class URLHelper
                 "uk" => Store::where('name', "Newegg UK")->first(),
             };
         }
-
 
         return explode("/p/", $this->path)[1];
     }
