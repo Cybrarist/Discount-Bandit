@@ -17,6 +17,7 @@ class ProductDiscounted extends Notification
     use Queueable;
 
     public string $product_temp_link;
+    public string $product_temp_snooze;
 
     public string $notification_title;
 
@@ -38,8 +39,9 @@ class ProductDiscounted extends Notification
         public $tags,
     ) {
         $this->product_temp_link = URL::temporarySignedRoute("products.show", now()->addMinutes(15), ['product' => $this->product_id]);
+        $this->product_temp_snooze = URL::temporarySignedRoute("products.snooze", today()->endOfDay(), ['product' => $this->product_id]);
 
-        $this->notification_title = "For Just $this->price -  Discount For ".Str::words($this->product_name, 5);
+        $this->notification_title = "For Just {$this->currency} {$this->price} -  Discount For ".Str::words($this->product_name, 5);
         $this->notification_text = "{$this->product_name}, is at {$this->currency}{$this->price} <br>".
                 "----------------<br>".
                 "Highest Price: {$this->highest_price} <br>".
@@ -123,6 +125,10 @@ class ProductDiscounted extends Notification
                     "action" => "view",
                     "label" => "See Trend",
                     "url" => $this->product_temp_link,
+                ], [
+                    "action" => "view",
+                    "label" => "Snooze For Today",
+                    "url" => $this->product_temp_snooze,
                 ],
             ],
             "Attach" => $this->image,
@@ -148,7 +154,8 @@ class ProductDiscounted extends Notification
                 $this->tags
             )
             ->button('View Product', $this->product_url)
-            ->button('View Trend', $this->product_temp_link);
+            ->button('View Trend', $this->product_temp_link)
+            ->button('Snooze For Today', $this->product_temp_snooze);
     }
 
 

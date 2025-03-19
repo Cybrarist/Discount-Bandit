@@ -189,6 +189,11 @@ class URLHelper
         return $product_key;
     }
 
+    public function get_nexths_key(): string
+    {
+        return explode("sku/", $this->path)[1];
+    }
+
     public function get_noon_key(): string
     {
 

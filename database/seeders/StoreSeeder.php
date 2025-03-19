@@ -536,6 +536,12 @@ class StoreSeeder extends Seeder
                 'image' => 'microless.svg',
                 'currency_id' => Currency::firstOrCreate(['code' => '$'])->id,
                 'slug' => 'microless_com',
+            ], [
+                'name' => 'Next Hardware & Software',
+                'domain' => 'nexths.it',
+                'image' => 'microless.svg',
+                'currency_id' => Currency::firstOrCreate(['code' => '€'])->id,
+                'slug' => 'nexths_it',
             ],
         ];
 

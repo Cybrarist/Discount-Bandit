@@ -2,16 +2,13 @@
 
 namespace App\Helpers\StoresAvailable;
 
-use App\Helpers\GeneralHelper;
 use Exception;
 use Illuminate\Support\Str;
 use Throwable;
 
-class Microless extends StoreTemplate
+class Nexths extends StoreTemplate
 {
-    const string MAIN_URL = "https://subdomain.store/product/product_id";
-
-    private $center_column;
+    const string MAIN_URL = "https://store/Products/details/sku/product_id";
 
     private $product_schema;
 
@@ -37,15 +34,9 @@ class Microless extends StoreTemplate
     public function prepare_sections_to_crawl(): void
     {
         try {
-            $this->product_schema = $this->get_product_schema(script_type: 'application/ld+json');
+            $this->product_schema = $this->xml->xpath("//div[@itemtype='http://schema.org/Product']")[0];
         } catch (Throwable $exception) {
-            $this->log_error("Crawling Microless Schema", $exception->getMessage());
-        }
-
-        try {
-            $this->center_column = $this->xml->xpath("//div[@class = 'ml-home-content']")[0];
-        } catch (Throwable $exception) {
-            $this->log_error("Crawling Microless Structure", $exception->getMessage());
+            $this->log_error("Crawling Next H&S Schema", $exception->getMessage());
         }
     }
 
@@ -55,37 +46,24 @@ class Microless extends StoreTemplate
     public function get_name(): void
     {
         try {
-            $this->name = $this->document->getElementsByTagName("title")->item(0)->textContent;
+            $this->name = $this->product_schema->xpath("//h1[@itemprop='name']")[0]->__toString();
 
             return;
         } catch (Throwable $exception) {
             $this->log_error("Product Name First Method", $exception->getMessage());
         }
-
         try {
-            $this->name = $this->center_column->xpath("//h1[@class='product-title-h1']//span")[0]->__toString();
-
-            return;
+            $this->name = $this->xml->xpath("//h1[@class='itempage_title']")[0]->__toString();
         } catch (Throwable $exception) {
             $this->log_error("Product Name Second Method", $exception->getMessage());
         }
-
-        // product schema moved to last method as the product name is cropped in the website schema
-        try {
-            $this->name = $this->product_schema['name'];
-
-            return;
-        } catch (Throwable $exception) {
-            $this->log_error("Product Name Third Method", $exception->getMessage());
-        }
-
     }
 
     public function get_image(): void
     {
 
         try {
-            $this->image = $this->product_schema['image'];
+            $this->image = $this->product_schema->xpath("//link[@itemprop='image']")[0]->attributes()['href']->__toString();
 
             return;
         } catch (Throwable $exception) {
@@ -93,8 +71,7 @@ class Microless extends StoreTemplate
         }
 
         try {
-            $this->image = $this->center_column->xpath("//div[@class='prod-img-pic-wrap']//a//img")[0]->attributes()['src']->__toString();
-
+            $this->image = $this->xml->xpath("//div[@class='item active']//img")[0]->attributes()['src']->__toString();
         } catch (Throwable $exception) {
             $this->log_error("Product Image Second Method", $exception->getMessage());
         }
@@ -103,23 +80,12 @@ class Microless extends StoreTemplate
 
     public function get_price(): void
     {
-
         try {
-            $this->price = (float) $this->product_schema['offers'][0]['price'];
+            $this->price = (float) $this->product_schema->xpath("//div[@itemprop='offers']//meta[@itemprop='price']")[0]->attributes()['content']->__toString();
 
             return;
         } catch (Throwable $exception) {
             $this->log_error("Price First Method", $exception->getMessage());
-        }
-
-        // method 2 to return the price of the product
-        try {
-            $price = $this->center_column->xpath("//span[@class='price-amount']")[0];
-            $this->price = (float) GeneralHelper::get_numbers_only_with_dot($price);
-
-            return;
-        } catch (Throwable $exception) {
-            $this->log_error("Price Second Method", $exception->getMessage());
         }
 
     }
@@ -129,23 +95,34 @@ class Microless extends StoreTemplate
     public function get_stock(): void
     {
         try {
-            $this->in_stock = Str::contains($this->product_schema['offers'][0]['availability'], "InStock", true);
+            $this->in_stock = Str::contains($this->product_schema->xpath("//div[@itemprop='offers']//meta[@itemprop='availability']")[0]->attributes()['content']->__toString(), "InStock", true);
         } catch (Throwable $exception) {
             $this->log_error("Stock Availability First Method", $exception->getMessage());
         }
     }
 
-    public function get_no_of_rates(): void {}
+    public function get_no_of_rates(): void
+    {
+        try {
+            $this->no_of_rates = (int) $this->product_schema->xpath("//div[@itemprop='aggregateRating']//meta[@itemprop='reviewCount']")[0]->attributes()['content']->__toString();
+        } catch (Throwable $exception) {
+            $this->log_error("Number of Rates First Method", $exception->getMessage());
+        }
+    }
 
-    public function get_rate(): void {}
+    public function get_rate(): void {
+
+        try {
+            $this->rating = $this->product_schema->xpath("//div[@itemprop='aggregateRating']//meta[@itemprop='ratingValue']")[0]->attributes()['content']->__toString();
+        } catch (Throwable $exception) {
+            $this->log_error("Rating First Method", $exception->getMessage());
+        }
+    }
 
     public function get_seller(): void
     {
         try {
-
-            $this->seller = $this
-                ->center_column
-                ->xpath("//div[@class='product-sold-by']//a")[0]->__toString();
+            $this->seller =$this->product_schema->xpath("//div[@itemprop='offers']//div[@itemprop='seller']//meta[@itemprop='name']")[0]->attributes()['content']->__toString();
         } catch (Throwable $exception) {
             $this->log_error("The Seller First Method", $exception->getMessage());
         }
@@ -156,7 +133,7 @@ class Microless extends StoreTemplate
     public function get_condition(): void
     {
         try {
-            $this->condition = (Str::contains($this->product_schema['offers'][0]['itemCondition'], "NewCondition", true)) ? "new" : "used";
+            $this->condition = (Str::contains($this->product_schema->xpath("//div[@itemprop='offers']//meta[@itemprop='itemCondition']")[0]->attributes()['content']->__toString(), "NewCondition", true)) ? "new" : "used";
         } catch (Exception $e) {
             $this->log_error("the Condition");
         }
@@ -169,13 +146,9 @@ class Microless extends StoreTemplate
 
     public static function prepare_url($domain, $product, $store = null): string
     {
-        $domain_to_use = match ($store->name) {
-            "Microless UAE" => "uae",
-        };
-
         return Str::replace(
-            ["store", "subdomain", "product_id"],
-            [$domain, $domain_to_use, $product],
+            ["store", "product_id"],
+            [$domain, $product],
             self::MAIN_URL
         );
 

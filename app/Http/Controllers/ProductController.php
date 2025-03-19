@@ -106,4 +106,12 @@ class ProductController extends Controller
             "product_stores" => $product_stores,
         ]);
     }
+
+    public function snooze(Product $product)
+    {
+
+        $product->update(['snoozed_until' => today()->addDay()]);
+
+        return "Product Snoozed Successfully Until";
+    }
 }
