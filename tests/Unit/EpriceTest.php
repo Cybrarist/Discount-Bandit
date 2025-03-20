@@ -3,9 +3,8 @@
 namespace Tests\Unit;
 
 use App\Enums\StatusEnum;
-use App\Helpers\StoresAvailable\Amazon;
-use App\Helpers\StoresAvailable\Microless;
-use App\Helpers\StoresAvailable\Newegg;
+use App\Helpers\StoresAvailable\Eprice;
+use App\Helpers\StoresAvailable\Nexths;
 use App\Helpers\URLHelper;
 use App\Models\Product;
 use App\Models\ProductStore;
@@ -14,7 +13,7 @@ use Database\Seeders\StoreSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
-class MicrolessTest extends TestCase
+class EpriceTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -49,14 +48,14 @@ class MicrolessTest extends TestCase
 
     }
 
-    public function test_microless_uae_is_being_crawled()
+    public function test_eprice_uae_is_being_crawled()
     {
-        $url = "https://uae.microless.com/product/msi-advanced-gaming-pc-amd-ryzen-7-8700f-8-cores-16-threads-nvidia-rtx-4060-8gb-32gb-ddr5-ram-6000mhz-1tb-ssd-gen-4-650w-80-plus-psu-120mm-tower-cooler-wi-fi-bt-msi-gift-included/";
+        $url = "https://www.eprice.it/d-68636102";
 
-        [$product_store , $product] = $this->create_product_and_assign_it_to_store('Microless UAE', $url);
+        [$product_store , $product] = $this->create_product_and_assign_it_to_store('Eprice', $url);
 
         // crawl the product
-        new Microless($product_store->id);
+        new Eprice($product_store->id);
 
         // get the updated information
         $product->refresh();
@@ -68,9 +67,8 @@ class MicrolessTest extends TestCase
 
         // get product prices
         $this->assertGreaterThan(0, $product_store->price);
+        $this->assertNotNull($product_store->price);
         $this->assertGreaterThan(0, $product_store->lowest_price);
         $this->assertGreaterThan(0, $product_store->highest_price);
     }
-
-
 }

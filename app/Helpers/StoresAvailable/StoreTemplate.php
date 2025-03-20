@@ -507,7 +507,7 @@ abstract class StoreTemplate
 
         $browser = $browser_factory
             ->createBrowser([
-                'headless' => true,
+                'headless' => false,
                 'noSandbox' => true,
                 "headers" => $extra_headers,
                 'userAgent' => self::get_random_user_agent(),
@@ -517,7 +517,7 @@ abstract class StoreTemplate
 
         try {
             $page_event = match (true) {
-                Str::contains($url, ["mediamarket"], true) => Page::DOM_CONTENT_LOADED,
+                Str::contains($url, ["mediamarket", "eprice"], true) => Page::DOM_CONTENT_LOADED,
                 Str::contains($url, ["emax"], true) => Page::INTERACTIVE_TIME,
                 default => Page::NETWORK_IDLE
             };
@@ -666,7 +666,6 @@ abstract class StoreTemplate
                 return json_decode($single_script->__toString(), true);
             }
         }
-
         return [];
     }
 

@@ -47,7 +47,7 @@ class NexthsTest extends TestCase
 
     }
 
-    public function test_newegg_uae_is_being_crawled()
+    public function test_nexths_uae_is_being_crawled()
     {
         $url = "https://www.nexths.it/Products/details/sku/4711081762331";
 
