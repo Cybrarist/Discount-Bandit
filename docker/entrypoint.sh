@@ -50,7 +50,6 @@ php artisan optimize
 
 php artisan make:filament-user --name=$DEFAULT_USER --email=$DEFAULT_EMAIL --password=$DEFAULT_PASSWORD
 
-
 php artisan octane:install --server=frankenphp
 
 Xvfb :99 -screen 0 2000x2000x24 & export DISPLAY=:99
