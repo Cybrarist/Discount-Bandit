@@ -112,6 +112,6 @@ class ProductController extends Controller
 
         $product->update(['snoozed_until' => today()->addDay()]);
 
-        return "Product Snoozed Successfully Until";
+        return "Product Snoozed Successfully Until ".today()->addDay()->toDateTimeString();
     }
 }
