@@ -51,7 +51,7 @@ class AdminPanelProvider extends PanelProvider
                 SpotlightPlugin::make(),
                 EasyFooterPlugin::make()
                     ->withGithub()
-                    ->withLogo(asset("storage/bandit.png"), "https://discount-bandit.cybrarist.com", "v3.4"),
+                    ->withLogo(asset("storage/bandit.png"), "https://discount-bandit.cybrarist.com", "v3.5"),
                 FilamentLogManager::make(),
                 FilamentJobsMonitorPlugin::make(),
                 QuickCreatePlugin::make()

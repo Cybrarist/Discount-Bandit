@@ -224,7 +224,6 @@ abstract class StoreTemplate
             return true;
         }
 
-
         if (config('settings.notify_any_change') && $this->price_crawled_and_different_from_database()) {
             $this->ntfy_tags .= ",Any Change";
             $this->notify();
@@ -333,6 +332,7 @@ abstract class StoreTemplate
     {
         return $this->price &&
             $this->current_record->notify_percentage &&
+            $this->current_record->price &&
             (($this->current_record->price - $this->price) / $this->current_record->price) * 100 >= $this->current_record->notify_percentage;
     }
 
@@ -507,7 +507,7 @@ abstract class StoreTemplate
 
         $browser = $browser_factory
             ->createBrowser([
-                'headless' => true,
+                'headless' => false,
                 'noSandbox' => true,
                 "headers" => $extra_headers,
                 'userAgent' => self::get_random_user_agent(),
@@ -517,7 +517,7 @@ abstract class StoreTemplate
 
         try {
             $page_event = match (true) {
-                Str::contains($url, ["mediamarket"], true) => Page::DOM_CONTENT_LOADED,
+                Str::contains($url, ["mediamarket", "eprice"], true) => Page::DOM_CONTENT_LOADED,
                 Str::contains($url, ["emax"], true) => Page::INTERACTIVE_TIME,
                 default => Page::NETWORK_IDLE
             };
@@ -535,7 +535,8 @@ abstract class StoreTemplate
             return $page->getHtml();
             // too long to load
         } catch (Exception $exception) {
-            self::log_error("Crawling using chrome", $exception->getMessage());
+            Log::error("Crawling using chrome");
+            Log::error($exception->getMessage());
         }
 
         return "";
@@ -631,7 +632,8 @@ abstract class StoreTemplate
             }
             $history->update($to_update);
         } catch (Exception $exception) {
-            self::log_error("Couldn't update the price history", $exception->getMessage());
+            Log::error("Couldn't update the price history");
+            Log::error($exception->getMessage());
         }
     }
 

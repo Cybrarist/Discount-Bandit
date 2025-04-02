@@ -11,4 +11,9 @@ Route::middleware('signed')
 
         Route::withoutMiddleware('auth')
             ->get('temp/groups/{group}', [\App\Http\Controllers\GroupController::class, 'show'])->name('groups.show');
+
+        Route::withoutMiddleware('auth')
+            ->get('temp/products/{product}/snooze', [\App\Http\Controllers\ProductController::class, 'snooze'])
+            ->name('products.snooze');
+
     });

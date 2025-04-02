@@ -129,30 +129,30 @@ class StoresRelationManager extends RelationManager
                     }),
             ])
             ->actions([
-                Tables\Actions\EditAction::make()->form(fn (Tables\Actions\EditAction $action): array => [
-                    Forms\Components\Checkbox::make('add_shipping')
-                        ->label('Shipping'),
+                Tables\Actions\EditAction::make()
+                    ->form(fn (Tables\Actions\EditAction $action): array => [
+                        Forms\Components\Checkbox::make('add_shipping')
+                            ->label('Shipping'),
 
-                    Forms\Components\TextInput::make('price')
-                        ->disabled()
-                        ->dehydrated(false)
-                        ->label('Current Price')
-                        ->suffix(CurrencyHelper::get_currencies(currency_id: $action->getRecord()->currency_id)),
+                        Forms\Components\TextInput::make('price')
+                            ->disabled()
+                            ->dehydrated(false)
+                            ->label('Current Price')
+                            ->suffix(CurrencyHelper::get_currencies(currency_id: $action->getRecord()->currency_id)),
 
-                    Forms\Components\TextInput::make('notify_price')
-                        ->numeric()
-                        ->step(0.01)
-                        ->label('Notify when cheaper than')
-                        ->suffix(CurrencyHelper::get_currencies(currency_id: $action->getRecord()->currency_id)),
+                        Forms\Components\TextInput::make('notify_price')
+                            ->numeric()
+                            ->step(0.01)
+                            ->label('Notify when cheaper than')
+                            ->suffix(CurrencyHelper::get_currencies(currency_id: $action->getRecord()->currency_id)),
+                    ])->using(function ($record, array $data) {
+                        $record->products()->updateExistingPivot($this->ownerRecord->id, [
+                            'notify_price' => $data['notify_price'] * 100,
+                            'add_shipping' => $data['add_shipping'],
+                        ]);
 
-                ])->using(function ($record, array $data) {
-                    $record->products()->updateExistingPivot($this->ownerRecord->id, [
-                        'notify_price' => $data['notify_price'] * 100,
-                        'add_shipping' => $data['add_shipping'],
-                    ]);
-
-                    return $record;
-                }),
+                        return $record;
+                    }),
 
                 Tables\Actions\DetachAction::make()->label("Remove")->after(function ($record) {
                     if (ProductStore::where([
