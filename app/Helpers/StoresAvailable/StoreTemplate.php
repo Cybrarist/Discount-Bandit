@@ -224,7 +224,6 @@ abstract class StoreTemplate
             return true;
         }
 
-
         if (config('settings.notify_any_change') && $this->price_crawled_and_different_from_database()) {
             $this->ntfy_tags .= ",Any Change";
             $this->notify();
@@ -333,6 +332,7 @@ abstract class StoreTemplate
     {
         return $this->price &&
             $this->current_record->notify_percentage &&
+            $this->current_record->price &&
             (($this->current_record->price - $this->price) / $this->current_record->price) * 100 >= $this->current_record->notify_percentage;
     }
 
@@ -666,6 +666,7 @@ abstract class StoreTemplate
                 return json_decode($single_script->__toString(), true);
             }
         }
+
         return [];
     }
 
