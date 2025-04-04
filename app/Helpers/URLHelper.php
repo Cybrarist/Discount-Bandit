@@ -157,12 +157,21 @@ class URLHelper
 
     public function get_eprice_key(): string
     {
-        return "d-" . explode("/d-", $this->path)[1];
+        return "d-".explode("/d-", $this->path)[1];
     }
 
     public function get_flipkart_key(): string
     {
         return Str::after($this->path, 'itm');
+    }
+
+    public function get_homedepot_key(): string
+    {
+        $paths = explode("/p/", $this->path);
+
+        $last_path = explode("/", $paths[1]);
+
+        return $last_path[count($last_path) - 1];
     }
 
     public function get_mediamarkt_key(): string
