@@ -145,9 +145,16 @@ class StoresRelationManager extends RelationManager
                             ->step(0.01)
                             ->label('Notify when cheaper than')
                             ->suffix(CurrencyHelper::get_currencies(currency_id: $action->getRecord()->currency_id)),
+
+                        Forms\Components\TextInput::make('notify_percentage')
+                            ->numeric()
+                            ->step(0.01)
+                            ->label('Notify percentage'),
+
                     ])->using(function ($record, array $data) {
                         $record->products()->updateExistingPivot($this->ownerRecord->id, [
                             'notify_price' => $data['notify_price'] * 100,
+                            'notify_percentage' => $data['notify_percentage'] * 100,
                             'add_shipping' => $data['add_shipping'],
                         ]);
 

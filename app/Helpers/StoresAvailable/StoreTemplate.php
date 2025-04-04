@@ -472,6 +472,7 @@ abstract class StoreTemplate
         //        dd($output);
 
         return Http::withUserAgent(self::get_random_user_agent())
+            ->timeout(10)
             ->withHeaders(
                 array_merge([
                     'Accept' => '*/*',
@@ -500,25 +501,33 @@ abstract class StoreTemplate
      */
     public static function get_website_chrome(string $url, array $extra_headers = []): string
     {
-
         $browser = app()->isProduction() ? 'chromium' : null;
 
         $browser_factory = new BrowserFactory($browser);
 
+        $options = [
+            //            'keepAlive' => true,
+            'connectionDelay' => 1,
+            'headless' => false,
+            'noSandbox' => true,
+            "headers" => $extra_headers,
+            'userAgent' => self::get_random_user_agent($url),
+            'customFlags' => ['--lang=en-US', '--disable-blink-features=AutomationControlled'],
+        ];
+
+        if (! $options['userAgent']) {
+            unset($options['userAgent']);
+        }
+
         $browser = $browser_factory
-            ->createBrowser([
-                'headless' => false,
-                'noSandbox' => true,
-                "headers" => $extra_headers,
-                'userAgent' => self::get_random_user_agent(),
-            ]);
+            ->createBrowser($options);
 
         $page = $browser->createPage();
 
         try {
             $page_event = match (true) {
                 Str::contains($url, ["mediamarket", "eprice"], true) => Page::DOM_CONTENT_LOADED,
-                Str::contains($url, ["emax"], true) => Page::INTERACTIVE_TIME,
+                Str::contains($url, ["emax", "homedepot"], true) => Page::INTERACTIVE_TIME,
                 default => Page::NETWORK_IDLE
             };
 
@@ -653,6 +662,8 @@ abstract class StoreTemplate
             Str::contains($url, "noon.com", true) => self::NOON_AGENT,
             Str::contains($url, "argos.co.uk", true) => Arr::random(self::ARGOS_AGENTS),
             Str::contains($url, "walmart", true) => Str::random(),
+            Str::contains($url, "homedepot", true) => "",
+
             default => Arr::random(self::USER_AGENTS)
         };
     }
