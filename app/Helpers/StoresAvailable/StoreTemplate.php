@@ -506,13 +506,14 @@ abstract class StoreTemplate
         $browser_factory = new BrowserFactory($browser);
 
         $options = [
-            //            'keepAlive' => true,
+//                        'keepAlive' => true,
             'connectionDelay' => 1,
             'headless' => false,
             'noSandbox' => true,
             "headers" => $extra_headers,
             'userAgent' => self::get_random_user_agent($url),
-            'customFlags' => ['--lang=en-US', '--disable-blink-features=AutomationControlled'],
+            'customFlags' => ['--lang=en-US', '--disable-blink-features=AutomationControlled', '--deny-permission-prompts=true'],
+            'disableNotifications' => true,
         ];
 
         if (! $options['userAgent']) {
@@ -527,16 +528,37 @@ abstract class StoreTemplate
         try {
             $page_event = match (true) {
                 Str::contains($url, ["mediamarket", "eprice"], true) => Page::DOM_CONTENT_LOADED,
-                Str::contains($url, ["emax", "homedepot"], true) => Page::INTERACTIVE_TIME,
+                Str::contains($url, ["emax"], true) => Page::INTERACTIVE_TIME,
+                Str::contains($url, ["homedepot"], true) => Page::LOAD,
+
                 default => Page::NETWORK_IDLE
             };
 
             $timeout = match (true) {
                 Str::contains($url, ["bestbuy", "canadiantire"], true) => 20000,
+                Str::contains($url, ["homedepot"], true) => 30000,
                 default => 10000
             };
 
-            $page->navigate($url)->waitForNavigation($page_event, $timeout);
+            try {
+                $page->navigate($url)
+                    ->waitForNavigation($page_event, $timeout);
+
+                //todo change in v4
+                if (Str::contains($url, "homedepot.ca", true)) {
+
+                    $page->waitUntilContainsElement('.hdca-modal__content');
+
+                    $page->mouse()
+                        ->move(10, 10)
+                        ->click();
+
+                    $page->waitUntilContainsElement('.hdca-product__description-pricing-price-value');
+                }
+
+            } catch (Exception $e) {
+                Log::error("couldn't crawl $url");
+            }
 
             return $page->getHtml();
 

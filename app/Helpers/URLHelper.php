@@ -167,7 +167,11 @@ class URLHelper
 
     public function get_homedepot_key(): string
     {
-        $paths = explode("/p/", $this->path);
+
+        $paths = match ($this->domain) {
+            'homedepot.ca' => explode('/product/', $this->path),
+            'homedepot.com' => explode('/p/', $this->path),
+        };
 
         $last_path = explode("/", $paths[1]);
 

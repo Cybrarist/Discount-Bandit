@@ -10,6 +10,8 @@ class Homedepot extends StoreTemplate
 {
     const string MAIN_URL = "https://www.store/p/product_id";
 
+    const string CANADA_URL = "https://www.store/product/adsasdasdasd/product_id";
+
     private $product_schema;
 
     public function __construct(int $product_store_id)
@@ -71,9 +73,16 @@ class Homedepot extends StoreTemplate
 
         try {
             $this->image = $this->document->getElementById("thd-helmet__meta--ogImage")->getAttribute("content");
-
+            return;
         } catch (Throwable $exception) {
             $this->log_error("Product Image Second Method", $exception->getMessage());
+        }
+
+        try {
+            $this->image = $this->xml->xpath("//img[@class='acl-image__image']")[0]->attributes()['src'];
+            return;
+        } catch (Throwable $exception) {
+            $this->log_error("Product Image Third Method", $exception->getMessage());
         }
 
     }
@@ -107,8 +116,18 @@ class Homedepot extends StoreTemplate
             $price_div = $this->xml->xpath("//div[@id='standard-price']//div//span");
 
             $this->price = (float) $price_div[1]->__toString().$price_div[2]->__toString().$price_div[3]->__toString();
+            return;
         } catch (Throwable $exception) {
             $this->log_error("Price Third Method", $exception->getMessage());
+        }
+
+        try {
+            $price_div = $this->xml->xpath("//span[@class='hdca-product__description-pricing-price-value']");
+
+            $this->price = (float) GeneralHelper::get_numbers_only_with_dot($price_div[0]->__toString());
+            return;
+        } catch (Throwable $exception) {
+            $this->log_error("Price Fourth Method", $exception->getMessage());
         }
 
     }
@@ -145,8 +164,15 @@ class Homedepot extends StoreTemplate
 
         try {
             $this->no_of_rates = (int) GeneralHelper::get_numbers_only($this->xml->xpath("//span[@id='product-details__review__target']/button/span")[1]->__toString());
+            return;
         } catch (Throwable $exception) {
             $this->log_error("Second Method No. Of Rates", $exception->getMessage());
+        }
+        try {
+            $this->no_of_rates = (int) GeneralHelper::get_numbers_only($this->xml->xpath("//span[@class='acl-rating__reviews']")[0]->__toString());
+            return;
+        } catch (Throwable $exception) {
+            $this->log_error("Third Method No. Of Rates", $exception->getMessage());
         }
     }
 
@@ -160,8 +186,18 @@ class Homedepot extends StoreTemplate
 
         try {
             $this->rating = Str::remove(' stars', $this->xml->xpath("//button[@data-testid='rating-button']/span")[0]->attributes()['aria-label']->__toString(), false);
+
+            return;
         } catch (Throwable $exception) {
             $this->log_error("Second Method The Rate", $exception->getMessage());
+        }
+
+        try {
+            $this->rating = $this->xml->xpath("//span[@class='bvseo-ratingValue']")[0]->__toString();
+
+            return;
+        } catch (Throwable $exception) {
+            $this->log_error("Third Method The Rate", $exception->getMessage());
         }
 
     }
@@ -183,10 +219,16 @@ class Homedepot extends StoreTemplate
 
     public static function prepare_url($domain, $product, $store = null): string
     {
+
+        $url_to_use = match ($domain) {
+            'homedepot.com' => self::MAIN_URL,
+            'homedepot.ca' => self::CANADA_URL
+        };
+
         return Str::replace(
             ["store", "product_id"],
             [$domain, $product],
-            self::MAIN_URL);
+            $url_to_use);
     }
 
     public function is_system_detected_as_robot(): bool
