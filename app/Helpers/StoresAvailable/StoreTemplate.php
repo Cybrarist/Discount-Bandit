@@ -46,7 +46,7 @@ abstract class StoreTemplate
         "Mozilla/5.0 (Windows; U; Windows NT 6.1; ko-KR) AppleWebKit/533.20.25  Version/5.0.4 Safari/533.20.27",
     ];
 
-    const string OTHER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:88.0) Gecko/20100101 Firefox/88.0";
+    const string OTHER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:137.0) Gecko/20100101 Firefox/137.0";
 
     const string NOON_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:127.0) Gecko/20100101 Firefox/127.0";
 
@@ -124,7 +124,7 @@ abstract class StoreTemplate
      */
     public function crawl_url(array $extra_headers = []): void
     {
-        $response = self::get_website($this->product_url, $extra_headers);
+        $response = self::get_website($this->product_url, [], $extra_headers);
         self::prepare_dom($response, $this->document, $this->xml);
     }
 
@@ -442,7 +442,6 @@ abstract class StoreTemplate
      */
     public static function get_website(string $url, array $data = [], array $extra_headers = []): Response
     {
-
         // todo move the the extra headers to single stores files
         $extra_headers = match (true) {
             Str::contains($url, "argos.co.uk", true) => [
@@ -454,25 +453,8 @@ abstract class StoreTemplate
             default => $extra_headers
         };
 
-        //        $creq = curl_init();
-        //
-        //
-        //        curl_setopt_array($creq, array(
-        //            CURLOPT_URL => $url,
-        //            CURLOPT_RETURNTRANSFER => true,
-        //            CURLOPT_POST => true,
-        //            CURLOPT_ENCODING => '',
-        //            CURLINFO_HEADER_OUT => true,
-        //            CURLOPT_POSTFIELDS => $data,
-        //            CURLOPT_FOLLOWLOCATION => false
-        //        ));
-        //
-        //        $output = curl_exec($creq);
-
-        //        dd($output);
-
         return Http::withUserAgent(self::get_random_user_agent())
-            ->timeout(10)
+            ->timeout(5)
             ->withHeaders(
                 array_merge([
                     'Accept' => '*/*',
@@ -506,7 +488,7 @@ abstract class StoreTemplate
         $browser_factory = new BrowserFactory($browser);
 
         $options = [
-//                        'keepAlive' => true,
+            //                        'keepAlive' => true,
             'connectionDelay' => 1,
             'headless' => false,
             'noSandbox' => true,
@@ -544,7 +526,7 @@ abstract class StoreTemplate
                 $page->navigate($url)
                     ->waitForNavigation($page_event, $timeout);
 
-                //todo change in v4
+                // todo change in v4
                 if (Str::contains($url, "homedepot.ca", true)) {
 
                     $page->waitUntilContainsElement('.hdca-modal__content');
