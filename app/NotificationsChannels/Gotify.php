@@ -27,7 +27,7 @@ class Gotify
         $url = "{$baseUrl}/message?token={$token}";
 
         $data = [
-            "title" => $notification_title['Title'],
+            "title" => $notification_title['title'],
             "message" => Str::replace("<br>", "\n", $notification_content),
         ];
 

@@ -64,8 +64,8 @@ class ProductHelper
             ->orderBy("date", "desc")
             ->selectRaw(
                 "store_id,
-            date,
-            price,
+                date,
+                price,
             $concat   as con_date"
             )
             ->get()
