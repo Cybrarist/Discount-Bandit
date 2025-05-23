@@ -509,7 +509,7 @@ abstract class StoreTemplate
 
         try {
             $page_event = match (true) {
-                Str::contains($url, ["mediamarket", "eprice"], true) => Page::DOM_CONTENT_LOADED,
+                Str::contains($url, ["mediamarket", "eprice", "ebay"], true) => Page::DOM_CONTENT_LOADED,
                 Str::contains($url, ["emax"], true) => Page::INTERACTIVE_TIME,
                 Str::contains($url, ["homedepot"], true) => Page::LOAD,
 
