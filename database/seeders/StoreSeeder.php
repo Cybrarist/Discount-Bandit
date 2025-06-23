@@ -548,6 +548,18 @@ class StoreSeeder extends Seeder
                 'image' => 'eprice.png',
                 'currency_id' => Currency::firstOrCreate(['code' => '€'])->id,
                 'slug' => 'eprice_it',
+            ], [
+                'name' => 'Homedepot USA',
+                'domain' => 'homedepot.com',
+                'image' => 'homedepot.svg',
+                'currency_id' => Currency::firstOrCreate(['code' => '$'])->id,
+                'slug' => 'homedepot_com',
+            ], [
+                'name' => 'Homedepot Canada',
+                'domain' => 'homedepot.ca',
+                'image' => 'homedepot.svg',
+                'currency_id' => Currency::firstOrCreate(['code' => '$'])->id,
+                'slug' => 'homedepot_ca',
             ],
         ];
 

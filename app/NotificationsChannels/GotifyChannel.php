@@ -20,6 +20,6 @@ class GotifyChannel
     {
         $message = $notification->toGotify($notifiable);
 
-        return $this->gotify->send(notification_title: $message["headers"], notification_content: $message["content"]);
+        return $this->gotify->send(notification_title: ['title' => $message["title"]], notification_content: $message["message"]);
     }
 }

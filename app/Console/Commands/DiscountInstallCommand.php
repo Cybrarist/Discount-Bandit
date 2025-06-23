@@ -322,14 +322,15 @@ class DiscountInstallCommand extends Command
             hint: ($os == "linux" || $os == "mac") ? "/var/www/discount" : "C:\\path\\to\\project"
         );
 
+
         if ($how_to_run == "cron" && ($os == "mac" || $os == "linux")) {
             $this->setup_cron_linux($path, $project);
         } elseif ($how_to_run == "terminal" && ($os == "mac" || $os == "linux")) {
             $this->setup_terminal_linux($path, $project);
         } elseif ($how_to_run == "cron" && $os == "windows") {
-            $this->setup_cron_windows($path, $os);
+            $this->setup_cron_windows($path, $project);
         } elseif ($how_to_run == "terminal" && $os == "windows") {
-            $this->setup_terminal_windows($path, $os);
+            $this->setup_terminal_windows($path, $project);
         }
 
     }
