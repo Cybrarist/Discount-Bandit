@@ -76,9 +76,7 @@ class Amazon extends StoreTemplate
     {
 
         try {
-            $title = explode(":", $this->document->getElementsByTagName("title")->item(0)->textContent);
-
-            $this->name = (count($title) > 1) ? $title[0] : $title[1];
+            $this->name =  $this->document->getElementsByTagName("title")->item(0)->textContent;
 
             return;
         } catch (Throwable $exception) {
