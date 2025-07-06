@@ -16,6 +16,7 @@ use DOMDocument;
 use Exception;
 use Filament\Notifications\Notification;
 use HeadlessChromium\BrowserFactory;
+use HeadlessChromium\Exception\BrowserConnectionFailed;
 use HeadlessChromium\Exception\OperationTimedOut;
 use HeadlessChromium\Page;
 use Illuminate\Http\Client\ConnectionException;
@@ -483,12 +484,18 @@ abstract class StoreTemplate
      */
     public static function get_website_chrome(string $url, array $extra_headers = []): string
     {
-        $browser = app()->isProduction() ? 'chromium' : null;
 
-        $browser_factory = new BrowserFactory($browser);
+        // path to the file to store websocket's uri
+        $socketFile = '/tmp/chrome-php-demo-socket';
+
+        if (! file_exists($socketFile)) {
+            file_put_contents($socketFile, '');
+        }
+
+        $socket = \file_get_contents($socketFile);
 
         $options = [
-            //                        'keepAlive' => true,
+            //
             'connectionDelay' => 1,
             'headless' => false,
             'noSandbox' => true,
@@ -496,14 +503,26 @@ abstract class StoreTemplate
             'userAgent' => self::get_random_user_agent($url),
             'customFlags' => ['--lang=en-US', '--disable-blink-features=AutomationControlled', '--deny-permission-prompts=true'],
             'disableNotifications' => true,
+            'keepAlive' => true,
         ];
 
         if (! $options['userAgent']) {
             unset($options['userAgent']);
         }
 
-        $browser = $browser_factory
-            ->createBrowser($options);
+        try {
+            $browser = BrowserFactory::connectToBrowser($socket);
+        } catch (BrowserConnectionFailed $e) {
+            $browserType = app()->isProduction() ? 'chromium' : null;
+
+            // The browser was probably closed, start it again
+            $browser_factory = new BrowserFactory($browserType);
+
+            $browser = $browser_factory
+                ->createBrowser($options);
+            // save the uri to be able to connect again to browser
+            \file_put_contents($socketFile, $browser->getSocketUri(), LOCK_EX);
+        }
 
         $page = $browser->createPage();
 
@@ -542,15 +561,25 @@ abstract class StoreTemplate
                 Log::error("couldn't crawl $url");
             }
 
-            return $page->getHtml();
+            $html = $page->getHtml();
+            $page->close();
+
+            return $html;
 
         } catch (OperationTimedOut $e) {
-            return $page->getHtml();
+            $html = $page->getHtml();
+            $page->close();
+
+            return $html;
             // too long to load
         } catch (Exception $exception) {
             Log::error("Crawling using chrome");
             Log::error($exception->getMessage());
+            $page->close();
+
         }
+
+        $page->close();
 
         return "";
     }
