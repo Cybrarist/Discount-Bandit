@@ -512,7 +512,7 @@ abstract class StoreTemplate
 
         try {
             $browser = BrowserFactory::connectToBrowser($socket);
-        } catch (BrowserConnectionFailed $e) {
+        } catch (Exception $e) {
             $browserType = app()->isProduction() ? 'chromium' : null;
 
             // The browser was probably closed, start it again
@@ -521,7 +521,7 @@ abstract class StoreTemplate
             $browser = $browser_factory
                 ->createBrowser($options);
             // save the uri to be able to connect again to browser
-            \file_put_contents($socketFile, $browser->getSocketUri(), LOCK_EX);
+            file_put_contents($socketFile, $browser->getSocketUri(), LOCK_EX);
         }
 
         $page = $browser->createPage();
@@ -554,6 +554,8 @@ abstract class StoreTemplate
                     $page->mouse()
                         ->move(10, 10)
                         ->click();
+
+                    $page->waitUntilContainsElement('.hdca-product__description-pricing-price-value');
 
                 }
 

@@ -21,7 +21,7 @@ class Noon extends StoreTemplate
 
     public function crawler(): void
     {
-        parent::crawl_url();
+        parent::crawl_url_chrome();
     }
 
     public function prepare_sections_to_crawl(): void
