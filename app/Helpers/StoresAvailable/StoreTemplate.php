@@ -492,7 +492,7 @@ abstract class StoreTemplate
             file_put_contents($socketFile, '');
         }
 
-        $socket = \file_get_contents($socketFile);
+        $socket = file_get_contents($socketFile);
 
         $options = [
             //
@@ -548,13 +548,13 @@ abstract class StoreTemplate
                 // todo change in v4
                 if (Str::contains($url, "homedepot.ca", true)) {
 
-                    $page->waitUntilContainsElement('.hdca-modal__content');
+
+                    $page->waitUntilContainsElement('.hdca-modal__content , .hdca-product__description-pricing-price-value');
 
                     $page->mouse()
                         ->move(10, 10)
                         ->click();
 
-                    $page->waitUntilContainsElement('.hdca-product__description-pricing-price-value');
                 }
 
             } catch (Exception $e) {
