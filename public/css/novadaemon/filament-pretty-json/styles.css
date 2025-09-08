@@ -1,0 +1,61 @@
+.prettyjson-container {
+  position: relative;
+  min-width: 0;
+  flex: 1;
+}
+
+pre.prettyjson {
+  color: black;
+  background-color: rgba(0, 0, 0, 0);
+  border: 1px solid rgb(229, 231, 235);
+  border-radius: 0.5rem;
+  padding: 10px 20px;
+  overflow: auto;
+  font-size: 12px;
+  position: relative;
+}
+
+:is(.dark) pre.prettyjson {
+  opacity: 0.7;
+  --tw-bg-opacity: 1;
+  --tw-border-opacity: 1;
+  border: 1px solid rgb(75 85 99 / var(--tw-border-opacity));
+  color: rgb(209 213 219 / var(--tw-text-opacity));
+}
+
+:is(.dark) pre.prettyjson span.json-key {
+  color: red !important;
+}
+
+:is(.dark) pre.prettyjson span.json-string {
+  color: aquamarine !important;
+}
+
+:is(.dark) pre.prettyjson span.json-value {
+  color: deepskyblue !important;
+}
+
+.copy-button {
+  position: absolute;
+  right: 15px;
+  top: 10px;
+  width: 20px;
+  height: 20px;
+  text-align: center;
+  line-height: 20px;
+  cursor: pointer;
+  color: rgb(156 163 175);
+  border: none;
+  outline: none;
+  z-index: 50;
+}
+
+.copy-button:hover {
+  color: rgb(75 85 99);
+}
+
+.copy-button:active,
+.copy-button:focus {
+  border: none;
+  outline: none;
+}
