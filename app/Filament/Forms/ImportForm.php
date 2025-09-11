@@ -12,6 +12,7 @@ use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Wizard\Step;
+use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -22,6 +23,7 @@ class ImportForm
         ini_set('max_execution_time', 6000);
 
         return Action::make('Import')
+            ->icon(Heroicon::ArrowUpCircle)
             ->steps([
                 Step::make('Database')
                     ->description('Select Database Type')
@@ -163,7 +165,6 @@ class ImportForm
                             ->get();
 
                         foreach ($product_stores as $product_store) {
-
                             $new_link = ProductLink::updateOrCreate(
                                 [
                                     'key' => $product_store->key,
