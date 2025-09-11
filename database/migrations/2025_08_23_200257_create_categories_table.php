@@ -16,7 +16,7 @@ return new class extends Migration
             $table->timestamps();
 
             $table->string('name');
-            $table->string('color');
+            $table->string('color')->nullable();
 
             $table->foreignIdFor(\App\Models\User::class)->constrained();
         });

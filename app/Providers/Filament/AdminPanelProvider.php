@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Enums\RoleEnum;
+use App\Filament\Forms\ImportForm;
 use App\Filament\Pages\Auth\Login;
 use App\Filament\Pages\Auth\Register;
 use Boquizo\FilamentLogViewer\FilamentLogViewerPlugin;
@@ -46,6 +47,9 @@ class AdminPanelProvider extends PanelProvider
                 Action::make('settings')
                     ->url(fn (): string => route('filament.admin.resources.users.edit', ['record' => Auth::id()]))
                     ->icon('heroicon-o-cog-6-tooth'),
+
+                ImportForm::configure()
+
             ])
             ->brandName(name: config('app.name'))
             ->brandLogo(asset("storage/bandit.png"))

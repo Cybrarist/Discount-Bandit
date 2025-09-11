@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ProductStatusEnum;
 use App\Models\Scopes\UserOwnedScope;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -22,7 +23,6 @@ class Product extends Model
         'status',
         'user_id',
         'is_favourite',
-        'is_shipping_considered',
         'is_in_stock',
         'snoozed_until',
         'max_notifications_daily',
@@ -36,6 +36,7 @@ class Product extends Model
     {
         return [
             'snoozed_until' => 'date',
+            'status' => ProductStatusEnum::class,
         ];
     }
 
