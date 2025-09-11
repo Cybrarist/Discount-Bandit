@@ -40,7 +40,6 @@ return new class extends Migration
             $table->foreignIdFor(Product::class)->constrained();
             $table->foreignIdFor(User::class)->constrained();
 
-            $table->unique(['key', 'store_id', 'product_id','user_id'], 'key_store_product_user_unique');
         });
     }
 
