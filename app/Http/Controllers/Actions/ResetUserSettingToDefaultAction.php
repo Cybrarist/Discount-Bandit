@@ -20,14 +20,11 @@ class ResetUserSettingToDefaultAction extends Controller
             'ntfy_auth_password' => null,
             'telegram_bot_token' => null,
             'telegram_channel_id' => null,
-            'timezone' => 'UTC',
             'enable_rss_feed' => false,
-            'enable_top_navigation' => true,
             'notify_percentage' => null,
         ];
 
         $customization_settings = [
-            'timezone' => 'UTC',
             'enable_rss_feed' => false,
             'enable_top_navigation' => true,
         ];
@@ -40,7 +37,7 @@ class ResetUserSettingToDefaultAction extends Controller
             'notification_settings' => $notification_settings,
             'customization_settings' => $customization_settings,
             'other_settings' => $other_settings,
-            'rss_feed' => Str::random(256),
+            'rss_feed' => Str::random(250),
         ]);
 
     }

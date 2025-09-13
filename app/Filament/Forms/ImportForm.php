@@ -2,17 +2,23 @@
 
 namespace App\Filament\Forms;
 
+use App\Enums\Icons\Devicons;
 use App\Enums\ProductStatusEnum;
 use App\Models\Category;
+use App\Models\NotificationSetting;
 use App\Models\Product;
 use App\Models\ProductLink;
 use App\Models\Store;
+use Awcodes\Shout\Components\Shout;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Schemas\Components\Wizard\Step;
+use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
+use Filament\Schemas\Components\Utilities\Get;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
@@ -24,59 +30,54 @@ class ImportForm
 
         return Action::make('Import')
             ->icon(Heroicon::ArrowUpCircle)
-            ->steps([
-                Step::make('Database')
-                    ->description('Select Database Type')
-                    ->live()
-                    ->schema([
-                        Select::make('database')
-                            ->options([
-                                'MySQL' => 'MySQL',
-                                'SQLite' => 'SQLite',
-                            ])
-                            ->live()
-                            ->preload()
-                            ->native(false),
+            ->schema([
+                Shout::make('so-important')
+                    ->heading('Important Notice')
+                    ->content('This will reset all data in the application except users.')
+                    ->type('danger'),
+
+                Tabs::make('Tabs')
+                    ->activeTab(1)
+                    ->tabs([
+                        Tab::make('MySQL')
+                            ->icon(Devicons::Mysql)
+                            ->schema([
+                                TextInput::make('host')
+                                    ->placeholder('192.168.1.172')
+                                    ->default('192.168.1.172'),
+
+                                TextInput::make('database_name')
+                                    ->placeholder('discountbandit')
+                                    ->default('discountbandit'),
+
+                                TextInput::make('port')
+                                    ->placeholder(3306)
+                                    ->default(3306),
+
+                                TextInput::make('username')
+                                    ->placeholder('root')
+                                    ->default('root'),
+
+                                TextInput::make('password')
+                                    ->placeholder('***********')
+                                    ->default("5o7377a5lxlO2D%F*e^@r^yt%0yWU!7^H3$@nu#6M04g6IiqG93N5GpP6&JF80G7"),
+                            ]),
+                        Tab::make('SQLite')
+                            ->icon(Devicons::Sqlite)
+                            ->schema([
+                                FileUpload::make('database_file')
+                                    ->maxFiles(1),
+                            ]),
                     ]),
+            ])
+            ->action(function ($data) {
 
-                Step::make('MySQL')
-                    ->visible(fn ($get) => $get('database') == 'MySQL')
-                    ->live()
-                    ->schema([
-                        TextInput::make('host')
-                            ->default('127.0.0.1')
-                            ->required(),
-
-                        TextInput::make('database_name')
-                            ->default('discount_bandit')
-                            ->required(),
-
-                        TextInput::make('port')
-                            ->default(3306)
-                            ->required(),
-
-                        TextInput::make('username')
-                            ->default('root')
-                            ->required(),
-
-                        TextInput::make('password')
-                            ->default("password")
-                            ->required(),
-                    ]),
-
-                Step::make('SQLite')
-                    ->visible(fn ($get) => $get('database') == 'SQLite')
-                    ->description('SQLite Database')
-                    ->live()
-                    ->schema([
-                        FileUpload::make('database_file')
-                            ->maxFiles(1)
-                            ->required(),
-                    ]),
-
-            ])->action(function ($data) {
-
-                if ($data['database'] == 'MySQL') {
+                if ($data['host'] &&
+                    $data['port'] &&
+                    $data['database_name'] &&
+                    $data['username'] &&
+                    $data['password']
+                ) {
                     $database_builder = DB::build([
                         'driver' => 'mysql',
                         'host' => $data['host'],
@@ -85,12 +86,21 @@ class ImportForm
                         'username' => $data['username'],
                         'password' => $data['password'],
                     ]);
-                } elseif ($data['database'] == 'SQLite') {
+                } elseif ($data['database_file']) {
                     $database_builder = DB::build([
                         'driver' => 'sqlite',
                         'database' => storage_path('app/private/'.$data['database_file']),
                     ]);
+                } else {
+                    Notification::make()
+                        ->title('Please Fill all fields for your selected type')
+                        ->danger()
+                        ->send();
+
+                    return;
                 }
+
+                self::reset_all();
 
                 // get all categories
                 self::import_categories($database_builder);
@@ -101,106 +111,159 @@ class ImportForm
             });
     }
 
+    public static function reset_all()
+    {
+        NotificationSetting::truncate();
+        ProductLink::truncate();
+        DB::table('category_product')->truncate();
+        Product::truncate();
+        Category::truncate();
+    }
+
     public static function import_categories($database_builder): void
     {
         $database_builder->table('categories')
             ->chunkById(100, function ($categories) {
+                $new_categories = [];
                 foreach ($categories as $category) {
-                    Category::updateOrCreate([
+                    $new_categories[] = [
                         'name' => $category->name,
                         'user_id' => Auth::id(),
-                    ]);
+                    ];
                 }
+
+                Category::insert($new_categories);
             });
     }
 
     public static function import_products($database_builder): void
     {
 
-        $currentStores = Store::all()->pluck('id', 'name')->toArray();
-        $remoteStores = $database_builder->table('stores')->pluck('name', 'id')->toArray();
+        $current_stores = Store::all()->pluck('id', 'name')->toArray();
+        $remote_stores = $database_builder->table('stores')->pluck('name', 'id')->toArray();
+
+        $old_categories = $database_builder
+            ->table('categories')
+            ->pluck('name', 'id')
+            ->toArray();
+
+        $new_categories = Category::all()
+            ->pluck('id', 'name')
+            ->toArray();
+
+        $start_product_id = 1;
+        $start_product_link_id = 1;
 
         $database_builder->table('products')
-            ->chunkById(100, function ($products) use ($database_builder, $currentStores, $remoteStores) {
-                foreach ($products as $product) {
+            ->chunkById(5, function ($products) use ($database_builder, $old_categories,
+                $current_stores, $remote_stores, $new_categories, &$start_product_id,
+                &$start_product_link_id) {
 
-                    DB::transaction(function () use ($product, $database_builder, $currentStores, $remoteStores) {
-                        $status = match ($product->status) {
-                            'p' => ProductStatusEnum::Active,
-                            'd' => ProductStatusEnum::Disabled,
-                            default => ProductStatusEnum::Silenced,
-                        };
+                $new_products = [];
+                $product_links = [];
+                $product_categories = [];
+                $notification_settings = [];
+                $product_store_histories = [];
 
-                        $new_product = Product::updateOrCreate(
-                            [
-                                'name' => $product->name,
-                                'image' => $product->image,
-                                'user_id' => Auth::id(),
-                            ],
-                            [
-                                'is_favourite' => $product->favourite,
-                                'status' => $status,
-                                'snoozed_until' => $product->snoozed_until,
-                                'max_notifications_daily' => $product->max_notifications,
-                                'notifications_sent' => 0,
-                            ]);
+                $categories_for_current_products_batch = $database_builder
+                    ->table('category_product')
+                    ->whereIn('product_id', $products->pluck('id')->toArray())
+                    ->select([
+                        'category_id',
+                        'product_id',
+                    ])
+                    ->get();
 
-                        // move categories to product
-                        $categories_for_product = $database_builder
-                            ->table('category_product')
-                            ->join('categories', 'category_product.category_id', '=', 'categories.id')
-                            ->where('product_id', $product->id)
-                            ->pluck('categories.name')
-                            ->toArray();
+                $old_products_stores = $database_builder
+                    ->table('product_store')
+                    ->whereIn('product_id', $products->pluck('id')->toArray())
+                    ->get();
 
-                        $categories = Category::whereIn('name', $categories_for_product)
-                            ->pluck('id')
-                            ->toArray();
-                        $new_product->categories()->sync($categories);
+                foreach ($products as $old_product) {
+                    $status = match ($old_product->status) {
+                        'p' => ProductStatusEnum::Active,
+                        'd' => ProductStatusEnum::Disabled,
+                        default => ProductStatusEnum::Silenced,
+                    };
 
-                        // get the product stores
-                        $product_stores = $database_builder
-                            ->table('product_store')
-                            ->where('product_id', $product->id)
-                            ->get();
+                    $new_products[$old_product->id] = [
+                        'new_id' => $start_product_id,
+                        'name' => $old_product->name,
+                        'image' => $old_product->image,
+                        'is_favourite' => $old_product->favourite,
+                        'status' => $status,
+                        'snoozed_until' => $old_product->snoozed_until,
+                        'max_notifications_daily' => $old_product->max_notifications,
+                        'notifications_sent' => 0,
+                        'user_id' => Auth::id(),
+                    ];
 
-                        foreach ($product_stores as $product_store) {
-                            $new_link = ProductLink::updateOrCreate(
-                                [
-                                    'key' => $product_store->key,
-                                    'store_id' => $currentStores[$remoteStores[$product_store->store_id]],
-                                    'product_id' => $new_product->id,
-                                    'user_id' => Auth::id(),
-
-                                ],
-                                [
-                                    'price' => $product_store->price / 100,
-                                    'used_price' => $product_store->used_price / 100,
-                                    'highest_price' => $product_store->highest_price / 100,
-                                    'lowest_price' => $product_store->lowest_price / 100,
-                                    'shipping_price' => $product_store->shipping_price / 100,
-                                    'is_in_stock' => $product_store->in_stock,
-                                    'rating' => $product_store->rate,
-                                    'total_reviews' => $product_store->number_of_rates,
-                                    'seller' => $product_store->seller ?? "",
-                                    'condition' => $product_store->condition,
-                                    'is_official' => true,
-                                ]);
-
-                            $new_link->notification_settings()->create([
-                                'price_desired' => $product_store->notify_price ?? null,
-                                'percentage_drop' => $product_store->notify_percentage,
-                                'price_lowest_in_x_days' => $product->lowest_within,
-                                'is_in_stock' => $product->stock,
-                                'is_official' => $product->only_official,
-                                'user_id' => Auth::id(),
-                                'is_shipping_included' => $product_store->add_shipping,
-                            ]);
-
-                        }
-                    });
+                    $start_product_id++;
                 }
+
+                Product::insert(Arr::select($new_products, [
+                    'name',
+                    'image',
+                    'is_favourite',
+                    'status',
+                    'snoozed_until',
+                    'max_notifications_daily',
+                    'notifications_sent',
+                    'user_id',
+                ]));
+
+                foreach ($categories_for_current_products_batch as $category_product) {
+                    $product_categories[] = [
+                        'category_id' => $new_categories[$old_categories[$category_product->category_id]],
+                        'product_id' => $new_products[$category_product->product_id]['new_id'],
+                    ];
+                }
+
+                DB::table('category_product')
+                    ->insert($product_categories);
+
+                foreach ($old_products_stores as $old_product_store) {
+                    $product_links[$old_product_store->id] = [
+                        'key' => $old_product_store->key,
+                        'store_id' => $current_stores[$remote_stores[$old_product_store->store_id]],
+                        'product_id' => $new_products[$old_product_store->product_id]['new_id'],
+                        'price' => $old_product_store->price * 10,
+                        'used_price' => $old_product_store->used_price * 10,
+                        'highest_price' => $old_product_store->highest_price * 10,
+                        'lowest_price' => $old_product_store->lowest_price * 10,
+                        'shipping_price' => $old_product_store->shipping_price * 10,
+                        'is_in_stock' => $old_product_store->in_stock,
+                        'rating' => $old_product_store->rate,
+                        'total_reviews' => $old_product_store->number_of_rates,
+                        'seller' => $old_product_store->seller ?? "",
+                        'condition' => $old_product_store->condition,
+                        'is_official' => true,
+                        'user_id' => Auth::id(),
+                    ];
+
+                    $notification_settings[$old_product_store->id] = [
+                        'product_link_id' => $start_product_link_id,
+                        'price_desired' => $old_product_store->notify_price ?? null,
+                        'percentage_drop' => $old_product_store->notify_percentage,
+                        'price_lowest_in_x_days' => $old_product->lowest_within,
+                        'is_in_stock' => $old_product->stock,
+                        'is_official' => $old_product->only_official,
+                        'is_shipping_included' => $old_product_store->add_shipping,
+                        'user_id' => Auth::id(),
+                    ];
+
+                    $start_product_link_id++;
+                }
+
+                ProductLink::insert($product_links);
+                NotificationSetting::insert($notification_settings);
+
+                Notification::make()
+                    ->title('Imported '.count($products).' products')
+                    ->success()
+                    ->send();
             });
 
     }
+
 }
