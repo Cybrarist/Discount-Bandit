@@ -108,11 +108,13 @@ class ImportForm
 
     public static function reset_all()
     {
+        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
         NotificationSetting::truncate();
         ProductLink::truncate();
         DB::table('category_product')->truncate();
         Product::truncate();
         Category::truncate();
+        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
     }
 
     public static function import_categories($database_builder): void
