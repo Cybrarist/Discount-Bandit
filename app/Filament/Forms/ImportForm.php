@@ -43,24 +43,19 @@ class ImportForm
                             ->icon(Devicons::Mysql)
                             ->schema([
                                 TextInput::make('host')
-                                    ->placeholder('192.168.1.172')
-                                    ->default('192.168.1.172'),
+                                    ->placeholder('127.0.0.1'),
 
                                 TextInput::make('database_name')
-                                    ->placeholder('discountbandit')
-                                    ->default('discountbandit'),
+                                    ->placeholder('discountbandit'),
 
                                 TextInput::make('port')
-                                    ->placeholder(3306)
-                                    ->default(3306),
+                                    ->placeholder(3306),
 
                                 TextInput::make('username')
-                                    ->placeholder('root')
-                                    ->default('root'),
+                                    ->placeholder('root'),
 
                                 TextInput::make('password')
-                                    ->placeholder('***********')
-                                    ->default("5o7377a5lxlO2D%F*e^@r^yt%0yWU!7^H3$@nu#6M04g6IiqG93N5GpP6&JF80G7"),
+                                    ->placeholder('***********'),
                             ]),
                         Tab::make('SQLite')
                             ->icon(Devicons::Sqlite)
