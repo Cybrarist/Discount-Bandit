@@ -39,6 +39,8 @@ class User extends Authenticatable implements FilamentUser
         'notification_settings.ntfy_auth_token',
         'notification_settings.telegram_bot_token',
         'notification_settings.telegram_channel_id',
+        'notification_settings.gotify_url',
+        'notification_settings.gotify_token',
         'notification_settings.enable_rss_feed',
         'customization_settings',
         'customization_settings.timezone',
@@ -87,13 +89,24 @@ class User extends Authenticatable implements FilamentUser
         return $this->belongsTo(Currency::class);
     }
 
-    public function product_links()
+    public function links()
     {
-        return $this->hasMany(ProductLink::class);
+        return $this->hasMany(Link::class);
     }
 
     public function rss_feed_items(): HasMany
     {
         return $this->hasMany(RssFeedItem::class);
+    }
+
+
+    public function categories(): HasMany
+    {
+        return $this->hasMany(Category::class);
+    }
+
+    public function products(): HasMany
+    {
+        return $this->hasMany(Product::class);
     }
 }

@@ -5,7 +5,7 @@ namespace App\Classes\Stores;
 use App\Classes\Crawler\SimpleCrawler;
 use App\Classes\StoreTemplate;
 use App\Helpers\GeneralHelper;
-use App\Models\ProductLink;
+use App\Models\Link;
 use Illuminate\Support\Str;
 
 use function Laravel\Prompts\warning;
@@ -14,18 +14,18 @@ class Emaxme extends StoreTemplate
 {
     const string MAIN_URL = "https://uae.[domain]/[product_key].html";
 
-    public function __construct(ProductLink $product_link, array $extra_headers = [], ?string $user_agent = '')
+    public function __construct(Link $link, array $extra_headers = [], ?string $user_agent = '')
     {
 
         $this->chromium_crawler = true;
-        parent::__construct($product_link);
+        parent::__construct($link);
     }
 
-    public static function prepare_url(ProductLink $product_link, $extra = []): string
+    public static function prepare_url(Link $link, $extra = []): string
     {
         return Str::replace(
             ["[domain]", "[product_key]"],
-            [$product_link->store->domain, $product_link->key],
+            [$link->store->domain, $link->key],
             self::MAIN_URL);
     }
 

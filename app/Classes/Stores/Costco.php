@@ -5,11 +5,13 @@ namespace App\Classes\Stores;
 use App\Classes\Crawler\SimpleCrawler;
 use App\Classes\StoreTemplate;
 use App\Helpers\GeneralHelper;
-use App\Models\ProductLink;
+use App\Models\Link;
 use Illuminate\Support\Str;
 
 use function Laravel\Prompts\warning;
 
+
+//todo not working properly
 class Costco extends StoreTemplate
 {
     const string MAIN_URL = "https://[domain]/.product.[product_key].html";
@@ -22,25 +24,23 @@ class Costco extends StoreTemplate
         'Accept-Encoding' => "gzip, deflate, br, zstd",
         'Cache-Control' => "no-cache",
         'Connection' => "keep-alive",
-
     ];
 
-    public function __construct(ProductLink $product_link, array $extra_headers = [], ?string $user_agent = '')
+    public function __construct(Link $link, array $extra_headers = [], ?string $user_agent = '')
     {
-
         $this->user_agent = "User-Agent: Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/121.0.0.0 Safari/537.36";
 
         $this->extra_headers = $extra_headers + $this->extra_headers;
         $this->chromium_crawler = true;
 
-        parent::__construct($product_link);
+        parent::__construct($link);
     }
 
-    public static function prepare_url(ProductLink $product_link, $extra = []): string
+    public static function prepare_url(Link $link, $extra = []): string
     {
-        return match ($product_link->store->domain) {
-            "costco.com","costco.ca" => Str::replace(["[domain]", "[product_key]"], [$product_link->store->domain, Str::upper($product_link->key)], self::MAIN_URL),
-            "costco.com.mx", "costco.co.uk" , "costco.co.kr" , "costco.com.tw","costco.co.jp","costco.com.au","costco.is" => Str::replace(["[domain]", "[product_key]"], [$product_link->store->domain, Str::upper($product_link->key)], self::SECONDARY_URL),
+        return match ($link->store->domain) {
+            "costco.com","costco.ca" => Str::replace(["[domain]", "[product_key]"], [$link->store->domain, Str::upper($link->key)], self::MAIN_URL),
+            "costco.com.mx", "costco.co.uk" , "costco.co.kr" , "costco.com.tw","costco.co.jp","costco.com.au","costco.is" => Str::replace(["[domain]", "[product_key]"], [$link->store->domain, Str::upper($link->key)], self::SECONDARY_URL),
         };
     }
 
@@ -179,7 +179,7 @@ class Costco extends StoreTemplate
         warning("system detected as bot, trying other method");
 
         $other_buying_url = static::prepare_url(
-            $this->product_link
+            $this->link
         );
 
         $this->dom = new SimpleCrawler(

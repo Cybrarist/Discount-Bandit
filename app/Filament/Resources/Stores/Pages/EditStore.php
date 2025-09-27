@@ -6,6 +6,7 @@ use App\Filament\Resources\Stores\StoreResource;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\ViewAction;
 use Filament\Resources\Pages\EditRecord;
+use Filament\Support\Icons\Heroicon;
 
 class EditStore extends EditRecord
 {
@@ -15,7 +16,8 @@ class EditStore extends EditRecord
     {
         return [
             ViewAction::make(),
-            DeleteAction::make(),
+            DeleteAction::make()
+                ->icon(Heroicon::Trash),
         ];
     }
 }

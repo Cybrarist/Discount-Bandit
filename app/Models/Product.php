@@ -9,7 +9,6 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 
 #[ScopedBy(UserOwnedScope::class)]
 class Product extends Model
@@ -29,6 +28,7 @@ class Product extends Model
         'lowest_price',
         'highest_price',
         'notifications_sent',
+        'remove_link_if_out_of_stock_for_x_days',
 
     ];
 
@@ -40,9 +40,13 @@ class Product extends Model
         ];
     }
 
-    public function product_links(): HasMany
+    public function links(): BelongsToMany
     {
-        return $this->hasMany(ProductLink::class);
+        return $this->belongsToMany(Link::class)
+            ->withTimestamps()
+            ->withPivot([
+                'user_id',
+            ]);
     }
 
     public function categories(): BelongsToMany

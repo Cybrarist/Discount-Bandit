@@ -22,6 +22,9 @@ class CategoryResource extends Resource
 
     protected static ?int $navigationSort = 3;
 
+
+    
+
     public static function form(Schema $schema): Schema
     {
         return CategoryForm::configure($schema);

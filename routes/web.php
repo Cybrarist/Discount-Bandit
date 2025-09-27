@@ -1,19 +1,9 @@
 <?php
 
-use App\Models\ProductLink;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use Spatie\Feed\Http\FeedController;
 
-Route::withoutMiddleware('auth') -> get('/feed', FeedController::class)->name('feeds.main');
-
-Route::get('/test', function (Request $request) {
-
-    $link = ProductLink::firstWhere('id', 2);
-
-    new \App\Classes\Stores\Amazon($link);
-
-});
+Route::withoutMiddleware('auth')->get('/feed', FeedController::class)->name('feeds.main');
 
 Route::middleware('signed')
     ->group(function () {

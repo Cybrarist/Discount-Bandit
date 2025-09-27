@@ -20,6 +20,6 @@ class NtfyChannel
     {
         $message = $notification->toNtfy($notifiable);
 
-        return $this->ntfy->send(notification_title: $message["headers"], notification_content: $message["content"], user: $notifiable);
+        return $this->ntfy->send(notification: $message["headers"], notification_content: $message["content"], user: $notifiable);
     }
 }

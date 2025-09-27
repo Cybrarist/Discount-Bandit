@@ -4,26 +4,26 @@ namespace App\Classes\Stores;
 
 use App\Classes\StoreTemplate;
 use App\Helpers\GeneralHelper;
-use App\Models\ProductLink;
+use App\Models\Link;
 use Illuminate\Support\Str;
 
 class Ebay extends StoreTemplate
 {
     const string MAIN_URL = "https://www.[domain]/itm/[product_key]?[ref]";
 
-    public function __construct(ProductLink $product_link, array $extra_headers = [], ?string $user_agent = '')
+    public function __construct(Link $link, array $extra_headers = [], ?string $user_agent = '')
     {
         $this->chromium_crawler = true;
-        parent::__construct($product_link);
+        parent::__construct($link);
     }
 
-    public static function prepare_url(ProductLink $product_link, $extra = []): string
+    public static function prepare_url(Link $link, $extra = []): string
     {
         $template_url = self::MAIN_URL;
 
         return Str::replace(
             ["[domain]", "[product_key]", "[ref]"],
-            [$product_link->store->domain, $product_link->key, $product_link->store->referral],
+            [$link->store->domain, $link->key, $link->store->referral],
 
             $template_url);
     }
@@ -121,7 +121,7 @@ class Ebay extends StoreTemplate
 
     public function get_shipping_price(): void
     {
-        if (isset($this->schema['product']['offers']['shippingDetails'])) {
+        if (isset($this->schema['product']['offers']['shippingDetails']['shippingRate']['value'])) {
             $this->product_data['shipping_price'] = (float) $this->schema['product']['offers']['shippingDetails']['shippingRate']['value'];
         }
     }

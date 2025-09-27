@@ -4,6 +4,7 @@ namespace App\Providers;
 
 use Filament\Support\Facades\FilamentView;
 use Filament\Tables\Enums\FiltersLayout;
+use Filament\Tables\Enums\PaginationMode;
 use Filament\Tables\Table;
 use Filament\View\PanelsRenderHook;
 use Illuminate\Support\HtmlString;
@@ -23,8 +24,10 @@ class AppServiceProvider extends ServiceProvider
 
         Table::configureUsing(function (Table $table): void {
             $table->filtersLayout(FiltersLayout::AboveContentCollapsible)
+                ->paginationMode(PaginationMode::Cursor)
                 ->paginationPageOptions([24, 48, 72, 96, 'all'])
-                ->deferLoading();
+                ->deferLoading()
+            ;
         });
 
         FilamentView::registerRenderHook(

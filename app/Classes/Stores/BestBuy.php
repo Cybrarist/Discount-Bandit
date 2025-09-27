@@ -6,7 +6,7 @@ use App\Classes\Crawler\SimpleCrawler;
 use App\Classes\StoreTemplate;
 use App\Helpers\GeneralHelper;
 use App\Helpers\UserAgentHelper;
-use App\Models\ProductStore;
+use App\Models\Link;
 use Illuminate\Support\Str;
 
 use function Laravel\Prompts\warning;
@@ -30,10 +30,10 @@ class BestBuy extends StoreTemplate
         'Connection' => 'keep-alive',
     ];
 
-    public function __construct(ProductStore $product_store, array $extra_headers = [], ?string $user_agent = '')
+    public function __construct(Link $link, array $extra_headers = [], ?string $user_agent = '')
     {
 
-//        if ($this->product_store->store->domain === "bestbuy.ca") {
+//        if ($this->link->store->domain === "bestbuy.ca") {
 //            $this->chromium_crawler = true;
 //            $this->extra_headers = $extra_headers + ['X-CLIENT-ID' => 'lib-price-browser'] + $this->extra_headers;
 //        } else {
@@ -42,10 +42,10 @@ class BestBuy extends StoreTemplate
 
         $this->user_agent = ($user_agent) ?: UserAgentHelper::get_random_user_agent();
 
-        parent::__construct($product_store);
+        parent::__construct($link);
     }
 
-    public static function prepare_url(string $domain, string $product_key, array $extra = []): string
+    public static function prepare_url(Link $link, array $extra = []): string
     {
 
 //        if (array_key_exists('notify', $extra)) {
@@ -58,8 +58,8 @@ class BestBuy extends StoreTemplate
 
         return Str::replace(
             ["[domain]", "[product_key]"],
-            [$domain, $product_key],
-            ($domain == "bestbuy.com") ? self::MAIN_URL : self::CANADA_URL);
+            [$link->store->domain, $link->key],
+            ($link->store->domain == "bestbuy.com") ? self::MAIN_URL : self::CANADA_URL);
     }
 
     public function get_name(): void
@@ -189,8 +189,7 @@ class BestBuy extends StoreTemplate
         warning("system detected as bot, trying other method");
 
         $other_buying_url = static::prepare_url(
-            domain: $this->product_store->store->domain,
-            product_key: $this->product_store->key,
+             $this->link,
         );
 
         $this->dom = new SimpleCrawler(

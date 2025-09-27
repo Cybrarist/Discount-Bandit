@@ -14,14 +14,14 @@ use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Artisan;
 
 class StoresTable
 {
     public static function configure(Table $table): Table
     {
         return $table
-            ->modifyQueryUsing(fn ($query) => $query->with('currency:id,code')
-            )
+            ->modifyQueryUsing(fn ($query) => $query->with('currency:id,code'))
             ->columns([
                 ImageColumn::make('image')
                     ->disk('store')
@@ -65,8 +65,11 @@ class StoresTable
 
                             Notification::make()
                                 ->title('Stores Disabled Successfully')
+                                ->body('System will be down for few seconds to update')
                                 ->success()
                                 ->send();
+                            Artisan::call('discount:fill-supervisor-workers');
+
                         }),
 
                     BulkAction::make('enable')
@@ -78,10 +81,14 @@ class StoresTable
                                     'status' => StoreStatusEnum::Active,
                                 ]);
 
+
                             Notification::make()
                                 ->title('Stores Enabled Successfully')
+                                ->body('System will be down for few seconds to update')
                                 ->success()
                                 ->send();
+                            Artisan::call('discount:fill-supervisor-workers');
+
                         }),
                 ]),
             ]);

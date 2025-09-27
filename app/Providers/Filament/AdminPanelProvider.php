@@ -6,6 +6,14 @@ use App\Enums\RoleEnum;
 use App\Filament\Forms\ImportForm;
 use App\Filament\Pages\Auth\Login;
 use App\Filament\Pages\Auth\Register;
+use App\Filament\Resources\Links\LinkResource;
+use App\Filament\Resources\NotificationSettings\NotificationSettingResource;
+use App\Filament\Resources\Products\ProductResource;
+use App\Filament\Resources\Stores\StoreResource;
+use App\Filament\Resources\Users\UserResource;
+use App\Models\User;
+use Asmit\ResizedColumn\ResizedColumnPlugin;
+use Awcodes\QuickCreate\QuickCreatePlugin;
 use Boquizo\FilamentLogViewer\FilamentLogViewerPlugin;
 use Devonab\FilamentEasyFooter\EasyFooterPlugin;
 use Filament\Actions\Action;
@@ -13,7 +21,6 @@ use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
-use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Assets\Css;
@@ -31,6 +38,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Jeffgreco13\FilamentBreezy\BreezyCore;
 use Tapp\FilamentAuthenticationLog\FilamentAuthenticationLogPlugin;
+use Tapp\FilamentAuthenticationLog\Resources\AuthenticationLogResource;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -48,7 +56,7 @@ class AdminPanelProvider extends PanelProvider
                     ->url(fn (): string => route('filament.admin.resources.users.edit', ['record' => Auth::id()]))
                     ->icon('heroicon-o-cog-6-tooth'),
 
-                ImportForm::configure()
+                ImportForm::configure(),
 
             ])
             ->brandName(name: config('app.name'))
@@ -60,9 +68,9 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
-            ->pages([
-                Dashboard::class,
-            ])
+//            ->pages([
+//                Dashboard::class,
+//            ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
                 AccountWidget::class,
@@ -84,7 +92,6 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->viteTheme('resources/css/filament/admin/theme.css')
             ->maxContentWidth(Width::Full)
-            ->spa(hasPrefetching: true)
             ->sidebarCollapsibleOnDesktop(
                 fn () => ! Auth::user()?->customization_settings['enable_top_navigation']
             )
@@ -106,6 +113,13 @@ class AdminPanelProvider extends PanelProvider
                 FilamentLogViewerPlugin::make()
                     ->navigationGroup('Settings')
                     ->authorize(fn () => Auth::user()->role == RoleEnum::Admin),
+                ResizedColumnPlugin::make()
+                    ->preserveOnDB(),
+                QuickCreatePlugin::make()
+                    ->includes([
+                        ProductResource::class,
+                        StoreResource::class,
+                    ]),
             ]);
     }
 }

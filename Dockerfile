@@ -6,6 +6,8 @@ ENV SERVER_NAME=":80"
 ENV FRANKENPHP_CONFIG="worker /app/public/index.php"
 ENV FRANKEN_HOST="localhost"
 
+COPY ./docker/php.ini /usr/local/etc/php/conf.d/memory-limit.ini
+
 RUN apt update && apt install -y supervisor  \
         libbz2-dev \
         libzip-dev \

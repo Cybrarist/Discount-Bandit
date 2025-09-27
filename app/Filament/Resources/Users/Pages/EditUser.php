@@ -5,7 +5,7 @@ namespace App\Filament\Resources\Users\Pages;
 use App\Enums\RoleEnum;
 use App\Filament\Resources\Users\UserResource;
 use App\Models\Product;
-use App\Models\ProductLink;
+use App\Models\Link;
 use App\Notifications\ProductDiscounted;
 use Filament\Actions\Action;
 use Filament\Resources\Pages\EditRecord;
@@ -30,6 +30,7 @@ class EditUser extends EditRecord
                         ->where('user_id', $record->id)
                         ->first();
 
+
                     if (! $product) {
                         $product = Product::create([
                             'user_id' => $record->id,
@@ -37,7 +38,8 @@ class EditUser extends EditRecord
                         ]);
                     }
 
-                    $product_link = new ProductLink([
+
+                    $link = new Link([
                         'price' => 100,
                         'used_price' => 50,
                         'is_in_stock' => true,
@@ -54,7 +56,7 @@ class EditUser extends EditRecord
                         product_name: $product->name,
                         product_image: "https://raw.githubusercontent.com/Cybrarist/Discount-Bandit/refs/heads/master/storage/app/public/bandit.png",
                         store_name: "Discount Bandit",
-                        new_product_link: $product_link,
+                        new_link: $link,
                         highest_price: 150,
                         lowest_price: 100,
                         currency_code: "$",

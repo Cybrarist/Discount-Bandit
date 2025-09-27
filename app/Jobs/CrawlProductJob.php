@@ -26,7 +26,7 @@ use App\Classes\Stores\Princessauto;
 use App\Classes\Stores\Target;
 use App\Classes\Stores\Tatacliq;
 use App\Classes\Stores\Walmart;
-use App\Models\ProductLink;
+use App\Models\Link;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Queue\Queueable;
 
@@ -48,35 +48,36 @@ class CrawlProductJob implements ShouldQueue
      */
     public function handle(): void
     {
-        $product_link = ProductLink::withoutGlobalScopes()
+        $link = Link::withoutGlobalScopes()
             ->with('store')
             ->find($this->link_id);
 
+        //todo remove some stores and make them custom
         match (true) {
-            str_contains($product_link->store->name, 'Aliexpress') => new Aliexpress($product_link),
-            str_contains($product_link->store->name, 'Amazon') => new Amazon($product_link),
-            str_contains($product_link->store->name, 'Currys') => new Currys($product_link),
-            str_contains($product_link->store->name, 'Canadian Tire') => new Canadiantire($product_link),
-            str_contains($product_link->store->name, 'DIY') => new Diy($product_link),
-            str_contains($product_link->store->name, 'Ebay') => new Ebay($product_link),
-            str_contains($product_link->store->name, 'Eprice') => new Eprice($product_link),
-            str_contains($product_link->store->name, 'Emaxme') => new Emaxme($product_link),
-            str_contains($product_link->store->name, 'Fnac') => new Fnac($product_link),
-            str_contains($product_link->store->name, 'FlipKart') => new Flipkart($product_link),
-            str_contains($product_link->store->name, 'Homedepot') => new Homedepot($product_link),
-            str_contains($product_link->store->name, 'Media Market') => new Mediamarkt($product_link),
-            str_contains($product_link->store->name, 'Microless') => new Microless($product_link),
-            str_contains($product_link->store->name, 'Myntra') => new Myntra($product_link),
-            str_contains($product_link->store->name, 'Next Hardware') => new Nexths($product_link),
-            str_contains($product_link->store->name, 'Newegg') => new Newegg($product_link),
-            str_contains($product_link->store->name, 'Noon') => new Noon($product_link),
-            str_contains($product_link->store->name, 'Nykaa') => new Nykaa($product_link),
-            str_contains($product_link->store->name, 'Otaku ME') => new Otakume($product_link),
-            str_contains($product_link->store->name, 'Princess Auto') => new Princessauto($product_link),
-            str_contains($product_link->store->name, 'Target') => new Target($product_link),
-            str_contains($product_link->store->name, 'Tata Cliq') => new Tatacliq($product_link),
-            str_contains($product_link->store->name, 'Walmart') => new Walmart($product_link),
-            default => new CustomStoreTemplate($product_link),
+            str_contains($link->store->name, 'Aliexpress') => new Aliexpress($link),
+            str_contains($link->store->name, 'Amazon') => new Amazon($link),
+            str_contains($link->store->name, 'Currys') => new Currys($link),
+            str_contains($link->store->name, 'Canadian Tire') => new Canadiantire($link),
+            str_contains($link->store->name, 'DIY') => new Diy($link),
+            str_contains($link->store->name, 'Ebay') => new Ebay($link),
+            str_contains($link->store->name, 'Eprice') => new Eprice($link),
+            str_contains($link->store->name, 'Emaxme') => new Emaxme($link),
+            str_contains($link->store->name, 'Fnac') => new Fnac($link),
+            str_contains($link->store->name, 'FlipKart') => new Flipkart($link),
+            str_contains($link->store->name, 'Homedepot') => new Homedepot($link),
+            str_contains($link->store->name, 'Media Market') => new Mediamarkt($link),
+            str_contains($link->store->name, 'Microless') => new Microless($link),
+            str_contains($link->store->name, 'Myntra') => new Myntra($link),
+            str_contains($link->store->name, 'Next Hardware') => new Nexths($link),
+            str_contains($link->store->name, 'Newegg') => new Newegg($link),
+            str_contains($link->store->name, 'Noon') => new Noon($link),
+            str_contains($link->store->name, 'Nykaa') => new Nykaa($link),
+            str_contains($link->store->name, 'Otaku ME') => new Otakume($link),
+            str_contains($link->store->name, 'Princess Auto') => new Princessauto($link),
+            str_contains($link->store->name, 'Target') => new Target($link),
+            str_contains($link->store->name, 'Tata Cliq') => new Tatacliq($link),
+            str_contains($link->store->name, 'Walmart') => new Walmart($link),
+            default => new CustomStoreTemplate($link),
         };
     }
 }

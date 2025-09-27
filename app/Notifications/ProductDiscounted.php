@@ -5,9 +5,10 @@ namespace App\Notifications;
 // use App\Models\RssFeedItem;
 // use App\NotificationsChannels\AppriseChannel;
 // use App\NotificationsChannels\GotifyChannel;
-use App\Models\ProductLink;
+use App\Models\Link;
 use App\Models\RssFeedItem;
 use App\Models\User;
+use App\NotificationsChannels\GotifyChannel;
 use App\NotificationsChannels\NtfyChannel;
 use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
@@ -37,7 +38,7 @@ class ProductDiscounted extends Notification
         public ?string $product_name,
         public ?string $product_image,
         public string $store_name,
-        public ProductLink $new_product_link,
+        public Link $new_link,
         public float $highest_price,
         public float $lowest_price,
         public string $currency_code,
@@ -47,18 +48,18 @@ class ProductDiscounted extends Notification
         $this->product_temp_link = URL::temporarySignedRoute("products.show", now()->addMinutes(15), ['product' => $this->product_id]);
         $this->product_temp_snooze = URL::temporarySignedRoute("products.snooze", today()->endOfDay(), ['product' => $this->product_id]);
 
-        $this->notification_title = "For Just {$this->currency_code} {$this->new_product_link->price} -  Discount For ".Str::words($this->product_name, 5);
-        $this->notification_text = "{$this->product_name}, is at {$this->currency_code}{$this->new_product_link->price} <br>".
+        $this->notification_title = "For Just {$this->currency_code} {$this->new_link->price} -  Discount For ".Str::words($this->product_name, 5);
+        $this->notification_text = "{$this->product_name}, is at {$this->currency_code}{$this->new_link->price} <br>".
                 "----------------<br>".
-                "Used Price: {$this->new_product_link->used_price} <br>".
-                "Shipping Price: {$this->new_product_link->shipping_price} <br>".
+                "Used Price: {$this->new_link->used_price} <br>".
+                "Shipping Price: {$this->new_link->shipping_price} <br>".
                 "Highest Price: {$this->highest_price} <br>".
                 "Lowest Price: {$this->lowest_price} <br>".
-                "Seller : {$this->new_product_link->seller} <br>".
-                "In Stock : {$this->new_product_link->is_in_stock} <br>".
-                "Condition: {$this->new_product_link->condition} <br>".
-                "total reviews: {$this->new_product_link->total_reviews} <br>".
-                "rating : {$this->new_product_link->rating} <br>";
+                "Seller : {$this->new_link->seller} <br>".
+                "In Stock : {$this->new_link->is_in_stock} <br>".
+                "Condition: {$this->new_link->condition} <br>".
+                "total reviews: {$this->new_link->total_reviews} <br>".
+                "rating : {$this->new_link->rating} <br>";
 
     }
 
@@ -74,18 +75,14 @@ class ProductDiscounted extends Notification
         if ($notifiable->notification_settings['ntfy_url']) {
             $channels[] = NtfyChannel::class;
         }
-        //
-        //        if (config('settings.apprise_url')) {
-        //            $channels[] = AppriseChannel::class;
-        //        }
-        //
+
         if ($notifiable->notification_settings['telegram_channel_id'] && $notifiable->notification_settings['telegram_bot_token']) {
             $channels[] = 'telegram';
         }
 
-        //        if (config('settings.gotify_token')) {
-        //            $channels[] = GotifyChannel::class;
-        //        }
+        if ($notifiable->notification_settings['gotify_url']) {
+            $channels[] = GotifyChannel::class;
+        }
 
         if ($notifiable->notification_settings['enable_rss_feed']) {
             RssFeedItem::create([
@@ -161,7 +158,7 @@ class ProductDiscounted extends Notification
     {
 
         $notification_text = str_replace("<br>", "\n", $this->notification_text);
-        $notification_title = Str::remove([":", "_", "-", "|", "*"], "For Just {$this->currency_code} {$this->new_product_link->price} -  Discount For ".Str::words($this->product_name, 5));
+        $notification_title = Str::remove([":", "_", "-", "|", "*"], "For Just {$this->currency_code} {$this->new_link->price} -  Discount For ".Str::words($this->product_name, 5));
 
         return TelegramFile::create()
             ->photo($this->product_image)

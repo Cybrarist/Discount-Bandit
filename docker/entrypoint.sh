@@ -29,7 +29,7 @@ php artisan filament:optimize
 
 php artisan discount:fill-supervisor-workers
 
-php artisan exchange:price
+php artisan discount:exchange-rate
 
 Xvfb :99 -screen 0 2000x2000x24 & export DISPLAY=:99
 

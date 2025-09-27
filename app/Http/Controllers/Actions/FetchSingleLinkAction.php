@@ -5,8 +5,7 @@ namespace App\Http\Controllers\Actions;
 use App\Http\Controllers\Controller;
 use App\Jobs\CrawlProductJob;
 use App\Models\Product;
-use App\Models\ProductLink;
-use App\Models\ProductStore;
+use App\Models\Link;
 use Filament\Notifications\Notification;
 
 class FetchSingleLinkAction extends Controller
@@ -14,7 +13,7 @@ class FetchSingleLinkAction extends Controller
     /**
      * Handle the incoming request.
      */
-    public function __invoke(ProductLink $link)
+    public function __invoke(Link $link)
     {
         CrawlProductJob::dispatch($link->id);
 

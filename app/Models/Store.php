@@ -66,8 +66,8 @@ class Store extends Model
         return $this->belongsTo(Currency::class);
     }
 
-    public function product_links(): HasMany
+    public function links(): HasMany
     {
-        return $this->hasMany(ProductLink::class);
+        return $this->hasMany(Link::class);
     }
 }

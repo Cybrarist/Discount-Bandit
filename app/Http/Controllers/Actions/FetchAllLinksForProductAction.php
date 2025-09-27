@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Actions;
 use App\Http\Controllers\Controller;
 use App\Jobs\CrawlProductJob;
 use App\Models\Product;
-use App\Models\ProductStore;
 use Illuminate\Http\Request;
 
 class FetchAllLinksForProductAction extends Controller
@@ -15,11 +14,9 @@ class FetchAllLinksForProductAction extends Controller
      */
     public function __invoke(Product $product)
     {
-        ProductStore::where('product_id', $product->id)
-            ->pluck('id')
-            ->each(function ($id) {
-                CrawlProductJob::dispatch($id);
-            });
+        $product->links()->each(function ($link) {
+            CrawlProductJob::dispatch($link->id);
+        });
 
     }
 }

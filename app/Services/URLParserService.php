@@ -28,7 +28,7 @@ class URLParserService
             $this->parsed_url = Uri::of($url);
 
             $this->domain = Str::of($this->parsed_url->host())
-                ->remove(["www.", "uae.", "global."], false)
+                ->chopStart(["www.", "uae.", "global."])
                 ->toString();
 
             $this->parse_product_key_or_url();
@@ -51,9 +51,11 @@ class URLParserService
 
     private function parse_product_key_or_url(): void
     {
-        $store_name = explode(".", $this->domain)[0];
 
-        $method = "get_{$store_name}_key";
+        $method = "get_".match (true) {
+            Str::contains($this->domain, "aliexpress") => 'aliexpress',
+            default => explode(".", $this->domain)[0],
+        }."_key";
 
         if (method_exists($this, $method)) {
             $this->product_key = self::$method();
@@ -79,13 +81,13 @@ class URLParserService
 
     public function get_argos_key(): string
     {
-        return Str::remove("/", Str::squish(Arr::last(explode("/", $this->path))));
+        return Str::remove("/", Str::squish(Arr::last(explode("/", $this->parsed_url->path()))));
     }
 
     public function get_ajio_key(): string
     {
 
-        $paths = explode("/p/", $this->path);
+        $paths = explode("/p/", $this->parsed_url->path());
 
         return (count($paths) == 1) ? $paths[0] : $paths[1];
     }
@@ -105,9 +107,9 @@ class URLParserService
 
     public function get_bestbuy_key(): string
     {
-        $temp = explode("/", $this->path);
+        $temp = explode("/", $this->parsed_url->path());;
 
-        // todo if same after finihsing implementing ca then remove.
+        // todo if same after finishing implementing ca then remove.
         return match ($this->domain) {
             'bestbuy.com' => explode(".", Arr::last($temp))[0],
             'bestbuy.ca' => Arr::last($temp),

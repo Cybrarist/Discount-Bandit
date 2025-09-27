@@ -4,7 +4,7 @@ namespace App\Classes\Stores;
 
 use App\Classes\StoreTemplate;
 use App\Helpers\UserAgentHelper;
-use App\Models\ProductLink;
+use App\Models\Link;
 use Illuminate\Support\Str;
 
 class Nexths extends StoreTemplate
@@ -21,21 +21,20 @@ class Nexths extends StoreTemplate
         "Accept-Encoding" => "gzip, deflate",
     ];
 
-    public function __construct(ProductLink $product_link, array $extra_headers = [], ?string $user_agent = '')
+    public function __construct(Link $link, array $extra_headers = [], ?string $user_agent = '')
     {
 
         $this->extra_headers = $extra_headers + $this->extra_headers;
         $this->user_agent = ($user_agent) ?: UserAgentHelper::get_random_user_agent();
 
-        parent::__construct($product_link);
+        parent::__construct($link);
     }
 
-    public static function prepare_url(ProductLink $product_link, $extra = []): string
+    public static function prepare_url(Link $link, $extra = []): string
     {
         return Str::replace(
             ["[domain]", "[product_key]"],
-            [$product_link->store->domain, $product_link->key],
-
+            [$link->store->domain, $link->key],
             self::MAIN_URL);
     }
 
@@ -102,7 +101,7 @@ class Nexths extends StoreTemplate
 
     public function other_method_if_system_detected_as_bot(): void {}
 
-    public function is_system_detected_as_robot(): bool {}
+    public function is_system_detected_as_robot(): bool {return false;}
 
     public function prepare_dom_for_getting_product_information(): void
     {

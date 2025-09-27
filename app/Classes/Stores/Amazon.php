@@ -6,7 +6,7 @@ use App\Classes\Crawler\SimpleCrawler;
 use App\Classes\StoreTemplate;
 use App\Helpers\GeneralHelper;
 use App\Helpers\UserAgentHelper;
-use App\Models\ProductLink;
+use App\Models\Link;
 use Illuminate\Support\Str;
 
 use function Laravel\Prompts\warning;
@@ -24,10 +24,10 @@ class Amazon extends StoreTemplate
         'Connection' => 'keep-alive',
     ];
 
-    public function __construct(ProductLink $product_link, array $extra_headers = [], ?string $user_agent = '')
+    public function __construct(Link $link, array $extra_headers = [], ?string $user_agent = '')
     {
 
-        if (in_array($product_link->store->domain, [
+        if (in_array($link->store->domain, [
             'amazon.de',
             'amazon.ca'
         ])){
@@ -39,12 +39,10 @@ class Amazon extends StoreTemplate
 
         }
 
-
-
-        parent::__construct($product_link);
+        parent::__construct($link);
     }
 
-    public static function prepare_url(ProductLink $product_link, $extra = []): string
+    public static function prepare_url(Link $link, $extra = []): string
     {
         $template_url = self::MAIN_URL;
 
@@ -54,7 +52,7 @@ class Amazon extends StoreTemplate
 
         return Str::replace(
             ["[domain]", "[product_key]", "[ref]"],
-            [$product_link->store->domain, $product_link->key, $product_link->store->referral],
+            [$link->store->domain, $link->key, $link->store->referral],
 
             $template_url);
     }
@@ -104,7 +102,7 @@ class Amazon extends StoreTemplate
         ];
         $results_using_ids = $this->dom->querySelectorAll(implode(',', $ids_and_tag_selector));
 
-        $this->product_data['total_reviews'] = GeneralHelper::get_numbers_only_with_dot($results_using_ids[0]?->textContent);
+        $this->product_data['total_reviews'] = GeneralHelper::get_numbers_only_with_dot($results_using_ids[0]?->textContent ?? 0);
     }
 
     public function get_rating(): void
@@ -115,7 +113,7 @@ class Amazon extends StoreTemplate
 
         $results = $this->dom->querySelectorAll(implode(',', $general_selectors));
 
-        $this->product_data['rating'] = Str::trim($results[0]?->textContent);
+        $this->product_data['rating'] = Str::trim($results[0]?->textContent ?? '0');
     }
 
     public function get_seller(): void
@@ -195,7 +193,7 @@ class Amazon extends StoreTemplate
         warning("system detected as bot, trying other method");
 
         $other_buying_url = static::prepare_url(
-            $this->product_link
+            $this->link
         );
 
         $this->dom = new SimpleCrawler(

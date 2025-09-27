@@ -26,8 +26,10 @@ class ClearNotificationCount extends Command
      */
     public function handle(): void
     {
-        Product::where('notifications_sent', '>', 0)->update([
-            'notifications_sent' => 0,
-        ]);
+        Product::withoutGlobalScopes()
+            ->where('notifications_sent', '>', 0)
+            ->update([
+                'notifications_sent' => 0,
+            ]);
     }
 }

@@ -9,6 +9,8 @@
         "php": "^8.4",
         "ext-dom": "*",
         "ext-libxml": "*",
+        "asmit/resized-column": "^1.1",
+        "awcodes/filament-quick-create": "^4.0",
         "awcodes/shout": "^3.0",
         "chrome-php/chrome": "^1.14",
         "codeat3/blade-devicons": "^1.8",
@@ -28,6 +30,7 @@
         "torann/geoip": "^3.0"
     },
     "require-dev": {
+        "barryvdh/laravel-debugbar": "^3.16",
         "fakerphp/faker": "^1.23",
         "laradumps/laradumps": "^4.0",
         "laravel/pail": "^1.2.2",

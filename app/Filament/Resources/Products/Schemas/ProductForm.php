@@ -9,7 +9,9 @@ use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\Operation;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\Facades\Auth;
 
 class ProductForm
 {
@@ -22,7 +24,7 @@ class ProductForm
                 TextInput::make('name')
                     ->columnSpan(2)
                     ->nullable()
-                    ->helperText("if empty, it will be taken crawled url (Amazon has priority)"),
+                    ->helperText("if empty, it will be taken from first crawled link"),
 
                 Select::make('status')
                     ->columnSpan(1)
@@ -50,6 +52,14 @@ class ProductForm
                     ->hintIcon("heroicon-o-information-circle",
                         "this is for products that fluctuate in price, it won't send any more notification UNLESS the price is less than earlier"),
 
+                TextInput::make('remove_link_if_out_of_stock_for_x_days')
+                    ->integer()
+                    ->minValue(0)
+                    ->numeric()
+                    ->placeholder("unlimited")
+                    ->hintIcon("heroicon-o-information-circle",
+                        "this will remove the link from the database if the product is out of stock for x days to free space for other links.  notification will be sent about the link removed"),
+
                 Select::make('categories')
                     ->columnSpan(2)
                     ->relationship('categories', 'name')
@@ -57,16 +67,15 @@ class ProductForm
                         TextInput::make('name')->required(),
                         ColorPicker::make('color')->required(),
                     ])
+                    ->createOptionUsing(function (array $data): int {
+                        return Auth::user()->categories()->create($data)->getKey();
+                    })
                     ->multiple()
                     ->nullable()
                     ->preload(),
 
-                //                TextInput::make('user_id')
-                //                    ->formatStateUsing(fn ($record, $operation) => ($operation == 'create') ?: $record->user->name)
-                //                    ->disabledOn([CreateProduct::class])
-                //                    ,
-
                 TextInput::make('notifications_sent')
+                    ->hiddenOn([Operation::Create])
                     ->numeric(),
 
                 Toggle::make('is_favourite')

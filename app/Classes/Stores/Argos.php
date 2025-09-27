@@ -5,7 +5,7 @@ namespace App\Classes\Stores;
 use App\Classes\Crawler\SimpleCrawler;
 use App\Classes\StoreTemplate;
 use App\Helpers\GeneralHelper;
-use App\Models\ProductStore;
+use App\Models\Link;
 use Illuminate\Support\Str;
 
 use function Laravel\Prompts\warning;
@@ -22,23 +22,21 @@ class Argos extends StoreTemplate
 
     protected string $user_agent = 'Mozilla/5.0 (Windows; U; Windows NT 6.1; ko-KR) AppleWebKit/533.20.25  Version/5.0.4 Safari/533.20.27';
 
-    public function __construct(ProductStore $product_store, array $extra_headers = [], ?string $user_agent = '')
+    public function __construct(Link $link, array $extra_headers = [], ?string $user_agent = '')
     {
         $this->extra_headers = $extra_headers + $this->extra_headers;
         $this->user_agent = ($user_agent) ?: $this->user_agent;
 
-        parent::__construct($product_store);
+        parent::__construct($link);
     }
 
-    public static function prepare_url(string $domain, string $product_key, array $extra = []): string
+    public static function prepare_url(Link $link, array $extra = []): string
     {
-        $template_url = self::MAIN_URL;
-
         return Str::replace(
             ["[domain]", "[product_key]"],
-            [$domain, $product_key],
+            [$link->store->domain, $link->key],
+            self::MAIN_URL);
 
-            $template_url);
     }
 
     public function get_name(): void
@@ -159,8 +157,7 @@ class Argos extends StoreTemplate
         warning("system detected as bot, trying other method");
 
         $other_buying_url = static::prepare_url(
-            domain: $this->product_link->store->domain,
-            product_key: $this->product_link->key,
+            $this->link,
         );
 
         $this->dom = new SimpleCrawler(

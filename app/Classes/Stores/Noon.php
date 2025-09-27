@@ -4,7 +4,7 @@ namespace App\Classes\Stores;
 
 use App\Classes\StoreTemplate;
 use App\Helpers\GeneralHelper;
-use App\Models\ProductLink;
+use App\Models\Link;
 use Illuminate\Support\Str;
 
 class Noon extends StoreTemplate
@@ -18,25 +18,25 @@ class Noon extends StoreTemplate
         'Connection' => 'keep-alive',
     ];
 
-    public function __construct(ProductLink $product_link, array $extra_headers = [], ?string $user_agent = '')
+    public function __construct(Link $link, array $extra_headers = [], ?string $user_agent = '')
     {
         $this->chromium_crawler = true;
-        parent::__construct($product_link);
+        parent::__construct($link);
     }
 
-    public static function prepare_url(ProductLink $product_link, $extra = []): string
+    public static function prepare_url(Link $link, $extra = []): string
     {
 
-        $country = Str::of($product_link->store->name)
+        $country = Str::of($link->store->name)
             ->lower()
             ->explode(" ")
             ->last();
 
         return Str::replace(
             ["[domain]", "[country]", "[product_key]"],
-            [$product_link->store->domain,
+            [$link->store->domain,
                 $country,
-                Str::upper($product_link->key)],
+                Str::upper($link->key)],
             self::MAIN_URL);
 
     }
@@ -123,7 +123,7 @@ class Noon extends StoreTemplate
     public function get_seller(): void
     {
         if (isset($this->schema['product']['offers'])) {
-            $this->product_data['seller'] = $this->schema['product']['offers'][0]['seller']['name'];
+            $this->product_data['seller'] = $this->schema['product']['offers'][0]['seller']['name'] ?? "";
             $this->product_data['is_official'] = str_contains($this->product_data['seller'], 'Noon');
 
             return;
@@ -143,7 +143,7 @@ class Noon extends StoreTemplate
     {
 
         if (isset($this->schema['product']['offers'])) {
-            $this->product_data['price'] = (float) $this->schema['product']['offers'][0]['price'];
+            $this->product_data['price'] = (float) $this->schema['product']['offers'][0]['price'] ?? 0;
 
             return;
         }

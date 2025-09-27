@@ -17,6 +17,7 @@ public_html/hot
 
 vendor/
 storage/*.key
+storage/app/private
 .env
 Homestead.yaml
 Homestead.json

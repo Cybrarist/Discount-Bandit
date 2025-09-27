@@ -7,6 +7,7 @@ use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
+use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ToggleColumn;
 use Filament\Tables\Table;
@@ -27,11 +28,11 @@ class NotificationSettingsTable
                     ->numeric()
                     ->suffix('%'),
 
-                TextColumn::make('other_costs_amount')
+                TextColumn::make('extra_costs_amount')
                     ->sortable()
                     ->numeric(),
 
-                TextColumn::make('other_costs_percentage')
+                TextColumn::make('extra_costs_percentage')
                     ->sortable()
                     ->numeric()
                     ->suffix('%'),
@@ -68,7 +69,8 @@ class NotificationSettingsTable
             ])
             ->recordActions([
                 EditAction::make(),
-                DeleteAction::make(),
+                DeleteAction::make()
+                    ->icon(Heroicon::Trash),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

@@ -4,7 +4,7 @@ namespace App\Classes\Stores;
 
 use App\Classes\StoreTemplate;
 use App\Helpers\GeneralHelper;
-use App\Models\ProductLink;
+use App\Models\Link;
 use Illuminate\Support\Str;
 
 class Homedepot extends StoreTemplate
@@ -13,24 +13,24 @@ class Homedepot extends StoreTemplate
 
     const string CANADA_URL = "https://www.[domain]/product/[random]/[product_key]";
 
-    public function __construct(ProductLink $product_link, array $extra_headers = [], ?string $user_agent = '')
+    public function __construct(Link $link, array $extra_headers = [], ?string $user_agent = '')
     {
         $this->chromium_crawler = true;
         $this->chromium_options['timeout_ms'] = 5000;
         $this->chromium_options['page'] = "";
-        parent::__construct($product_link);
+        parent::__construct($link);
     }
 
-    public static function prepare_url(ProductLink $product_link, $extra = []): string
+    public static function prepare_url(Link $link, $extra = []): string
     {
-        $url_to_use = match ($product_link->store->domain) {
+        $url_to_use = match ($link->store->domain) {
             'homedepot.com' => self::MAIN_URL,
             'homedepot.ca' => self::CANADA_URL
         };
 
         return Str::replace(
             ["[domain]", "[product_key]", "[random]"],
-            [$product_link->store->domain, $product_link->key, Str::random(10)],
+            [$link->store->domain, $link->key, Str::random(10)],
 
             $url_to_use);
     }

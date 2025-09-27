@@ -3,7 +3,7 @@
 namespace App\Classes\Stores;
 
 use App\Classes\StoreTemplate;
-use App\Models\ProductStore;
+use App\Models\Link;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 
@@ -19,7 +19,7 @@ class Ajio extends StoreTemplate
         "Accept-Encoding" => "gzip, deflate",
     ];
 
-    public function __construct(ProductStore $product_store, array $extra_headers = [], ?string $user_agent = '')
+    public function __construct(Link $link, array $extra_headers = [], ?string $user_agent = '')
     {
         $this->user_agent = Arr::random([
             "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:130.0) Gecko/20100101 Firefox/130.",
@@ -28,17 +28,15 @@ class Ajio extends StoreTemplate
         $this->extra_headers = $extra_headers + $this->extra_headers;
         $this->user_agent = ($user_agent) ?: $this->user_agent;
 
-        parent::__construct($product_store);
+        parent::__construct($link);
     }
 
-    public static function prepare_url(string $domain, string $product_key, array $extra = []): string
+    public static function prepare_url(Link $link, array $extra = []): string
     {
-        $template_url = self::MAIN_URL;
-
         return Str::replace(
             ["[domain]", "[product_key]"],
-            [$domain, $product_key],
-            $template_url);
+            [$link->store->domain, $link->key],
+            self::MAIN_URL);
     }
 
     public function get_name(): void
@@ -57,7 +55,7 @@ class Ajio extends StoreTemplate
 
     public function get_seller(): void
     {
-        $this->product_data['seller'] = $this->product_store->store->name;
+        $this->product_data['seller'] = $this->link->store->name;
     }
 
     public function get_price(): void

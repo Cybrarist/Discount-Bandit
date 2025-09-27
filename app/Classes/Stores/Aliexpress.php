@@ -5,24 +5,25 @@ namespace App\Classes\Stores;
 use App\Classes\StoreTemplate;
 use App\Helpers\GeneralHelper;
 use App\Models\Currency;
-use App\Models\ProductLink;
+use App\Models\Link;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class Aliexpress extends StoreTemplate
 {
     const string MAIN_URL = "https://www.[domain]/item/[product_key].html?[ref]";
 
-    public function __construct(ProductLink $product_link, array $extra_headers = [], ?string $user_agent = '')
+    public function __construct(Link $link, array $extra_headers = [], ?string $user_agent = '')
     {
         $this->chromium_crawler = true;
-        parent::__construct($product_link);
+        parent::__construct($link);
     }
 
-    public static function prepare_url(ProductLink $product_link, $extra = []): string
+    public static function prepare_url(Link $link, $extra = []): string
     {
         return Str::replace(
             ["[domain]", "[product_key]", "[ref]"],
-            [$product_link->store->domain, $product_link->key, $product_link->store->referral],
+            [$link->store->domain, $link->key, $link->store->referral],
 
             self::MAIN_URL);
     }
@@ -121,7 +122,8 @@ class Aliexpress extends StoreTemplate
 
         $currency = Currency::firstWhere('code', $currency_detected);
 
-        if ($currency) {
+        if ($currency?->rate) {
+            Log::warning("Didn't convert Aliexpress price because currency rate is not set");
             $this->product_data['price'] = $this->product_data['price'] / $currency->rate;
         }
 

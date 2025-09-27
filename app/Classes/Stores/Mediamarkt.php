@@ -4,31 +4,31 @@ namespace App\Classes\Stores;
 
 use App\Classes\StoreTemplate;
 use App\Helpers\GeneralHelper;
-use App\Models\ProductLink;
+use App\Models\Link;
 use Illuminate\Support\Str;
 
 class Mediamarkt extends StoreTemplate
 {
     const string MAIN_URL = "https://www.[domain]/[language]/product/-[product_key].html";
 
-    public function __construct(ProductLink $product_link, array $extra_headers = [], ?string $user_agent = '')
+    public function __construct(Link $link, array $extra_headers = [], ?string $user_agent = '')
     {
         $this->chromium_crawler = true;
 
         $this->chromium_options['timeout_ms'] = 5000;
-        parent::__construct($product_link);
+        parent::__construct($link);
     }
 
-    public static function prepare_url(ProductLink $product_link, $extra = []): string
+    public static function prepare_url(Link $link, $extra = []): string
     {
 
-        $language = Str::of($product_link->store->domain)
+        $language = Str::of($link->store->domain)
             ->explode(".")
             ->last();
 
         return Str::replace(
             ["[domain]", "[product_key]", "[language]"],
-            [$product_link->store->domain, $product_link->key, $language],
+            [$link->store->domain, $link->key, $language],
 
             self::MAIN_URL);
     }

@@ -4,7 +4,7 @@ namespace App\Classes\Stores;
 
 use App\Classes\StoreTemplate;
 use App\Helpers\GeneralHelper;
-use App\Models\ProductLink;
+use App\Models\Link;
 use Illuminate\Support\Str;
 
 class Walmart extends StoreTemplate
@@ -13,17 +13,17 @@ class Walmart extends StoreTemplate
 
     private array $current_variant = [];
 
-    public function __construct(ProductLink $product_link, array $extra_headers = [], ?string $user_agent = '')
+    public function __construct(Link $link, array $extra_headers = [], ?string $user_agent = '')
     {
         $this->chromium_crawler = true;
-        parent::__construct($product_link);
+        parent::__construct($link);
     }
 
-    public static function prepare_url(ProductLink $product_link, $extra = []): string
+    public static function prepare_url(Link $link, $extra = []): string
     {
         return Str::replace(
             ["[domain]", "[product_key]", "[ref]"],
-            [$product_link->store->domain, $product_link->key, $product_link->store->referral],
+            [$link->store->domain, $link->key, $link->store->referral],
 
             self::MAIN_URL);
     }
@@ -147,7 +147,7 @@ class Walmart extends StoreTemplate
         if (isset($this->schema['product_group'])) {
             $this->schema = $this->schema['product_group'][0];
             foreach ($this->schema['hasVariant'] as $variant) {
-                if (isset($variant['sku']) && $variant['sku'] == $this->product_link->key) {
+                if (isset($variant['sku']) && $variant['sku'] == $this->link->key) {
                     $this->current_variant = $variant;
                     break;
                 }

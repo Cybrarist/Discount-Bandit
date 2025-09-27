@@ -9,6 +9,7 @@ use HeadlessChromium\Exception\BrowserConnectionFailed;
 use HeadlessChromium\Exception\OperationTimedOut;
 use HeadlessChromium\Page;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 
@@ -66,7 +67,12 @@ class ChromiumCrawler
         try {
             $browser = BrowserFactory::connectToBrowser($socket);
         } catch (BrowserConnectionFailed|InvalidArgumentException $e) {
-            $browserType = app()->isProduction() ? 'chromium' : 'chrome';
+            Log::info('New Chrome instance');
+            Log::info($e->getMessage());
+            $browserType = app()->isProduction() ? 'chromium' : null;
+
+            // just in case there is a chromium process running on the server
+            Process::run("killall chromium");
 
             // The browser was probably closed, start it again
             $browser_factory = new BrowserFactory($browserType);
@@ -86,7 +92,6 @@ class ChromiumCrawler
             if (Str::contains($url, "homedepot.ca", true)) {
                 $this->home_depot_process($page);
             }
-
 
             $this->dom = HTMLDocument::createFromString($page->getHtml(), LIBXML_NOERROR);
             $page->close();

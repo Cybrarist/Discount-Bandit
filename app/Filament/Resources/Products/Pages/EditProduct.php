@@ -7,6 +7,7 @@ use App\Http\Controllers\Actions\FetchAllLinksForProductAction;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
+use Filament\Support\Icons\Heroicon;
 
 class EditProduct extends EditRecord
 {
@@ -16,7 +17,7 @@ class EditProduct extends EditRecord
     {
         return [
             DeleteAction::make()
-                ->before(fn ($record) => $record->notification_settings()->delete()),
+                ->icon(Heroicon::Trash),
 
             Action::make('Fetch')
                 ->color('primary')

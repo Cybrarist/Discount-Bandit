@@ -31,9 +31,9 @@ class ProductsTable
         return $table
             ->modifyQueryUsing(function ($query) {
                 $query->with([
-                    'product_links:product_id,store_id,key,url,updated_at,highest_price,price,lowest_price',
-                    'product_links.store',
-                    'product_links.store.currency:id,code,rate',
+                    'links',
+                    'links.store',
+                    'links.store.currency:id,code,rate',
                 ]);
             })
             ->recordUrl(function ($record) {
@@ -103,7 +103,7 @@ class ProductsTable
                                     'lg' => 8,
                                     'sm' => 1,
                                 ])->schema([
-                                    TextColumn::make('product_links')
+                                    TextColumn::make('links')
                                         ->color('primary')
                                         ->formatStateUsing(function ($state) {
                                             $link = ProductHelper::get_url($state);
@@ -117,7 +117,7 @@ class ProductsTable
                                         ->html()
                                         ->listWithLineBreaks(),
 
-                                    TextColumn::make('product_links')
+                                    TextColumn::make('links')
                                         ->formatStateUsing(function ($state) {
                                             $price = $state->highest_price;
                                             if (Auth::user()->currency_id) {
@@ -133,7 +133,7 @@ class ProductsTable
                                         ])
                                         ->color('danger'),
 
-                                    TextColumn::make('product_links')
+                                    TextColumn::make('links')
                                         ->formatStateUsing(function ($state) {
                                             $price = $state->price;
                                             $code = $state->store->currency->code;
@@ -150,7 +150,7 @@ class ProductsTable
                                         ])
                                         ->listWithLineBreaks(),
 
-                                    TextColumn::make('product_links')
+                                    TextColumn::make('links')
                                         ->columnSpan([
                                             'md' => 2,
                                             'sm' => 2,
@@ -178,7 +178,7 @@ class ProductsTable
             ->contentGrid([
                 'md' => 2,
             ])
-            ->defaultSort('favourite', 'desc')
+            ->defaultSort('is_favourite', 'desc')
 
             ->filters([
                 SelectFilter::make('category')
@@ -193,8 +193,8 @@ class ProductsTable
                     ->preload()
                     ->multiple(),
 
-                Filter::make('favourite')->query(function (Builder $query) {
-                    $query->where('favourite');
+                Filter::make('is_favourite')->query(function (Builder $query) {
+                    $query->where('is_favourite');
                 })
                     ->label('Favourite product')
                     ->toggle(),

@@ -5,9 +5,9 @@ namespace App\Filament\Forms;
 use App\Enums\Icons\Devicons;
 use App\Enums\ProductStatusEnum;
 use App\Models\Category;
+use App\Models\Link;
 use App\Models\NotificationSetting;
 use App\Models\Product;
-use App\Models\ProductLink;
 use App\Models\Store;
 use Awcodes\Shout\Components\Shout;
 use Filament\Actions\Action;
@@ -26,6 +26,14 @@ class ImportForm
 {
     public static function configure()
     {
+
+        if (Auth::user()?->role !== 'admin') {
+            Notification::make()
+                ->title('You are not authorized to access this page')
+                ->danger()
+                ->send();
+        }
+
         ini_set('max_execution_time', 6000);
 
         return Action::make('Import')
@@ -108,13 +116,21 @@ class ImportForm
 
     public static function reset_all()
     {
-        DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        $isMySql = DB::connection()->getDriverName() === 'mysql';
+
+        if ($isMySql) {
+            DB::statement('SET FOREIGN_KEY_CHECKS=0;');
+        }
+
         NotificationSetting::truncate();
-        ProductLink::truncate();
+        Link::truncate();
         DB::table('category_product')->truncate();
         Product::truncate();
         Category::truncate();
-        DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+
+        if ($isMySql) {
+            DB::statement('SET FOREIGN_KEY_CHECKS=1;');
+        }
     }
 
     public static function import_categories($database_builder): void
@@ -149,18 +165,18 @@ class ImportForm
             ->toArray();
 
         $start_product_id = 1;
-        $start_product_link_id = 1;
+        $start_link_id = 1;
 
         $database_builder->table('products')
-            ->chunkById(5, function ($products) use ($database_builder, $old_categories,
+            ->chunkById(50, function ($products) use ($database_builder, $old_categories,
                 $current_stores, $remote_stores, $new_categories, &$start_product_id,
-                &$start_product_link_id) {
+                &$start_link_id) {
 
                 $new_products = [];
-                $product_links = [];
+                $links = [];
+                $link_products = [];
                 $product_categories = [];
                 $notification_settings = [];
-                $product_store_histories = [];
 
                 $categories_for_current_products_batch = $database_builder
                     ->table('category_product')
@@ -220,10 +236,9 @@ class ImportForm
                     ->insert($product_categories);
 
                 foreach ($old_products_stores as $old_product_store) {
-                    $product_links[$old_product_store->id] = [
+                    $links[$old_product_store->id] = [
                         'key' => $old_product_store->key,
                         'store_id' => $current_stores[$remote_stores[$old_product_store->store_id]],
-                        'product_id' => $new_products[$old_product_store->product_id]['new_id'],
                         'price' => $old_product_store->price * 10,
                         'used_price' => $old_product_store->used_price * 10,
                         'highest_price' => $old_product_store->highest_price * 10,
@@ -235,11 +250,10 @@ class ImportForm
                         'seller' => $old_product_store->seller ?? "",
                         'condition' => $old_product_store->condition,
                         'is_official' => true,
-                        'user_id' => Auth::id(),
                     ];
 
                     $notification_settings[$old_product_store->id] = [
-                        'product_link_id' => $start_product_link_id,
+                        'link_id' => $start_link_id,
                         'price_desired' => $old_product_store->notify_price ?? null,
                         'percentage_drop' => $old_product_store->notify_percentage,
                         'price_lowest_in_x_days' => $old_product->lowest_within,
@@ -247,20 +261,29 @@ class ImportForm
                         'is_official' => $old_product->only_official,
                         'is_shipping_included' => $old_product_store->add_shipping,
                         'user_id' => Auth::id(),
+                        'product_id' => $new_products[$old_product_store->product_id]['new_id'],
                     ];
 
-                    $start_product_link_id++;
+                    $link_products[] = [
+                        'product_id' => $new_products[$old_product_store->product_id]['new_id'],
+                        'link_id' => $start_link_id,
+                        'user_id' => Auth::id(),
+                    ];
+
+                    $start_link_id++;
                 }
 
-                ProductLink::insert($product_links);
+                Link::insert($links);
+                DB::table('link_product')
+                    ->insert($link_products);
                 NotificationSetting::insert($notification_settings);
 
-                Notification::make()
-                    ->title('Imported '.count($products).' products')
-                    ->success()
-                    ->send();
             });
 
-    }
+        Notification::make()
+            ->title('All Products Imported Successfully')
+            ->success()
+            ->send();
 
+    }
 }

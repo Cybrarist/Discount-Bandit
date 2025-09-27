@@ -5,7 +5,7 @@ namespace App\Classes\Stores;
 use App\Classes\StoreTemplate;
 use App\Helpers\GeneralHelper;
 use App\Models\Currency;
-use App\Models\ProductLink;
+use App\Models\Link;
 use Illuminate\Support\Str;
 
 class Newegg extends StoreTemplate
@@ -37,23 +37,23 @@ class Newegg extends StoreTemplate
         'UK' => 'uk',
     ];
 
-    public function __construct(ProductLink $product_link, array $extra_headers = [], ?string $user_agent = '')
+    public function __construct(Link $link, array $extra_headers = [], ?string $user_agent = '')
     {
         $this->chromium_crawler = true;
-        parent::__construct($product_link);
+        parent::__construct($link);
     }
 
-    public static function prepare_url(ProductLink $product_link, $extra = []): string
+    public static function prepare_url(Link $link, $extra = []): string
     {
-        $domain_to_use = match ($product_link->store->domain) {
+        $domain_to_use = match ($link->store->domain) {
             "newegg.ca" => self::SINGLE_STORE_URL,
             default => self::GLOBAL_URL,
         };
-        $country_code = self::$country_short[Str::remove('Newegg ', $product_link->store->name)];
+        $country_code = self::$country_short[Str::remove('Newegg ', $link->store->name)];
 
         return Str::replace(
             ["[domain]", "[country]", "[product_key]"],
-            [$product_link->store->domain, $country_code, Str::upper($product_link->key)],
+            [$link->store->domain, $country_code, Str::upper($link->key)],
             $domain_to_use);
 
     }
@@ -137,8 +137,8 @@ class Newegg extends StoreTemplate
         $currency = Currency::firstWhere('code', $currency_detected);
 
 
-        if ($currency && $currency->code != $this->product_link->store->currency->code) {
-            $this->product_data['price'] = ($this->product_data['price'] / $currency->rate) * $this->product_link->store->currency->rate;
+        if ($currency && $currency->code != $this->link->store->currency->code) {
+            $this->product_data['price'] = ($this->product_data['price'] / $currency->rate) * $this->link->store->currency->rate;
         }
     }
 

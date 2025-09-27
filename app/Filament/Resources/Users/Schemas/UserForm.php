@@ -58,7 +58,11 @@ class UserForm
                         TextInput::make('notification_settings.telegram_channel_id')
                             ->hint('include the "-"'),
 
-                        Toggle::make('notification_settings.enable_rss_feed'),
+                        TextInput::make('notification_settings.gotify_url'),
+                        TextInput::make('notification_settings.gotify_token'),
+
+                        Toggle::make('notification_settings.enable_rss_feed')
+                            ->columnStart(1),
                         TextInput::make('rss_feed')
                             ->formatStateUsing(fn ($state) => config('app.url').'/feed/?feed_id='.$state)
                             ->copyable()
@@ -82,12 +86,14 @@ class UserForm
                             ->relationship('currency', 'code')
                             ->searchable()
                             ->label('Currency')
+                            ->helperText("if empty, all values inserted in settings like desired price, shipping, etc will be the same currency as the store, otherwise
+                            it will be the currency you chose")
                             ->preload(),
 
                         TextInput::make('other_settings.max_links')
                             ->numeric()
                             ->hint('Maximum number of links per user')
-                            ->disabled(fn () => Auth::user()->role == RoleEnum::User->value),
+                            ->disabled(fn () => Auth::user()->role == RoleEnum::User),
                     ]),
 
             ]);

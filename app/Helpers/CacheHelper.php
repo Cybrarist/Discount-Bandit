@@ -2,7 +2,7 @@
 
 namespace App\Helpers;
 
-use App\Models\ProductLink;
+use App\Models\Link;
 use App\Models\Store;
 use Illuminate\Support\Facades\Cache;
 
@@ -11,7 +11,7 @@ class CacheHelper
     public static function get_stores_with_active_products()
     {
         return Cache::remember('stores_with_active_products', now()->addDay(), function () {
-            return Store::whereIn('id', ProductLink::distinct()->get('store_id')->toArray())
+            return Store::whereIn('id', Link::distinct()->get('store_id')->toArray())
                 ->with('currency:id,code,symbol')
                 ->get(["id", "name", "currency_id", "domain"]);
         });

@@ -12,7 +12,7 @@ class Ntfy
         public Http $httpClient
     ) {}
 
-    public function send(array $notification_title, string $notification_content, User $user)
+    public function send(array $notification, string $notification_content, User $user)
     {
         $auth = [];
 
@@ -29,10 +29,10 @@ class Ntfy
         $data = [
             "topic" => $ntfy_url[1],
             "message" => Str::replace("<br>", "\n", $notification_content),
-            "title" => $notification_title['Title'],
-            "tags" => explode(',', $notification_title['X-Tags']),
-            "attach" => $notification_title['Attach'],
-            "actions" => $notification_title['Actions'],
+            "title" => $notification['Title'],
+            "tags" => explode(',', $notification['X-Tags']),
+            "attach" => $notification['Attach'],
+            "actions" => $notification['Actions'],
         ];
 
         Http::withHeaders($auth)

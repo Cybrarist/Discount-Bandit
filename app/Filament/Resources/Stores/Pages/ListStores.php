@@ -10,6 +10,13 @@ class ListStores extends ListRecords
 {
     protected static string $resource = StoreResource::class;
 
+    public function setPage($page, $pageName = 'page'): void
+    {
+        parent::setPage($page, $pageName);
+
+        $this->dispatch('scroll-to-top');
+    }
+
     protected function getHeaderActions(): array
     {
         return [

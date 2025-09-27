@@ -18,6 +18,8 @@ class ResetUserSettingToDefaultAction extends Controller
             'ntfy_url' => null,
             'ntfy_auth_username' => null,
             'ntfy_auth_password' => null,
+            'gotify_url' => null,
+            'gotify_token' => null,
             'telegram_bot_token' => null,
             'telegram_channel_id' => null,
             'enable_rss_feed' => false,

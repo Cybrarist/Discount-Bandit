@@ -14,7 +14,7 @@ class CheckNotificationSettingsJob implements ShouldQueue
      * Create a new job instance.
      */
     public function __construct(
-        private int $product_link,
+        private int $link,
     ) {
         //
     }
@@ -24,7 +24,7 @@ class CheckNotificationSettingsJob implements ShouldQueue
      */
     public function handle(): void
     {
-        $notification_settings = NotificationSetting::where('product_link_id', $this->product_link)->get();
+        $notification_settings = NotificationSetting::where('link_id', $this->link)->get();
 
         foreach ($notification_settings as $notification_setting) {
 

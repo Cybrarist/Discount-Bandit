@@ -27,7 +27,8 @@ return new class extends Migration
             // notification information
             $table->date('snoozed_until')->nullable();
             $table->unsignedTinyInteger('max_notifications_daily')->nullable();
-            $table->unsignedTinyInteger('notifications_sent')->nullable()->default(0);
+            $table->unsignedTinyInteger('notifications_sent')->default(0);
+            $table->unsignedTinyInteger('remove_link_if_out_of_stock_for_x_days')->nullable();
 
             // other information
             $table->boolean('is_favourite')->default(false);

@@ -3,16 +3,20 @@
 use App\Console\Commands\ClearNotificationCount;
 use App\Enums\StoreStatusEnum;
 use App\Jobs\CrawlProductJob;
+use App\Jobs\DeleteLinksFromProductsThatAreOutOfStockForXDaysJob;
+use App\Jobs\DeleteLinksThatDontHaveProductsJob;
 use App\Models\Store;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 
-Artisan::command('inspire', function () {
-    $this->comment(Inspiring::quote());
-})->purpose('Display an inspiring quote');
-
-Artisan::command('exchange:price', function () {})
+Artisan::command('discount:exchange-rate', function () {})
     ->dailyAt('00:00');
+
+Schedule::job(DeleteLinksFromProductsThatAreOutOfStockForXDaysJob::class)
+    ->dailyAt('11:59');
+Schedule::job(DeleteLinksThatDontHaveProductsJob::class)
+    ->dailyAt('00:00');
+
 
 Schedule::call(function () {
     try {
@@ -21,7 +25,7 @@ Schedule::call(function () {
 
         Log::info("Products Schedule Started");
 
-        $stores = Store::withWhereHas('product_links', function ($query) {
+        $stores = Store::withWhereHas('links', function ($query) {
             $query->withoutGlobalScopes()
                 ->orderBy("updated_at")
                 ->distinct(['key', 'store_id'])
@@ -31,8 +35,8 @@ Schedule::call(function () {
             ->get();
 
         foreach ($stores as $store) {
-            foreach ($store->product_links as $index => $product_link) {
-                CrawlProductJob::dispatch($product_link->id)
+            foreach ($store->links as $index => $link) {
+                CrawlProductJob::dispatch($link->id)
                     ->onQueue($store->slug)
                     ->delay(now()->addSeconds($index * 5));
             }

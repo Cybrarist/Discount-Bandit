@@ -6,7 +6,7 @@ use App\Classes\Crawler\SimpleCrawler;
 use App\Classes\StoreTemplate;
 use App\Helpers\GeneralHelper;
 use App\Helpers\UserAgentHelper;
-use App\Models\ProductLink;
+use App\Models\Link;
 use Illuminate\Support\Str;
 
 use function Laravel\Prompts\warning;
@@ -22,19 +22,19 @@ class Princessauto extends StoreTemplate
         'Connection' => 'keep-alive',
     ];
 
-    public function __construct(ProductLink $product_link, array $extra_headers = [], ?string $user_agent = '')
+    public function __construct(Link $link, array $extra_headers = [], ?string $user_agent = '')
     {
         $this->extra_headers = $extra_headers + $this->extra_headers;
         $this->user_agent = ($user_agent) ?: UserAgentHelper::get_random_user_agent();
 
-        parent::__construct($product_link);
+        parent::__construct($link);
     }
 
-    public static function prepare_url(ProductLink $product_link, $extra = []): string
+    public static function prepare_url(Link $link, $extra = []): string
     {
         return Str::replace(
             ["[domain]", "[product_key]", "[ref]"],
-            [$product_link->store->domain, $product_link->key, $product_link->store->referral],
+            [$link->store->domain, $link->key, $link->store->referral],
 
             self::MAIN_URL);
     }

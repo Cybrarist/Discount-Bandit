@@ -2,39 +2,27 @@
 
 namespace App\Classes\Stores;
 
-use App\Classes\Crawler\SimpleCrawler;
 use App\Classes\StoreTemplate;
 use App\Helpers\GeneralHelper;
-use App\Helpers\UserAgentHelper;
-use App\Models\ProductLink;
+use App\Models\Link;
 use Illuminate\Support\Str;
-
-use function Laravel\Prompts\warning;
 
 class Diy extends StoreTemplate
 {
     const MAIN_URL = "https://[domain]/departments/random/[product_key]_BQ.prd";
 
-
-    public function __construct(ProductLink $product_link, array $extra_headers = [], ?string $user_agent = '')
+    public function __construct(Link $link, array $extra_headers = [], ?string $user_agent = '')
     {
-        $this->chromium_crawler= true;
-        parent::__construct($product_link);
+        $this->chromium_crawler = true;
+        parent::__construct($link);
     }
 
-    public static function prepare_url(ProductLink $product_link, $extra = []): string
+    public static function prepare_url(Link $link, $extra = []): string
     {
-        $template_url = self::MAIN_URL;
-
-        if (array_key_exists('alternative', $extra)) {
-            $template_url = self::OTHER_BUYING_OPTIONS;
-        }
-
         return Str::replace(
             ["[domain]", "[product_key]", "[ref]"],
-            [$product_link->store->domain, $product_link->key, $product_link->store->referral],
-
-            $template_url);
+            [$link->store->domain, $link->key, $link->store->referral],
+            self::MAIN_URL);
     }
 
     public function get_name(): void
@@ -80,7 +68,7 @@ class Diy extends StoreTemplate
         $this->product_data['total_reviews'] = GeneralHelper::get_numbers_only_with_dot($results_using_ids[0]?->textContent);
     }
 
-    //todo implement rating
+    // todo implement rating
     public function get_rating(): void
     {
         $this->product_data['rating'] = 5;
@@ -89,7 +77,7 @@ class Diy extends StoreTemplate
     public function get_seller(): void
     {
         $general_selectors = [
-            "div[data-testid='seller']"
+            "div[data-testid='seller']",
         ];
 
         $results = $this->dom->querySelectorAll(implode(',', $general_selectors));
@@ -115,7 +103,7 @@ class Diy extends StoreTemplate
 
     }
 
-    //todo needs example to implement
+    // todo needs example to implement
     public function get_used_price(): void
     {
         $general_selectors = [
@@ -123,19 +111,19 @@ class Diy extends StoreTemplate
         ];
     }
 
-    //todo needs example if price is there but not stock
+    // todo needs example if price is there but not stock
     public function get_stock(): void
     {
         $this->product_data['is_in_stock'] = $this->product_data['price'] > 0 || $this->product_data['used_price'] > 0;
     }
 
-    //todo needs example with shipping price as there's no shipping price on the page
+    // todo needs example with shipping price as there's no shipping price on the page
     public function get_shipping_price(): void
     {
         $this->product_data['shipping_price'] = 0;
     }
 
-    //todo needs example
+    // todo needs example
     public function get_condition(): void {}
 
     public function other_method_if_system_detected_as_bot(): void

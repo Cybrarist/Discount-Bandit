@@ -14,14 +14,14 @@ class GetExchangePriceTodayCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'exchange:price';
+    protected $signature = 'discount:exchange-rate';
 
     /**
      * The console command description.
      *
      * @var string
      */
-    protected $description = 'Command description';
+    protected $description = 'Get the exchange rate for today';
 
     /**
      * Execute the console command.
