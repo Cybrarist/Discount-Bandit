@@ -68,11 +68,11 @@ class NotificationSettingForm
                     ->inline(false),
 
                 Toggle::make('any_price_change')
-                    ->label("Alert When Stock Available")
+                    ->label("Alert on any price change")
                     ->inline(false),
 
                 Toggle::make('is_shipping_included')
-                    ->label("Alert When Stock Available")
+                    ->label("Is shipping included")
                     ->inline(false),
 
                 Textarea::make('description')
