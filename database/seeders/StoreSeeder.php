@@ -616,7 +616,7 @@ class StoreSeeder extends Seeder
             [
                 'name' => 'Otaku ME',
                 'domain' => 'otakume.com',
-                'image' => 'otakume.svg',
+                'image' => 'otakume.png',
                 'currency_id' => Currency::firstOrCreate(['code' => 'AED'])->id,
                 'slug' => 'otakume_com',
             ], [
