@@ -6,17 +6,14 @@ use App\Jobs\CrawlProductJob;
 use App\Jobs\DeleteLinksFromProductsThatAreOutOfStockForXDaysJob;
 use App\Jobs\DeleteLinksThatDontHaveProductsJob;
 use App\Models\Store;
-use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 
 Artisan::command('discount:exchange-rate', function () {})
-    ->dailyAt('00:00');
-
-Schedule::job(DeleteLinksFromProductsThatAreOutOfStockForXDaysJob::class)
-    ->dailyAt('11:59');
-Schedule::job(DeleteLinksThatDontHaveProductsJob::class)
-    ->dailyAt('00:00');
-
+    ->daily();
+Schedule::job(new DeleteLinksFromProductsThatAreOutOfStockForXDaysJob)
+    ->daily();
+Schedule::job(new DeleteLinksThatDontHaveProductsJob)
+    ->daily();
 
 Schedule::call(function () {
     try {
