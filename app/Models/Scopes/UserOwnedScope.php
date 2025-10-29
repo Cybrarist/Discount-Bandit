@@ -17,6 +17,6 @@ class UserOwnedScope implements Scope
         if (Auth::user()->role === 'admin') {
             return;
         }
-        $builder->where('user_id', Auth::id());
+        $builder->where($builder->qualifyColumn('user_id'), Auth::id());
     }
 }
