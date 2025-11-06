@@ -27,3 +27,4 @@ services:
       ASSET_URL: "http://localhost:8080"
       EXCHANGE_RATE_API_KEY:
       CRON: "*/5 * * * *"
+      APP_KEY: #required, check docs to how generate it
