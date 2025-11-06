@@ -29,12 +29,14 @@ class DeleteLinksWithoutProductsCommand extends Command
     public function handle()
     {
 
-        $orphan_links = Link::whereDoesntHave(
+        $orphan_links = Link::withoutGlobalScopes()
+        ->whereDoesntHave(
             'products',
             function ($query) {
                 $query->withoutGlobalScopes();
             }
         )->pluck('id');
+
 
         LinkHistory::whereIn('link_id', $orphan_links)->delete();
 
@@ -42,6 +44,7 @@ class DeleteLinksWithoutProductsCommand extends Command
             ->whereIn('link_id', $orphan_links)
             ->delete();
 
-        Link::whereIn('id', $orphan_links)->delete();
+        Link::withoutGlobalScopes()
+        ->whereIn('id', $orphan_links)->delete();
     }
 }
