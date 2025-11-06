@@ -3,16 +3,15 @@
 use App\Console\Commands\ClearNotificationCount;
 use App\Enums\StoreStatusEnum;
 use App\Jobs\CrawlProductJob;
-use App\Jobs\DeleteLinksFromProductsThatAreOutOfStockForXDaysJob;
-use App\Jobs\DeleteLinksThatDontHaveProductsJob;
 use App\Models\Store;
 
 Schedule::command('discount:exchange-rate')
     ->daily();
-Schedule::job(new DeleteLinksFromProductsThatAreOutOfStockForXDaysJob)
+Schedule::command('discount:delete-orphan-links')
     ->daily();
-Schedule::job(new DeleteLinksThatDontHaveProductsJob)
+Schedule::command('discount:delete-links-out-of-stock')
     ->daily();
+
 
 Schedule::call(function () {
     try {
