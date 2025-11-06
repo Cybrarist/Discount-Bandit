@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Enums\StoreStatusEnum;
 use App\Http\Requests\StoreStoreRequest;
 use App\Http\Requests\UpdateStoreRequest;
 use App\Models\Store;
@@ -13,7 +14,9 @@ class StoreController extends Controller
      */
     public function index()
     {
-        //
+        return Store::select('name', 'domain', 'image')
+            ->where('status', StoreStatusEnum::Active)
+            ->get();
     }
 
     /**

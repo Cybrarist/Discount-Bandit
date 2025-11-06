@@ -6,12 +6,8 @@ use App\Enums\RoleEnum;
 use App\Filament\Forms\ImportForm;
 use App\Filament\Pages\Auth\Login;
 use App\Filament\Pages\Auth\Register;
-use App\Filament\Resources\Links\LinkResource;
-use App\Filament\Resources\NotificationSettings\NotificationSettingResource;
 use App\Filament\Resources\Products\ProductResource;
 use App\Filament\Resources\Stores\StoreResource;
-use App\Filament\Resources\Users\UserResource;
-use App\Models\User;
 use Asmit\ResizedColumn\ResizedColumnPlugin;
 use Awcodes\QuickCreate\QuickCreatePlugin;
 use Boquizo\FilamentLogViewer\FilamentLogViewerPlugin;
@@ -37,8 +33,8 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Jeffgreco13\FilamentBreezy\BreezyCore;
+use Leandrocfe\FilamentApexCharts\FilamentApexChartsPlugin;
 use Tapp\FilamentAuthenticationLog\FilamentAuthenticationLogPlugin;
-use Tapp\FilamentAuthenticationLog\Resources\AuthenticationLogResource;
 
 class AdminPanelProvider extends PanelProvider
 {
@@ -120,6 +116,7 @@ class AdminPanelProvider extends PanelProvider
                         ProductResource::class,
                         StoreResource::class,
                     ]),
+                FilamentApexChartsPlugin::make(),
             ]);
     }
 }

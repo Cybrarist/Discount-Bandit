@@ -10,11 +10,12 @@ use Illuminate\Support\Str;
 
 use function Laravel\Prompts\warning;
 
-
-//todo not working properly
+// todo not working properly
 class Costco extends StoreTemplate
 {
     const string MAIN_URL = "https://[domain]/.product.[product_key].html";
+
+    const string USA_URL = "https://[domain]/p/-/[product_key]";
 
     const string SECONDARY_URL = "https://[domain]/p/[product_key]";
 
@@ -39,7 +40,8 @@ class Costco extends StoreTemplate
     public static function prepare_url(Link $link, $extra = []): string
     {
         return match ($link->store->domain) {
-            "costco.com","costco.ca" => Str::replace(["[domain]", "[product_key]"], [$link->store->domain, Str::upper($link->key)], self::MAIN_URL),
+            "costco.com" => Str::replace(["[domain]", "[product_key]"], [$link->store->domain, Str::upper($link->key)], self::USA_URL),
+            "costco.ca" => Str::replace(["[domain]", "[product_key]"], [$link->store->domain, Str::upper($link->key)], self::MAIN_URL),
             "costco.com.mx", "costco.co.uk" , "costco.co.kr" , "costco.com.tw","costco.co.jp","costco.com.au","costco.is" => Str::replace(["[domain]", "[product_key]"], [$link->store->domain, Str::upper($link->key)], self::SECONDARY_URL),
         };
     }
@@ -76,6 +78,10 @@ class Costco extends StoreTemplate
                 $this->product_data['image'] = $image_url;
                 break;
             }
+        }
+
+        if (blank($this->product_data['image'])) {
+            $this->product_data['image'] = $this->schema['product']['image'];
         }
 
     }
@@ -123,11 +129,13 @@ class Costco extends StoreTemplate
             '#sns-base-price span.a-price-whole',
             '#corePriceDisplay_desktop_feature_div span.a-price-whole',
             '#corePrice_feature_div span.a-price-whole',
+            '[data-testid="Text_single-price-whole-value"]',
         ];
         $fractional_price_selectors = [
             '#sns-base-price span.a-price-fraction',
             '#corePriceDisplay_desktop_feature_div span.a-price-fraction',
             '#corePrice_feature_div span.a-price-fraction',
+            '[data-testid="Text_single-price-decimal-value"]',
         ];
 
         $results_whole = $this->dom->querySelectorAll(implode(',', $whole_price_selectors));

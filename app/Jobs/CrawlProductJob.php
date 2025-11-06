@@ -6,6 +6,7 @@ use App\Classes\CustomStoreTemplate;
 use App\Classes\Stores\Aliexpress;
 use App\Classes\Stores\Amazon;
 use App\Classes\Stores\Canadiantire;
+use App\Classes\Stores\Costco;
 use App\Classes\Stores\Currys;
 use App\Classes\Stores\Diy;
 use App\Classes\Stores\Ebay;
@@ -58,6 +59,7 @@ class CrawlProductJob implements ShouldQueue
             str_contains($link->store->name, 'Amazon') => new Amazon($link),
             str_contains($link->store->name, 'Currys') => new Currys($link),
             str_contains($link->store->name, 'Canadian Tire') => new Canadiantire($link),
+            str_contains($link->store->name, 'Costco') => new Costco($link),
             str_contains($link->store->name, 'DIY') => new Diy($link),
             str_contains($link->store->name, 'Ebay') => new Ebay($link),
             str_contains($link->store->name, 'Eprice') => new Eprice($link),

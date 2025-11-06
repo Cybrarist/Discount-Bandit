@@ -2,21 +2,15 @@
 
 namespace App\Notifications;
 
-// use App\Models\RssFeedItem;
-// use App\NotificationsChannels\AppriseChannel;
-// use App\NotificationsChannels\GotifyChannel;
 use App\Models\Link;
 use App\Models\RssFeedItem;
 use App\Models\User;
 use App\NotificationsChannels\GotifyChannel;
 use App\NotificationsChannels\NtfyChannel;
-use Illuminate\Bus\Queueable;
 use Illuminate\Notifications\Notification;
 use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Str;
 use NotificationChannels\Telegram\TelegramFile;
-
-// use NotificationChannels\Telegram\TelegramFile;
 
 class ProductDiscounted extends Notification
 {

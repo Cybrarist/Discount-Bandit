@@ -24,6 +24,7 @@
         "laravel/octane": "^2.12",
         "laravel/sanctum": "^4.0",
         "laravel/tinker": "^2.10.1",
+        "leandrocfe/filament-apex-charts": "^4.0",
         "novadaemon/filament-pretty-json": "^3.1",
         "spatie/laravel-feed": "^4.4",
         "tapp/filament-authentication-log": "^5.0",

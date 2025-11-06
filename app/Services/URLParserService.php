@@ -107,7 +107,7 @@ class URLParserService
 
     public function get_bestbuy_key(): string
     {
-        $temp = explode("/", $this->parsed_url->path());;
+        $temp = explode("/", $this->parsed_url->path());
 
         // todo if same after finishing implementing ca then remove.
         return match ($this->domain) {
@@ -130,7 +130,8 @@ class URLParserService
     public function get_costco_key(): string
     {
         return match ($this->domain) {
-            "costco.com","costco.ca" => Str::replace([".", "html"], "", explode(".product", $this->parsed_url->path())[1]),
+            "costco.com" => Str::of($this->parsed_url->path())->afterLast('/'),
+            "costco.ca" => Str::replace([".", "html"], "", explode(".product", $this->parsed_url->path())[1]),
             "costco.com.mx","costco.co.uk","costco.co.kr","costco.com.tw","costco.co.jp","costco.com.au","costco.is" => explode("/p/", $this->parsed_url->path())[1],
         };
     }

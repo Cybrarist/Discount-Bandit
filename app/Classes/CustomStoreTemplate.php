@@ -134,13 +134,19 @@ class CustomStoreTemplate
 
     public function update_product_details(): void
     {
+
+        $products_for_link = $this->link->products->pluck('id')->implode(',');
+
+        if (blank($products_for_link))
+            return;
+
         // update products details that are missing.
         DB::statement("
             UPDATE products
             SET
                 name = CASE WHEN name = '' OR name IS NULL THEN ? ELSE name END,
                 image = CASE WHEN image = '' OR image IS NULL THEN ? ELSE image END
-            WHERE id IN ({$this->link->products->pluck('id')->implode(',')})
+            WHERE id IN ($products_for_link)
         ", [
             $this->product_data['name'],
             $this->product_data['image'],

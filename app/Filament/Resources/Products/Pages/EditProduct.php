@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Products\Pages;
 
+use App\Filament\Resources\ProductResource\Widgets\PriceHistoryChart;
 use App\Filament\Resources\Products\ProductResource;
 use App\Http\Controllers\Actions\FetchAllLinksForProductAction;
 use Filament\Actions\Action;
@@ -23,6 +24,14 @@ class EditProduct extends EditRecord
                 ->color('primary')
                 ->action(fn () => new FetchAllLinksForProductAction()->__invoke($this->record))
                 ->after(fn ($livewire) => $livewire->dispatch('refresh')),
+        ];
+    }
+
+
+    protected function getFooterWidgets(): array
+    {
+        return [
+            PriceHistoryChart::class,
         ];
     }
 }
