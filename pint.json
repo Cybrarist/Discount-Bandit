@@ -1,0 +1,6 @@
+{
+    "rules": {
+        "single_quote": false,
+        "control_structure_braces": false
+    }
+}
