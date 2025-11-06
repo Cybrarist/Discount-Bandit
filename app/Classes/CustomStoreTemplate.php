@@ -303,6 +303,10 @@ class CustomStoreTemplate
 
         $this->get_results_for_key($results, $attributes, 'rating');
 
+        if (! $this->product_data['rating']) {
+            $this->product_data['rating'] = 0;
+        }
+
     }
 
     public function get_seller()
