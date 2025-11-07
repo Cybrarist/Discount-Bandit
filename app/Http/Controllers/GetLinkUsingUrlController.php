@@ -19,11 +19,14 @@ class GetLinkUsingUrlController extends Controller
 
         $service->setup($validated['url']);
 
-        return Link::with(['store', 'store.currency'])
+        $link = Link::with(['store', 'store.currency'])
             ->firstWhere([
                 'store_id' => $service->store?->id,
                 'key' => $service->product_key,
             ]);
 
+        $link->url = route('filament.admin.resources.links.edit', $link);
+
+        return $link;
     }
 }

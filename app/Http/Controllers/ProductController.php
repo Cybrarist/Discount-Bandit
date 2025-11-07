@@ -12,7 +12,15 @@ class ProductController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index(Request $request) {}
+    public function index(Request $request)
+    {
+        $validated = $request->validate([
+            'search' => ['required', 'string'],
+        ]);
+
+        return Product::whereLike('name', "%{$validated['search']}%")
+            ->pluck('name', 'id');
+    }
 
     /**
      * Show the form for creating a new resource.
