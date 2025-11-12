@@ -39,8 +39,8 @@ class LinkResource extends Resource
     public static function getRelations(): array
     {
         return [
-            NotificationSettingsRelationManager::class,
             ProductsRelationManager::class,
+            NotificationSettingsRelationManager::class,
         ];
     }
 

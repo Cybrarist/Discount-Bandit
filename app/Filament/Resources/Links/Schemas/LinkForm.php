@@ -31,14 +31,6 @@ class LinkForm
                                 TextInput::make('name')
                                     ->hiddenOn([Operation::Create]),
 
-                                Fileupload::make('image')
-                                    ->image()
-                                    ->hiddenOn([Operation::Create])
-                                    ->previewable()
-                                    ->downloadable()
-                                    ->openable(),
-
-
                             ]),
                         Section::make()
                             ->contained(false)

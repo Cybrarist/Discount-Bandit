@@ -20,9 +20,6 @@ class EditLink extends EditRecord
                 ->outlined()
                 ->icon(Heroicon::Link)
                 ->url(fn ($record) => ProductHelper::get_url($record), true),
-
-            DeleteAction::make()
-                ->icon(Heroicon::Trash),
         ];
     }
 }
