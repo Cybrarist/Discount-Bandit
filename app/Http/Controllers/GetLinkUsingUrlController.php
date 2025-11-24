@@ -25,6 +25,9 @@ class GetLinkUsingUrlController extends Controller
                 'key' => $service->product_key,
             ]);
 
+        if (! $link)
+            return response()->json(['message' => 'Link not found'], 404);
+
         $link->url = route('filament.admin.resources.links.edit', $link);
 
         return $link;

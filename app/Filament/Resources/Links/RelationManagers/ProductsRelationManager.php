@@ -7,6 +7,7 @@ use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Number;
 
 class ProductsRelationManager extends RelationManager
 {
@@ -25,11 +26,18 @@ class ProductsRelationManager extends RelationManager
                     ->verticallyAlignCenter()
                     ->alignCenter()
                     ->imageSize('100%')
-                    ->extraImgAttributes(['style' => 'max-height:200px; '])
+                    ->extraImgAttributes(['style' => 'max-height:200px; max-width: 200px;'])
                     ->columnSpan(3),
 
                 TextColumn::make('name')
                     ->searchable(),
+
+                TextColumn::make('highest_price')
+                    ->color('danger'),
+
+                TextColumn::make('lowest_price')
+                    ->color('danger'),
+
 
             ])
             ->filters([

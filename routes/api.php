@@ -1,5 +1,7 @@
 <?php
 
+use App\Http\Controllers\Actions\GetChartForCurrentLinkAndItsRelatedLinksForTheUserProducts;
+use App\Http\Controllers\Actions\GetOtherRelatedLinksController;
 use App\Http\Controllers\AddLinkFromBrowserPluginAction;
 use App\Http\Controllers\GetLinkUsingUrlController;
 use App\Http\Controllers\ProductController;
@@ -21,7 +23,8 @@ Route::middleware('auth:sanctum')
         Route::apiResource('products', ProductController::class);
         //        Route::get('/products/search', [ProductController::class, 'search']);
         Route::get('/link/search-url', GetLinkUsingUrlController::class);
-        Route::get('/link/{link}/related', \App\Http\Controllers\GetOtherRelatedLinksController::class);
+        Route::get('/link/{link}/related', GetOtherRelatedLinksController::class);
+        Route::get('/link/{link}/history', GetChartForCurrentLinkAndItsRelatedLinksForTheUserProducts::class);
 
     });
 

@@ -6,6 +6,7 @@ use App\Enums\RoleEnum;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Colors\Color;
@@ -88,6 +89,21 @@ class UserForm
                             ->label('Currency')
                             ->helperText("if empty, all values inserted in settings like desired price, shipping, etc will be the same currency as the store, otherwise
                             it will be the currency you chose")
+                            ->live()
+                            ->afterStateUpdated(function ($state) {
+
+                                if (!$state)
+                                    return;
+
+                                if  (! config('settings.exchange_rate_api_key')){
+                                    Notification::make()
+                                        ->title('Currency Selected without exchange Rate API')
+                                        ->body('Please set exchange rate api key in the environment file, Otherwise you will get wrong errors across the app')
+                                        ->danger()
+                                        ->send();
+                                }
+
+                            })
                             ->preload(),
 
                         TextInput::make('other_settings.max_links')
