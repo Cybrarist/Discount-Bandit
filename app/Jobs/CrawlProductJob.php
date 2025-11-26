@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Classes\CustomStoreTemplate;
 use App\Classes\Stores\Aliexpress;
 use App\Classes\Stores\Amazon;
+use App\Classes\Stores\BestBuy;
 use App\Classes\Stores\Canadiantire;
 use App\Classes\Stores\Costco;
 use App\Classes\Stores\Currys;
@@ -57,6 +58,7 @@ class CrawlProductJob implements ShouldQueue
         match (true) {
             str_contains($link->store->name, 'Aliexpress') => new Aliexpress($link),
             str_contains($link->store->name, 'Amazon') => new Amazon($link),
+            str_contains($link->store->name, 'Best Buy') => new BestBuy($link),
             str_contains($link->store->name, 'Currys') => new Currys($link),
             str_contains($link->store->name, 'Canadian Tire') => new Canadiantire($link),
             str_contains($link->store->name, 'Costco') => new Costco($link),
