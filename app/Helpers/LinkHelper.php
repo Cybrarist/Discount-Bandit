@@ -2,6 +2,7 @@
 
 namespace App\Helpers;
 
+use App\Classes\CustomStoreTemplate;
 use App\Classes\Stores\Ajio;
 use App\Classes\Stores\Aliexpress;
 use App\Classes\Stores\Amazon;
@@ -31,7 +32,7 @@ use App\Classes\Stores\Walmart;
 use App\Models\Link;
 use Illuminate\Support\Str;
 
-class ProductHelper
+class LinkHelper
 {
     public static function get_url(Link $link): string
     {
@@ -65,7 +66,26 @@ class ProductHelper
             str_contains($store_name, 'Target') => Target::prepare_url($link),
             str_contains($store_name, 'Tata Cliq') => Tatacliq::prepare_url($link),
             str_contains($store_name, 'Walmart') => Walmart::prepare_url($link),
-            default => "https://{$link->store->domain}/{$link->key}"
+            default => CustomStoreTemplate::prepare_url($link),
         };
+    }
+
+    public static function prepare_base_key_and_params(Link $link): array
+    {
+        [$link_base_key, $params] = array_pad(explode('?', $link->key), 2, null);
+
+        // check if the key has params
+        if (! str_contains($link->key, '?') || ! $link->store->are_params_allowed)
+            return [$link_base_key, ''];
+
+        if (filled($link->store->allowed_params)) {
+            parse_str($params, $param_value_pairs);
+
+            $key_value_pairs = array_intersect_key($param_value_pairs, array_flip($link->store->allowed_params));
+
+            return [$link_base_key, http_build_query($key_value_pairs)];
+        }
+
+        return [$link_base_key, $params];
     }
 }

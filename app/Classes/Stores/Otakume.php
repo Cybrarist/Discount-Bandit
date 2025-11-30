@@ -2,15 +2,12 @@
 
 namespace App\Classes\Stores;
 
-use App\Classes\Crawler\SimpleCrawler;
 use App\Classes\StoreTemplate;
 use App\Helpers\GeneralHelper;
+use App\Helpers\LinkHelper;
 use App\Helpers\UserAgentHelper;
-use App\Models\NotificationSetting;
 use App\Models\Link;
 use Illuminate\Support\Str;
-
-use function Laravel\Prompts\warning;
 
 class Otakume extends StoreTemplate
 {
@@ -32,11 +29,13 @@ class Otakume extends StoreTemplate
 
     public static function prepare_url(Link $link, $extra = []): string
     {
+        [$link_base, $link_params] = LinkHelper::prepare_base_key_and_params($link);
+
         return Str::replace(
             ["[domain]", "[product_key]", "[ref]"],
-            [$link->store->domain, $link->key, $link->store->referral],
+            [$link->store->domain, $link_base, $link->store->referral],
 
-            self::MAIN_URL);
+            self::MAIN_URL)."?{$link_params}";
     }
 
     public function get_name(): void
@@ -106,15 +105,11 @@ class Otakume extends StoreTemplate
         $this->product_data['is_in_stock'] = ! isset($results[0]);
     }
 
-    public function get_shipping_price(): void
-    {
-    }
+    public function get_shipping_price(): void {}
 
     public function get_condition(): void {}
 
-    public function other_method_if_system_detected_as_bot(): void
-    {
-    }
+    public function other_method_if_system_detected_as_bot(): void {}
 
     public function before_crawl(): void
     {

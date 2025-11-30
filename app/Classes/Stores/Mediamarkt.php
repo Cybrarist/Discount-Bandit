@@ -4,6 +4,7 @@ namespace App\Classes\Stores;
 
 use App\Classes\StoreTemplate;
 use App\Helpers\GeneralHelper;
+use App\Helpers\LinkHelper;
 use App\Models\Link;
 use Illuminate\Support\Str;
 
@@ -21,6 +22,7 @@ class Mediamarkt extends StoreTemplate
 
     public static function prepare_url(Link $link, $extra = []): string
     {
+        [$link_base, $link_params] = LinkHelper::prepare_base_key_and_params($link);
 
         $language = Str::of($link->store->domain)
             ->explode(".")
@@ -28,9 +30,9 @@ class Mediamarkt extends StoreTemplate
 
         return Str::replace(
             ["[domain]", "[product_key]", "[language]"],
-            [$link->store->domain, $link->key, $language],
+            [$link->store->domain, $link_base, $language],
 
-            self::MAIN_URL);
+            self::MAIN_URL)."?{$link_params}";
     }
 
     public function get_name(): void
@@ -111,10 +113,10 @@ class Mediamarkt extends StoreTemplate
         }
 
         $whole_price_selectors = [
-            "[data-test='branded-price-whole-value']"
+            "[data-test='branded-price-whole-value']",
         ];
         $fractional_price_selectors = [
-            "[data-test='branded-price-decimal-value']"
+            "[data-test='branded-price-decimal-value']",
         ];
 
         $results_whole = $this->dom->querySelectorAll(implode(',', $whole_price_selectors));
@@ -131,6 +133,7 @@ class Mediamarkt extends StoreTemplate
     {
         if (isset($this->schema['offers']['availability'])) {
             $this->product_data['is_in_stock'] = $this->schema['offers']['availability'] == 'https://schema.org/InStock';
+
             return;
         }
 

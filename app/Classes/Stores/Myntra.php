@@ -3,6 +3,7 @@
 namespace App\Classes\Stores;
 
 use App\Classes\StoreTemplate;
+use App\Helpers\LinkHelper;
 use App\Models\Link;
 use Illuminate\Support\Str;
 
@@ -19,11 +20,13 @@ class Myntra extends StoreTemplate
 
     public static function prepare_url(Link $link, $extra = []): string
     {
+        [$link_base, $link_params] = LinkHelper::prepare_base_key_and_params($link);
+
         return Str::replace(
             ["[domain]", "[product_key]", "[random]"],
-            [$link->store->domain, $link->key, Str::random(10)],
+            [$link->store->domain, $link_base, Str::random(10)],
 
-            self::MAIN_URL);
+            self::MAIN_URL)."?{$link_params}";
     }
 
     public function get_name(): void
@@ -31,6 +34,7 @@ class Myntra extends StoreTemplate
 
         if (isset($this->schema['name'])) {
             $this->product_data['name'] = $this->schema['name'];
+
             return;
         }
 
@@ -72,13 +76,9 @@ class Myntra extends StoreTemplate
 
     }
 
-    public function get_total_reviews(): void
-    {
-    }
+    public function get_total_reviews(): void {}
 
-    public function get_rating(): void
-    {
-    }
+    public function get_rating(): void {}
 
     public function get_seller(): void
     {
@@ -99,9 +99,9 @@ class Myntra extends StoreTemplate
 
     public function get_stock(): void
     {
-        if (isset($this->schema['offers']['availability']))
-        {
+        if (isset($this->schema['offers']['availability'])) {
             $this->product_data['is_in_stock'] = Str::contains($this->schema['offers']['availability'], 'InStock', true);
+
             return;
         }
 

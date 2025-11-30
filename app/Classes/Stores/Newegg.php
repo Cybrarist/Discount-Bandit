@@ -3,7 +3,7 @@
 namespace App\Classes\Stores;
 
 use App\Classes\StoreTemplate;
-use App\Helpers\GeneralHelper;
+use App\Helpers\LinkHelper;
 use App\Models\Currency;
 use App\Models\Link;
 use Illuminate\Support\Str;
@@ -45,6 +45,8 @@ class Newegg extends StoreTemplate
 
     public static function prepare_url(Link $link, $extra = []): string
     {
+        [$link_base, $link_params] = LinkHelper::prepare_base_key_and_params($link);
+
         $domain_to_use = match ($link->store->domain) {
             "newegg.ca" => self::SINGLE_STORE_URL,
             default => self::GLOBAL_URL,
@@ -53,8 +55,8 @@ class Newegg extends StoreTemplate
 
         return Str::replace(
             ["[domain]", "[country]", "[product_key]"],
-            [$link->store->domain, $country_code, Str::upper($link->key)],
-            $domain_to_use);
+            [$link->store->domain, $country_code, Str::upper($link_base)],
+            $domain_to_use) ."?{$link_params}";
 
     }
 
@@ -63,6 +65,7 @@ class Newegg extends StoreTemplate
 
         if (isset($this->schema['name'])) {
             $this->product_data['name'] = $this->schema['name'];
+
             return;
         }
         $ids_and_tag_selector = [
@@ -79,9 +82,9 @@ class Newegg extends StoreTemplate
 
         if (isset($this->schema['image'])) {
             $this->product_data['image'] = $this->schema['image'];
+
             return;
         }
-
 
         $ids_and_tag_selector = [
             "meta[property='og:image']",
@@ -135,7 +138,6 @@ class Newegg extends StoreTemplate
 
         $currency_detected = $this->schema['offers']['priceCurrency'];
         $currency = Currency::firstWhere('code', $currency_detected);
-
 
         if ($currency && $currency->code != $this->link->store->currency->code) {
             $this->product_data['price'] = ($this->product_data['price'] / $currency->rate) * $this->link->store->currency->rate;

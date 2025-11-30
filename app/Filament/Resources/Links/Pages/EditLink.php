@@ -3,9 +3,8 @@
 namespace App\Filament\Resources\Links\Pages;
 
 use App\Filament\Resources\Links\LinkResource;
-use App\Helpers\ProductHelper;
+use App\Helpers\LinkHelper;
 use Filament\Actions\Action;
-use Filament\Actions\DeleteAction;
 use Filament\Resources\Pages\EditRecord;
 use Filament\Support\Icons\Heroicon;
 
@@ -19,7 +18,7 @@ class EditLink extends EditRecord
             Action::make('open')
                 ->outlined()
                 ->icon(Heroicon::Link)
-                ->url(fn ($record) => ProductHelper::get_url($record), true),
+                ->url(fn ($record) => LinkHelper::get_url($record), true),
         ];
     }
 }

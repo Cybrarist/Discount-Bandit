@@ -3,6 +3,7 @@
 namespace App\Classes\Stores;
 
 use App\Classes\StoreTemplate;
+use App\Helpers\LinkHelper;
 use App\Helpers\UserAgentHelper;
 use App\Models\Currency;
 use App\Models\Link;
@@ -33,6 +34,7 @@ class Microless extends StoreTemplate
 
     public static function prepare_url(Link $link, $extra = []): string
     {
+        [$link_base, $link_params] = LinkHelper::prepare_base_key_and_params($link);
 
         $subdomain = match ($link->store->name) {
             "Microless UAE" => "uae.",
@@ -41,9 +43,9 @@ class Microless extends StoreTemplate
 
         return Str::replace(
             ["[domain]", "[product_key]", "[subdomain]"],
-            [$link->store->domain, $link->key, $subdomain],
+            [$link->store->domain, $link_base, $subdomain],
 
-            self::MAIN_URL);
+            self::MAIN_URL)."?{$link_params}";
     }
 
     public function get_name(): void

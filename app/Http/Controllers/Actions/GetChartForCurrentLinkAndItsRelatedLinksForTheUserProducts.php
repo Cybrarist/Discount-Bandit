@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers\Actions;
 
-use App\Helpers\ProductHelper;
 use App\Http\Controllers\Controller;
 use App\Models\Link;
 use App\Models\Product;

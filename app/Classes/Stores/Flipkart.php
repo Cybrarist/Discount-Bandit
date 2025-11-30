@@ -3,7 +3,7 @@
 namespace App\Classes\Stores;
 
 use App\Classes\StoreTemplate;
-use App\Helpers\GeneralHelper;
+use App\Helpers\LinkHelper;
 use App\Helpers\UserAgentHelper;
 use App\Models\Link;
 use Illuminate\Support\Str;
@@ -11,7 +11,6 @@ use Illuminate\Support\Str;
 class Flipkart extends StoreTemplate
 {
     const string MAIN_URL = "https://www.[domain]/[random]/p/itm[product_key]";
-
 
     protected array $extra_headers = [
         'Accept' => 'application/json',
@@ -30,11 +29,13 @@ class Flipkart extends StoreTemplate
 
     public static function prepare_url(Link $link, $extra = []): string
     {
+        [$link_base, $link_params] = LinkHelper::prepare_base_key_and_params($link);
+
         return Str::replace(
             ["[domain]", "[product_key]", "[random]"],
-            [$link->store->domain, $link->key, Str::random(10)],
+            [$link->store->domain, $link_base, Str::random(10)],
 
-            self::MAIN_URL);
+            self::MAIN_URL)."?{$link_params}";
     }
 
     public function get_name(): void

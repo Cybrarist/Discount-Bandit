@@ -3,7 +3,7 @@
 namespace App\Classes\Stores;
 
 use App\Classes\StoreTemplate;
-use App\Helpers\GeneralHelper;
+use App\Helpers\LinkHelper;
 use App\Models\Link;
 use Illuminate\Support\Str;
 
@@ -23,6 +23,8 @@ class Homedepot extends StoreTemplate
 
     public static function prepare_url(Link $link, $extra = []): string
     {
+        [$link_base, $link_params] = LinkHelper::prepare_base_key_and_params($link);
+
         $url_to_use = match ($link->store->domain) {
             'homedepot.com' => self::MAIN_URL,
             'homedepot.ca' => self::CANADA_URL
@@ -30,9 +32,9 @@ class Homedepot extends StoreTemplate
 
         return Str::replace(
             ["[domain]", "[product_key]", "[random]"],
-            [$link->store->domain, $link->key, Str::random(10)],
+            [$link->store->domain, $link_base, Str::random(10)],
 
-            $url_to_use);
+            $url_to_use)."?{$link_params}";
     }
 
     public function get_name(): void

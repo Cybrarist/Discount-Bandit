@@ -2,7 +2,7 @@
 
 namespace App\Filament\Resources\Links\Tables;
 
-use App\Helpers\ProductHelper;
+use App\Helpers\LinkHelper;
 use App\Http\Controllers\Actions\FetchSingleLinkAction;
 use App\Models\Link;
 use Filament\Actions\Action;
@@ -20,7 +20,6 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Number;
 
 class LinksTable
@@ -33,7 +32,18 @@ class LinksTable
                 ->headerActions([
                     CreateAction::make('create')
                         ->label('Add link')
-                        ->using(function ($data) use ($product) {
+                        ->using(function ($data, $action) use ($product) {
+
+                            if (blank($data['store_id'])) {
+                                Notification::make()
+                                    ->title("Store doesn't exist")
+                                    ->body("Please create the store first or check the url")
+                                    ->danger()
+                                    ->send();
+
+                                $action->halt();
+                            }
+
                             $link = Link::updateOrCreate(Arr::only($data, [
                                 'key',
                                 'store_id',
@@ -76,7 +86,7 @@ class LinksTable
                                         Action::make('View')
                                             ->url(route('filament.admin.resources.links.edit', ['record' => $link->id])),
                                     ])
-                                    ->duration(10000)
+                                    ->duration(1000)
                                     ->warning()
                                     ->send();
                         }),
@@ -85,7 +95,7 @@ class LinksTable
 
         return $table
             ->modifyQueryUsing(fn ($query) => $query
-                ->with(['store:id,name,currency_id,domain,referral', 'store.currency:id,code,rate'])
+                ->with(['store:id,name,currency_id,domain,referral,are_params_allowed,allowed_params', 'store.currency:id,code,rate'])
             )
             ->columns([
                 ImageColumn::make('image')
@@ -97,7 +107,7 @@ class LinksTable
                     ->wrap()
                     ->width('200px')
                     ->toggleable()
-                    ->url(fn ($record) => ProductHelper::get_url($record), true)
+                    ->url(fn ($record) => LinkHelper::get_url($record), true)
                     ->words(10)
                     ->tooltip(fn ($record) => $record->name)
                     ->color('primary')

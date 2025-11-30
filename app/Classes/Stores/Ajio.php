@@ -3,6 +3,7 @@
 namespace App\Classes\Stores;
 
 use App\Classes\StoreTemplate;
+use App\Helpers\LinkHelper;
 use App\Models\Link;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
@@ -33,10 +34,12 @@ class Ajio extends StoreTemplate
 
     public static function prepare_url(Link $link, array $extra = []): string
     {
+        [$link_base, $link_params] = LinkHelper::prepare_base_key_and_params($link);
+
         return Str::replace(
             ["[domain]", "[product_key]"],
-            [$link->store->domain, $link->key],
-            self::MAIN_URL);
+            [$link->store->domain, $link_base],
+            self::MAIN_URL).'?'. $link_params;
     }
 
     public function get_name(): void

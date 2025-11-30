@@ -5,6 +5,7 @@ namespace App\Classes\Stores;
 use App\Classes\Crawler\SimpleCrawler;
 use App\Classes\StoreTemplate;
 use App\Helpers\GeneralHelper;
+use App\Helpers\LinkHelper;
 use App\Helpers\UserAgentHelper;
 use App\Models\Link;
 use Illuminate\Support\Str;
@@ -29,11 +30,10 @@ class Amazon extends StoreTemplate
 
         if (in_array($link->store->domain, [
             'amazon.de',
-            'amazon.ca'
-        ])){
+            'amazon.ca',
+        ])) {
             $this->chromium_crawler = true;
-        }
-        else{
+        } else {
             $this->extra_headers = $extra_headers + $this->extra_headers;
             $this->user_agent = ($user_agent) ?: UserAgentHelper::get_random_user_agent();
 
@@ -44,6 +44,8 @@ class Amazon extends StoreTemplate
 
     public static function prepare_url(Link $link, $extra = []): string
     {
+        [$link_base, $link_params] = LinkHelper::prepare_base_key_and_params($link);
+
         $template_url = self::MAIN_URL;
 
         if (array_key_exists('alternative', $extra)) {
@@ -52,9 +54,9 @@ class Amazon extends StoreTemplate
 
         return Str::replace(
             ["[domain]", "[product_key]", "[ref]"],
-            [$link->store->domain, $link->key, $link->store->referral],
+            [$link->store->domain, $link_base, $link->store->referral],
 
-            $template_url);
+            $template_url)."&{$link_params}";
     }
 
     public function get_name(): void
@@ -90,7 +92,6 @@ class Amazon extends StoreTemplate
                 break;
             }
         }
-
 
     }
 

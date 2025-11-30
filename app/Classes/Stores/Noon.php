@@ -4,6 +4,7 @@ namespace App\Classes\Stores;
 
 use App\Classes\StoreTemplate;
 use App\Helpers\GeneralHelper;
+use App\Helpers\LinkHelper;
 use App\Models\Link;
 use Illuminate\Support\Str;
 
@@ -26,6 +27,8 @@ class Noon extends StoreTemplate
 
     public static function prepare_url(Link $link, $extra = []): string
     {
+        [$link_base, $link_params] = LinkHelper::prepare_base_key_and_params($link);
+
 
         $country = Str::of($link->store->name)
             ->lower()
@@ -36,8 +39,8 @@ class Noon extends StoreTemplate
             ["[domain]", "[country]", "[product_key]"],
             [$link->store->domain,
                 $country,
-                Str::upper($link->key)],
-            self::MAIN_URL);
+                Str::upper($link_base)],
+            self::MAIN_URL)."?{$link_params}";
 
     }
 

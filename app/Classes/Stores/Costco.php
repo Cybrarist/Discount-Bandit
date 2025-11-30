@@ -5,6 +5,7 @@ namespace App\Classes\Stores;
 use App\Classes\Crawler\SimpleCrawler;
 use App\Classes\StoreTemplate;
 use App\Helpers\GeneralHelper;
+use App\Helpers\LinkHelper;
 use App\Models\Link;
 use Illuminate\Support\Str;
 
@@ -39,11 +40,13 @@ class Costco extends StoreTemplate
 
     public static function prepare_url(Link $link, $extra = []): string
     {
+        [$link_base, $link_params] = LinkHelper::prepare_base_key_and_params($link);
+
         return match ($link->store->domain) {
-            "costco.com" => Str::replace(["[domain]", "[product_key]"], [$link->store->domain, Str::upper($link->key)], self::USA_URL),
-            "costco.ca" => Str::replace(["[domain]", "[product_key]"], [$link->store->domain, Str::upper($link->key)], self::MAIN_URL),
+            "costco.com" => Str::replace(["[domain]", "[product_key]"], [$link->store->domain, Str::upper($link_base)], self::USA_URL),
+            "costco.ca" => Str::replace(["[domain]", "[product_key]"], [$link->store->domain, Str::upper($link_base)], self::MAIN_URL),
             "costco.com.mx", "costco.co.uk" , "costco.co.kr" , "costco.com.tw","costco.co.jp","costco.com.au","costco.is" => Str::replace(["[domain]", "[product_key]"], [$link->store->domain, Str::upper($link->key)], self::SECONDARY_URL),
-        };
+        }."?{$link_params}";
     }
 
     public function get_name(): void

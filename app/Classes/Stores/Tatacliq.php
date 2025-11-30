@@ -3,15 +3,13 @@
 namespace App\Classes\Stores;
 
 use App\Classes\StoreTemplate;
-use App\Helpers\UserAgentHelper;
+use App\Helpers\LinkHelper;
 use App\Models\Link;
 use Illuminate\Support\Str;
 
 class Tatacliq extends StoreTemplate
 {
-
-    const string MAIN_URL="https://[domain]/p-mp[product_key]" ;
-
+    const string MAIN_URL = "https://[domain]/p-mp[product_key]";
 
     public function __construct(Link $link, array $extra_headers = [], ?string $user_agent = '')
     {
@@ -23,11 +21,13 @@ class Tatacliq extends StoreTemplate
 
     public static function prepare_url(Link $link, $extra = []): string
     {
+        [$link_base, $link_params] = LinkHelper::prepare_base_key_and_params($link);
+
         return Str::replace(
             ["[domain]", "[product_key]", "[random]"],
-            [$link->store->domain, $link->key, Str::random(10)],
+            [$link->store->domain, $link_base, Str::random(10)],
 
-            self::MAIN_URL);
+            self::MAIN_URL)."?{$link_params}";
     }
 
     public function get_name(): void
@@ -78,10 +78,7 @@ class Tatacliq extends StoreTemplate
 
     }
 
-    public function get_total_reviews(): void
-    {
-
-    }
+    public function get_total_reviews(): void {}
 
     public function get_rating(): void
     {
@@ -93,10 +90,10 @@ class Tatacliq extends StoreTemplate
     public function get_seller(): void
     {
 
-        if (isset($this->schema['offers']['seller']['name']))
-        {
+        if (isset($this->schema['offers']['seller']['name'])) {
             $this->product_data['seller'] = $this->schema['offers']['seller']['name'];
             $this->product_data['is_official'] = Str::contains($this->product_data['seller'], 'Tata Cliq', true);
+
             return;
         }
 

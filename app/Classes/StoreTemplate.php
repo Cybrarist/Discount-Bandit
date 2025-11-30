@@ -131,7 +131,7 @@ abstract class StoreTemplate
     public function update_product_details(): void
     {
 
-        // update products details that are missing.
+        // update product details that are missing.
         DB::statement("
             UPDATE products
             SET

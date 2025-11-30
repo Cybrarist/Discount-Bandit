@@ -6,12 +6,16 @@ use App\Enums\StoreStatusEnum;
 use App\Http\Controllers\Actions\NewStoreSmartSetupAction;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
+use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
+use Filament\Support\Enums\Alignment;
+use Filament\Support\Enums\Operation;
 use HeadlessChromium\Page;
 use Novadaemon\FilamentPrettyJson\Form\PrettyJsonField;
 
@@ -58,6 +62,28 @@ class StoreForm
                     ->preload()
                     ->required(),
 
+                Section::make('Store URL Settings')
+                    ->columnSpanFull()
+                    ->columns(3)
+                    ->collapsible()
+                    ->collapsed(fn ($operation) => $operation == Operation::Edit->value)
+                    ->schema([
+                        Toggle::make('are_params_allowed')
+                            ->inline(false)
+                            ->default(false),
+
+                        Repeater::make('allowed_params')
+                            ->label(null)
+                            ->grid(3)
+                            ->columnSpanFull()
+                            ->simple(
+                                TextInput::make('field')->required(),
+                            )
+                            ->distinct()
+                            ->addActionAlignment(Alignment::Start),
+
+                    ]),
+
                 Section::make('Custom Store Settings')
                     ->columnSpanFull()
                     ->columns(3)
@@ -100,7 +126,6 @@ class StoreForm
                             ])
                             ->default('chromium')
                             ->preload()
-                            ->required()
                             ->native(false),
 
                         Section::make('Chromium Settings')

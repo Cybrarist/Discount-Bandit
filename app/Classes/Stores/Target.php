@@ -3,7 +3,7 @@
 namespace App\Classes\Stores;
 
 use App\Classes\StoreTemplate;
-use App\Helpers\GeneralHelper;
+use App\Helpers\LinkHelper;
 use App\Helpers\UserAgentHelper;
 use App\Models\Link;
 use Illuminate\Support\Facades\Log;
@@ -34,10 +34,12 @@ class Target extends StoreTemplate
 
     public static function prepare_url(Link $link, $extra = []): string
     {
+        [$link_base, $link_params] = LinkHelper::prepare_base_key_and_params($link);
+
         return Str::replace(
             ["[domain]", "[product_key]"],
-            [$link->store->domain, $link->key],
-            self::MAIN_URL);
+            [$link->store->domain, $link_base],
+            self::MAIN_URL)."?{$link_params}";
     }
 
     public function get_name(): void
@@ -56,7 +58,6 @@ class Target extends StoreTemplate
 
         if (isset($this->schema['item']['enrichment']['images']['primary_image_url']))
             $this->product_data['image'] = $this->schema['item']['enrichment']['images']['primary_image_url'];
-
 
         $ids_and_tag_selector = [
             'img#landingImage',
@@ -102,18 +103,14 @@ class Target extends StoreTemplate
         $this->product_data['price'] = (float) $this->schema['price']['current_retail'];
     }
 
-    public function get_used_price(): void
-    {
-    }
+    public function get_used_price(): void {}
 
     public function get_stock(): void
     {
         $this->product_data['is_in_stock'] = $this->product_data['price'] > 0 || $this->product_data['used_price'] > 0;
     }
 
-    public function get_shipping_price(): void
-    {
-    }
+    public function get_shipping_price(): void {}
 
     public function get_condition(): void {}
 
@@ -145,11 +142,10 @@ class Target extends StoreTemplate
                     break;
                 }
             }
-        }catch (\Throwable $throwable){
-            Log::error("Couldn't get target product. please share this link with developer: {$this->current_product_url}" );
+        } catch (\Throwable $throwable) {
+            Log::error("Couldn't get target product. please share this link with developer: {$this->current_product_url}");
             exit();
         }
-
 
     }
 }

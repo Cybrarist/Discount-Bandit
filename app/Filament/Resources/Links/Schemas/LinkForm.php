@@ -4,9 +4,9 @@ namespace App\Filament\Resources\Links\Schemas;
 
 use App\Filament\Resources\NotificationSettings\Schemas\NotificationSettingForm;
 use App\Services\URLParserService;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\TextInput;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\Operation;
@@ -57,32 +57,34 @@ class LinkForm
 
                             ]),
 
-
-
-
                     ])
                     ->disabled()
                     ->columns(12)
                     ->columnSpanFull()
                     ->hiddenOn([Operation::Create]),
 
-
                 TextInput::make('url')
-                    ->required(fn ($operation) => $operation == "create")
+                    ->required(fn ($operation) => $operation == Operation::Create->value)
                     ->hiddenOn([Operation::Edit, Operation::View])
                     ->autofocus()
                     ->url()
                     ->label('URL of product')
                     ->live(onBlur: true)
                     ->afterStateUpdated(function ($state, $set, URLParserService $service) {
-                        if (! $state) {
-                            return;
+                        try {
+                            $service->setup($state);
+                            if ($service->store?->id) {
+                                $set('store_id', $service->store->id);
+                                $set('key', $service->product_key);
+                            }
+                        } catch (\Exception $e) {
+                            Notification::make()
+                                ->title("Error")
+                                ->body($e->getMessage())
+                                ->danger()
+                                ->send();
                         }
-                        $service->setup($state);
-                        if ($service->store?->id) {
-                            $set('store_id', $service->store->id);
-                            $set('key', $service->product_key);
-                        }
+
                     }),
 
                 Section::make()

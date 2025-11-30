@@ -2,14 +2,11 @@
 
 namespace App\Classes\Stores;
 
-use App\Classes\Crawler\SimpleCrawler;
 use App\Classes\StoreTemplate;
-use App\Helpers\GeneralHelper;
+use App\Helpers\LinkHelper;
 use App\Helpers\UserAgentHelper;
 use App\Models\Link;
 use Illuminate\Support\Str;
-
-use function Laravel\Prompts\warning;
 
 class Princessauto extends StoreTemplate
 {
@@ -32,11 +29,13 @@ class Princessauto extends StoreTemplate
 
     public static function prepare_url(Link $link, $extra = []): string
     {
+        [$link_base, $link_params] = LinkHelper::prepare_base_key_and_params($link);
+
         return Str::replace(
             ["[domain]", "[product_key]", "[ref]"],
-            [$link->store->domain, $link->key, $link->store->referral],
+            [$link->store->domain, $link_base, $link->store->referral],
 
-            self::MAIN_URL);
+            self::MAIN_URL)."?{$link_params}";
     }
 
     public function get_name(): void
@@ -54,13 +53,9 @@ class Princessauto extends StoreTemplate
         }
     }
 
-    public function get_total_reviews(): void
-    {
-    }
+    public function get_total_reviews(): void {}
 
-    public function get_rating(): void
-    {
-    }
+    public function get_rating(): void {}
 
     public function get_seller(): void
     {
@@ -76,9 +71,7 @@ class Princessauto extends StoreTemplate
         }
     }
 
-    public function get_used_price(): void
-    {
-    }
+    public function get_used_price(): void {}
 
     public function get_stock(): void
     {
@@ -90,21 +83,17 @@ class Princessauto extends StoreTemplate
         $this->product_data['is_in_stock'] = $this->product_data['price'] > 0 || $this->product_data['used_price'] > 0;
     }
 
-    public function get_shipping_price(): void
-    {
-    }
+    public function get_shipping_price(): void {}
 
-    public function get_condition(): void {
+    public function get_condition(): void
+    {
         if (isset($this->schema['offers'][0]['itemCondition'])) {
             $this->product_data['condition'] = $this->schema['offers'][0]['itemCondition'] == 'https://schema.org/NewCondition' ? 'New' : 'Used';
         }
 
     }
 
-    public function other_method_if_system_detected_as_bot(): void
-    {
-    }
-
+    public function other_method_if_system_detected_as_bot(): void {}
 
     public function prepare_dom_for_getting_product_information(): void
     {

@@ -5,10 +5,10 @@ namespace App\Services;
 use App\Exceptions\CouldntParseProductKeyOrURLException;
 use App\Models\Currency;
 use App\Models\Store;
-use Filament\Notifications\Notification;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Str;
 use Illuminate\Support\Uri;
+use Mockery\Exception;
 
 class URLParserService
 {
@@ -24,28 +24,26 @@ class URLParserService
 
     public function setup(string $url): void
     {
-        try {
-            $this->parsed_url = Uri::of($url);
+        if (! $url)
+            return;
 
-            $this->domain = Str::of($this->parsed_url->host())
-                ->chopStart(["www.", "uae.", "global."])
-                ->toString();
+        if (Str::doesntcontain($url, '://'))
+            $url = "https://".$url;
 
-            $this->parse_product_key_or_url();
 
-            if (! $this->store) {
-                $this->store = Store::where('domain', $this->domain)->first();
-            }
+        $this->parsed_url = Uri::of($url);
 
-            $this->top_host = explode('.', $this->parsed_url->host())[0];
+        $this->domain = Str::of($this->parsed_url->host())
+            ->chopStart(["www.", "uae.", "global."])
+            ->toString();
 
-        } catch (\Exception $e) {
-            Notification::make()
-                ->title("Error")
-                ->body($e->getMessage())
-                ->danger()
-                ->send();
-        }
+        $this->parse_product_key_or_url();
+
+        $this->store = Store::firstWhere('domain', $this->domain);
+
+        throw_if(! $this->store, new Exception('store not found'));
+
+        $this->top_host = explode('.', $this->parsed_url->host())[0];
 
     }
 
@@ -65,6 +63,8 @@ class URLParserService
                 ->toString();
             $this->product_key = $this->parsed_url->path();
         }
+
+        $this->product_key .= "?".http_build_query($this->parsed_url->query()->toArray());
 
     }
 
@@ -132,7 +132,7 @@ class URLParserService
         return match ($this->domain) {
             "costco.com" => Str::of($this->parsed_url->path())->afterLast('/'),
             "costco.ca" => Str::replace([".", "html"], "", explode(".product", $this->parsed_url->path())[1]),
-            "costco.com.mx","costco.co.uk","costco.co.kr","costco.com.tw","costco.co.jp","costco.com.au","costco.is" => explode("/p/", $this->parsed_url->path())[1],
+            "costco.com.mx", "costco.co.uk", "costco.co.kr", "costco.com.tw", "costco.co.jp", "costco.com.au", "costco.is" => explode("/p/", $this->parsed_url->path())[1],
         };
     }
 

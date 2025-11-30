@@ -25,6 +25,8 @@ class Store extends Model
         'status',
         'user_id',
         'currency_id',
+        'are_params_allowed',
+        'allowed_params',
         'custom_settings',
         'custom_settings.crawling_method',
         'custom_settings.crawling_chrome.timeout',
@@ -58,6 +60,8 @@ class Store extends Model
         return [
             'custom_settings' => 'json',
             'custom_settings.crawling_method' => CrawlingMethodEnum::class,
+            'allowed_params' => 'array',
+            'are_params_allowed' => 'boolean',
         ];
     }
 

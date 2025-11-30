@@ -5,6 +5,7 @@ namespace App\Classes;
 use App\Classes\Crawler\ChromiumCrawler;
 use App\Classes\Crawler\SimpleCrawler;
 use App\Helpers\GeneralHelper;
+use App\Helpers\LinkHelper;
 use App\Models\Link;
 use App\Models\LinkHistory;
 use App\Models\Product;
@@ -58,7 +59,7 @@ class CustomStoreTemplate
         try {
             $this->link->loadMissing(['store', 'products' => fn ($query) => $query->withoutGlobalScopes()]);
 
-            $this->current_product_url = "https://{$this->link->store->domain}/{$this->link->key}";
+            $this->current_product_url = self::prepare_url($this->link);
 
             $this->crawl_product();
 
@@ -85,6 +86,15 @@ class CustomStoreTemplate
             Log::error($t);
             $this->link->touch();
         }
+    }
+
+    public static function prepare_url(Link $link): string
+    {
+        $base_url = "https://{$link->store->domain}/";
+
+        [$link_base, $link_params] = LinkHelper::prepare_base_key_and_params($link);
+
+        return $base_url."{$link_base}?{$link_params}";
     }
 
     public function crawl_product(): void

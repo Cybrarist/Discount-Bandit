@@ -3,7 +3,7 @@
 namespace App\Filament\Resources\Products\Tables;
 
 use App\Enums\ProductStatusEnum;
-use App\Helpers\ProductHelper;
+use App\Helpers\LinkHelper;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
@@ -106,7 +106,7 @@ class ProductsTable
                                     TextColumn::make('links')
                                         ->color('primary')
                                         ->formatStateUsing(function ($state) {
-                                            $link = ProductHelper::get_url($state);
+                                            $link = LinkHelper::get_url($state);
 
                                             return new HtmlString("<a class='underline text-primary-400' href='{$link}' target='_blank'>{$state->store->name}</a>");
                                         })

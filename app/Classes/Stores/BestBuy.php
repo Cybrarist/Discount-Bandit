@@ -5,6 +5,7 @@ namespace App\Classes\Stores;
 use App\Classes\Crawler\SimpleCrawler;
 use App\Classes\StoreTemplate;
 use App\Helpers\GeneralHelper;
+use App\Helpers\LinkHelper;
 use App\Helpers\UserAgentHelper;
 use App\Models\Link;
 use Illuminate\Support\Str;
@@ -14,14 +15,14 @@ use function Laravel\Prompts\warning;
 class BestBuy extends StoreTemplate
 {
     const string MAIN_URL = "https://www.[domain]/product/[product_key]";
+
     const string CANADA_URL = "https://www.[domain]/en-ca/product/[product_key]";
 
-//    const string MAIN_URL = "https://www.bestbuy.com/pricing/v1/price/item?allFinanceOffers=true&catalog=bby&context=offer-list&effectivePlanPaidMemberType=NULL&includeOpenboxPrice=true&paidMemberSkuInCart=false&salesChannel=LargeView&skuId=[product_key]&useCabo=true&usePriceWithCart=true&visitorId=7e3432cd-6f63-11ef-97ca-12662d3c815b";
+    //    const string MAIN_URL = "https://www.bestbuy.com/pricing/v1/price/item?allFinanceOffers=true&catalog=bby&context=offer-list&effectivePlanPaidMemberType=NULL&includeOpenboxPrice=true&paidMemberSkuInCart=false&salesChannel=LargeView&skuId=[product_key]&useCabo=true&usePriceWithCart=true&visitorId=7e3432cd-6f63-11ef-97ca-12662d3c815b";
 
-//    const string MAIN_URL_NAME_AND_IMAGE = "https://www.[domain]/site/[product_key].p?skuId=[product_key]&intl=nosplash";
+    //    const string MAIN_URL_NAME_AND_IMAGE = "https://www.[domain]/site/[product_key].p?skuId=[product_key]&intl=nosplash";
 
-//    const string CANADA_URL = "https://www.[domain]/api/offers/v1/products/[product_key]/offers";
-
+    //    const string CANADA_URL = "https://www.[domain]/api/offers/v1/products/[product_key]/offers";
 
     protected array $extra_headers = [
         'Accept' => 'application/json',
@@ -33,12 +34,12 @@ class BestBuy extends StoreTemplate
     public function __construct(Link $link, array $extra_headers = [], ?string $user_agent = '')
     {
 
-//        if ($this->link->store->domain === "bestbuy.ca") {
-//            $this->chromium_crawler = true;
-//            $this->extra_headers = $extra_headers + ['X-CLIENT-ID' => 'lib-price-browser'] + $this->extra_headers;
-//        } else {
-            $this->extra_headers = $extra_headers + $this->extra_headers;
-//        }
+        //        if ($this->link->store->domain === "bestbuy.ca") {
+        //            $this->chromium_crawler = true;
+        //            $this->extra_headers = $extra_headers + ['X-CLIENT-ID' => 'lib-price-browser'] + $this->extra_headers;
+        //        } else {
+        $this->extra_headers = $extra_headers + $this->extra_headers;
+        //        }
 
         $this->user_agent = ($user_agent) ?: UserAgentHelper::get_random_user_agent();
 
@@ -48,18 +49,20 @@ class BestBuy extends StoreTemplate
     public static function prepare_url(Link $link, array $extra = []): string
     {
 
-//        if (array_key_exists('notify', $extra)) {
-//            return Str::replace(
-//                ["[domain]", "[product_key]"],
-//                [$domain, $product_key],
-//
-//                ($domain == "bestbuy.com") ? self::MAIN_URL_NAME_AND_IMAGE : self::CANADA_URL_NAME_AND_IMAGE);
-//        }
+        //        if (array_key_exists('notify', $extra)) {
+        //            return Str::replace(
+        //                ["[domain]", "[product_key]"],
+        //                [$domain, $product_key],
+        //
+        //                ($domain == "bestbuy.com") ? self::MAIN_URL_NAME_AND_IMAGE : self::CANADA_URL_NAME_AND_IMAGE);
+        //        }
+
+        [$link_base, $link_params] = LinkHelper::prepare_base_key_and_params($link);
 
         return Str::replace(
             ["[domain]", "[product_key]"],
-            [$link->store->domain, $link->key],
-            ($link->store->domain == "bestbuy.com") ? self::MAIN_URL : self::CANADA_URL);
+            [$link->store->domain, $link_base],
+            ($link->store->domain == "bestbuy.com") ? self::MAIN_URL : self::CANADA_URL) ."?{$link_params}";
     }
 
     public function get_name(): void
@@ -85,7 +88,7 @@ class BestBuy extends StoreTemplate
         foreach ($attributes as $attribute) {
             $image_url = $results[0]?->getAttribute($attribute);
             if (! empty($image_url)) {
-                $this->product_data['image'] = explode(';', $image_url) [0];
+                $this->product_data['image'] = explode(';', $image_url)[0];
                 break;
             }
         }
@@ -189,7 +192,7 @@ class BestBuy extends StoreTemplate
         warning("system detected as bot, trying other method");
 
         $other_buying_url = static::prepare_url(
-             $this->link,
+            $this->link,
         );
 
         $this->dom = new SimpleCrawler(

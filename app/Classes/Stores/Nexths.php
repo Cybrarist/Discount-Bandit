@@ -3,6 +3,7 @@
 namespace App\Classes\Stores;
 
 use App\Classes\StoreTemplate;
+use App\Helpers\LinkHelper;
 use App\Helpers\UserAgentHelper;
 use App\Models\Link;
 use Illuminate\Support\Str;
@@ -32,10 +33,12 @@ class Nexths extends StoreTemplate
 
     public static function prepare_url(Link $link, $extra = []): string
     {
+        [$link_base, $link_params] = LinkHelper::prepare_base_key_and_params($link);
+
         return Str::replace(
             ["[domain]", "[product_key]"],
-            [$link->store->domain, $link->key],
-            self::MAIN_URL);
+            [$link->store->domain, $link_base],
+            self::MAIN_URL)."?{$link_params}";
     }
 
     public function get_name(): void
@@ -101,7 +104,10 @@ class Nexths extends StoreTemplate
 
     public function other_method_if_system_detected_as_bot(): void {}
 
-    public function is_system_detected_as_robot(): bool {return false;}
+    public function is_system_detected_as_robot(): bool
+    {
+        return false;
+    }
 
     public function prepare_dom_for_getting_product_information(): void
     {

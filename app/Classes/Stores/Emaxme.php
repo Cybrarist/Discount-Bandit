@@ -2,13 +2,11 @@
 
 namespace App\Classes\Stores;
 
-use App\Classes\Crawler\SimpleCrawler;
 use App\Classes\StoreTemplate;
 use App\Helpers\GeneralHelper;
+use App\Helpers\LinkHelper;
 use App\Models\Link;
 use Illuminate\Support\Str;
-
-use function Laravel\Prompts\warning;
 
 class Emaxme extends StoreTemplate
 {
@@ -23,10 +21,12 @@ class Emaxme extends StoreTemplate
 
     public static function prepare_url(Link $link, $extra = []): string
     {
+        [$link_base, $link_params] = LinkHelper::prepare_base_key_and_params($link);
+
         return Str::replace(
             ["[domain]", "[product_key]"],
-            [$link->store->domain, $link->key],
-            self::MAIN_URL);
+            [$link->store->domain, $link_base],
+            self::MAIN_URL)."?{$link_params}";
     }
 
     public function get_name(): void
@@ -91,13 +91,9 @@ class Emaxme extends StoreTemplate
         $this->product_data['is_in_stock'] = $this->product_data['price'] > 0 || $this->product_data['used_price'] > 0;
     }
 
-    public function get_shipping_price(): void
-    {
-    }
+    public function get_shipping_price(): void {}
 
     public function get_condition(): void {}
 
-    public function other_method_if_system_detected_as_bot(): void
-    {
-    }
+    public function other_method_if_system_detected_as_bot(): void {}
 }
