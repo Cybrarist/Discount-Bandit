@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('stores', function (Blueprint $table) {
             $table->text('allowed_params')->nullable();
-            $table->text('are_params_allowed')->default(false);
+            $table->boolean('are_params_allowed')->default(false);
         });
     }
 
