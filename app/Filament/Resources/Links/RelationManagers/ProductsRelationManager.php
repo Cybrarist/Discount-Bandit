@@ -30,6 +30,7 @@ class ProductsRelationManager extends RelationManager
                     ->columnSpan(3),
 
                 TextColumn::make('name')
+                    ->words(20)
                     ->searchable(),
 
                 TextColumn::make('highest_price')
