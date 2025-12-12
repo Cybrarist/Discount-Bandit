@@ -17,7 +17,6 @@ Discount Bandit uses a web interface, so you need to install some dependencies f
 
 or you can install something like [MAMP](https://www.mamp.info/en/windows/) instead of installing each one alone.
 
-
 first, you need to install the packages with composer
 ```bash
 composer install 
