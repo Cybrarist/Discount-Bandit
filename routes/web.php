@@ -8,14 +8,14 @@ Route::withoutMiddleware('auth')->get('/feed', FeedController::class)->name('fee
 Route::middleware('signed')
     ->group(function () {
         Route::withoutMiddleware('auth')
-            ->get('temp/products/{product}', [\App\Http\Controllers\ProductController::class, 'show'])->name('products.show');
+            ->get('temp/products/{product}', [\App\Http\Controllers\ProductController::class, 'show'])->name('products.temp.show');
 
         //        Route::withoutMiddleware('auth')
         //            ->get('temp/groups/{group}', [\App\Http\Controllers\GroupController::class, 'show'])->name('groups.show');
 
         Route::withoutMiddleware('auth')
             ->get('temp/products/{product}/snooze', [\App\Http\Controllers\ProductController::class, 'snooze'])
-            ->name('products.snooze');
+            ->name('products.temp.snooze');
 
     });
 

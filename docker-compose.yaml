@@ -17,10 +17,11 @@ services:
     networks:
       - discount-bandit
     volumes:
-      - ./database/database.sqlite:/app/database/sqlite
+      - ./database/sqlite:/app/database/sqlite
       - ./logs:/logs
     environment:
       DB_CONNECTION: sqlite
+      DB_DATABASE: /app/database/sqlite/database.sqlite
       APP_TIMEZONE: UTC
       THEME_COLOR: Red
       APP_URL: "http://localhost:8080"
