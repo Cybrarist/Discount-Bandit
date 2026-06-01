@@ -32,16 +32,14 @@ class ChromiumCrawler
         $lockFile = '/tmp/chrome-php-demo-socket.lock';
 
         $options = [
-            //
             'connectionDelay' => 1.32,
-            'headless' => false,
+            'headless' => true,
             'noSandbox' => true,
             "headers" => $extra_headers,
             'customFlags' => [
                 '--lang=en-US',
                 '--disable-blink-features=AutomationControlled',
                 '--deny-permission-prompts=true',
-                '--disable-blink-features=AutomationControlled',
                 '--disable-web-security',
                 '--disable-features=IsolateOrigins,site-per-process',
                 '--disable-site-isolation-trials',
@@ -51,7 +49,16 @@ class ChromiumCrawler
                 '--no-sandbox',
                 '--test-type',
                 '--enable-features=NetworkService,NetworkServiceInProcess',
-                '--window-size=1920,1080',
+                '--window-size=1280,720',
+                '--disable-dev-shm-usage',
+                '--disable-gpu',
+                '--disable-extensions',
+                '--disable-background-networking',
+                '--disable-sync',
+                '--disable-translate',
+                '--mute-audio',
+                '--renderer-process-limit=6',
+                '--js-flags=--max-old-space-size=256',
             ],
             'disableNotifications' => true,
             'keepAlive' => true,
@@ -110,6 +117,31 @@ class ChromiumCrawler
             }
         }
 
+        $pageLockFile = '/tmp/chrome-php-page-semaphore.lock';
+        $maxConcurrentPages = 4;
+
+        // Block until a page slot is available
+        $pageSlot = fopen($pageLockFile, 'c');
+        $waited = 0;
+        while (true) {
+            flock($pageSlot, LOCK_EX);
+            $count = (int) (file_exists($pageLockFile . '.count') ? file_get_contents($pageLockFile . '.count') : 0);
+            if ($count < $maxConcurrentPages) {
+                file_put_contents($pageLockFile . '.count', $count + 1);
+                flock($pageSlot, LOCK_UN);
+                break;
+            }
+            flock($pageSlot, LOCK_UN);
+            usleep(200_000); // 200ms
+            if (++$waited > 150) { // 30s timeout
+                fclose($pageSlot);
+                Log::error("Timed out waiting for a page slot");
+                return;
+            }
+        }
+        fclose($pageSlot);
+
+        $page = null;
         try {
             $page = $browser->createPage();
             $page->navigate($url)
@@ -121,21 +153,29 @@ class ChromiumCrawler
 
             $this->dom = HTMLDocument::createFromString($page->getHtml(), LIBXML_NOERROR);
 
+        } catch (OperationTimedOut $e) {
+            Log::error("Page navigation timed out: " . $url);
         } catch (CommunicationException $e) {
             Log::error("Couldn't connect to the page");
         } catch (NoResponseAvailable $e) {
             Log::error("No response available");
-        } catch (OperationTimedOut $e) {
-            $this->dom = HTMLDocument::createFromString($page->getHtml(), LIBXML_NOERROR);
         } catch (Exception $exception) {
             Log::error("Crawling using chrome");
             Log::error($exception->getMessage());
-        }
+        } finally {
+            try {
+                $page?->close();
+            } catch (Throwable $e) {
+                Log::error("Couldn't close the page");
+            }
 
-        try {
-            $page?->close();
-        } catch (CommunicationException $e) {
-            Log::error("Couldn't close the page");
+            // Release page slot
+            $pageSlot = fopen($pageLockFile, 'c');
+            flock($pageSlot, LOCK_EX);
+            $count = (int) (file_exists($pageLockFile . '.count') ? file_get_contents($pageLockFile . '.count') : 1);
+            file_put_contents($pageLockFile . '.count', max(0, $count - 1));
+            flock($pageSlot, LOCK_UN);
+            fclose($pageSlot);
         }
     }
 
