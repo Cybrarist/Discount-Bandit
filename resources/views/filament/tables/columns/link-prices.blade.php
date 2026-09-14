@@ -26,7 +26,7 @@
     @endphp
 
     {{-- One row per link --}}
-    @foreach ($visibleLinks as $link)
+    @foreach ($visibleLinks ?? [] as $link)
         @php
             $storeRate = $link->store->currency->rate ?: 1;
             $factor  = $userRate / $storeRate;
