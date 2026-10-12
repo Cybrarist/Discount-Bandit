@@ -19,7 +19,7 @@
         "dedoc/scramble": "^0.13.24",
         "devonab/filament-easy-footer": "^2.0",
         "filament/filament": "^4.0",
-        "gboquizosanchez/filament-log-viewer": "^2.1",
+        "gboquizosanchez/filament-log-viewer": "^2.4",
         "guava/filament-icons": "^1.0",
         "jeffgreco13/filament-breezy": "^3.0",
         "laravel-notification-channels/telegram": "^6.0",
