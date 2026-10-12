@@ -42,14 +42,11 @@ class NotificationService
 
     public function check(): bool
     {
-
-        // ignore currency rate.
-
         if (
-            ! $this->new_link->price && ! $this->new_link->used_price ||
-            $this->is_product_snoozed() ||
-            $this->old_link->price == $this->new_link->price ||
-            $this->notification_setting->is_official && ! $this->new_link->is_official
+            (! $this->new_link->price && ! $this->new_link->used_price) ||
+            $this->old_link->price === $this->new_link->price ||
+            ($this->notification_setting->is_official && ! $this->new_link->is_official) ||
+            $this->is_product_snoozed()
         )
             return false;
 
