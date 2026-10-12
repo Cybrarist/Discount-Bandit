@@ -1,0 +1,26 @@
+{
+    "agents": [
+        "claude_code",
+        "codex"
+    ],
+    "cloud": false,
+    "guidelines": true,
+    "mcp": true,
+    "nightwatch": false,
+    "packages": [
+        "filament/filament",
+        "spatie/laravel-query-builder",
+        "dedoc/scramble"
+    ],
+    "sail": false,
+    "skills": [
+        "infer-conventions",
+        "laravel-best-practices",
+        "testing-best-practices",
+        "octane-development",
+        "tailwindcss-development",
+        "scramble-development",
+        "filament-development",
+        "laravel-query-builder"
+    ]
+}

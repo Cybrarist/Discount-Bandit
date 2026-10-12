@@ -29,7 +29,7 @@ class StoreForm
         return $schema
             ->components([
                 FileUpload::make('image')
-                    ->image()
+                    ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/webp', 'image/gif'])
                     ->disk('store')
                     ->maxFiles(1)
                     ->previewable()

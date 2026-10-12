@@ -16,6 +16,7 @@
         "chrome-php/chrome": "^1.14",
         "codeat3/blade-devicons": "^1.8",
         "daikazu/filament-image-checkbox-group": "^2.0",
+        "dedoc/scramble": "^0.13.24",
         "devonab/filament-easy-footer": "^2.0",
         "filament/filament": "^4.0",
         "gboquizosanchez/filament-log-viewer": "^2.1",
@@ -29,6 +30,7 @@
         "leandrocfe/filament-apex-charts": "^4.0",
         "novadaemon/filament-pretty-json": "^3.1",
         "spatie/laravel-feed": "^4.4",
+        "spatie/laravel-query-builder": "^7.3",
         "tapp/filament-authentication-log": "^5.0",
         "torann/geoip": "^3.0"
     },
@@ -36,6 +38,7 @@
         "barryvdh/laravel-debugbar": "^3.16",
         "fakerphp/faker": "^1.23",
         "laradumps/laradumps": "^4.0",
+        "laravel/boost": "^2.4",
         "laravel/pail": "^1.2.2",
         "laravel/pint": "^1.13",
         "laravel/sail": "^1.41",

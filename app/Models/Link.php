@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Casts\MoneyCast;
 use App\Models\Scopes\LinkScope;
 use App\Observers\LinkObserver;
+use Database\Factories\LinkFactory;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -17,7 +18,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 #[ObservedBy(LinkObserver::class)]
 class Link extends Model
 {
-    /** @use HasFactory<\Database\Factories\LinkFactory> */
+    /** @use HasFactory<LinkFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -49,13 +50,12 @@ class Link extends Model
         ];
     }
 
-
     public function products(): BelongsToMany
     {
         return $this->belongsToMany(Product::class)
             ->withTimestamps()
             ->withPivot([
-                'user_id'
+                'user_id',
             ]);
     }
 
