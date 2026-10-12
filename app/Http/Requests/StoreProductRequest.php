@@ -3,6 +3,7 @@
 namespace App\Http\Requests;
 
 use App\Enums\ProductStatusEnum;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -19,7 +20,7 @@ class StoreProductRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -29,7 +30,6 @@ class StoreProductRequest extends FormRequest
             'is_favourite' => ['required', 'boolean'],
             'snoozed_until' => ['nullable', 'date'],
             'remove_link_if_out_of_stock_for_x_days' => ['nullable', 'integer'],
-
         ];
     }
 }

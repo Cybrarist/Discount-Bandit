@@ -2,10 +2,11 @@
 
 namespace Database\Factories;
 
+use App\Models\Store;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 /**
- * @extends \Illuminate\Database\Eloquent\Factories\Factory<\App\Models\Store>
+ * @extends Factory<Store>
  */
 class StoreFactory extends Factory
 {
@@ -17,7 +18,11 @@ class StoreFactory extends Factory
     public function definition(): array
     {
         return [
-            //
+            'name' => fake()->company(),
+            'domain' => fake()->domainName(),
+            'image' => fake()->imageUrl(),
+            'slug' => fake()->unique()->slug(),
+            'status' => 'active',
         ];
     }
 }

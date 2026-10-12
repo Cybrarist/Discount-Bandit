@@ -4,23 +4,36 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreProductRequest;
 use App\Http\Requests\UpdateProductRequest;
+use App\Http\Resources\ProductResource;
 use App\Models\Product;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Spatie\QueryBuilder\AllowedFilter;
+use Spatie\QueryBuilder\AllowedSort;
+use Spatie\QueryBuilder\QueryBuilder;
 
 class ProductController extends Controller
 {
-    /**
-     * Display a listing of the resource.
-     */
     public function index(Request $request)
     {
-        $validated = $request->validate([
-            'search' => ['required', 'string'],
-        ]);
+        $products = QueryBuilder::for(Product::class)
+            ->allowedFilters(
+                AllowedFilter::partial('name'),
+                AllowedFilter::exact('status'),
+                AllowedFilter::exact('is_favourite'),
+            )
+            ->allowedSorts(
+                'name',
+                'created_at',
+                AllowedSort::field('lowest_price'),
+                AllowedSort::field('highest_price'),
+            )
+            ->allowedIncludes('links', 'categories')
+            ->defaultSort('-created_at')
+            ->paginate(20)
+            ->appends($request->query());
 
-        return Product::whereLike('name', "%{$validated['search']}%")
-            ->pluck('name', 'id');
+        return ProductResource::collection($products);
     }
 
     /**
@@ -30,10 +43,10 @@ class ProductController extends Controller
     {
         $validated = $request->validated();
 
-        Auth::user()->products()
+        $product = Auth::user()->products()
             ->create($validated);
 
-        return response()->json(['message' => 'Product Created Successfully']);
+        return ProductResource::make($product);
     }
 
     /**
@@ -47,14 +60,7 @@ class ProductController extends Controller
             'categories',
         ]);
 
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(Product $product)
-    {
-        //
+        return ProductResource::make($product);
     }
 
     /**
