@@ -187,10 +187,9 @@ class CustomStoreTemplate
             $service = new NotificationService($this->link, $new_temp_link, $notification_setting, $current_product);
             if ($service->check()) {
                 $notification_setting->user->notify(new ProductDiscounted(
-                    product_id: $current_product->id,
-                    product_name: $current_product->name,
-                    product_image: $current_product->image,
+                    product: $current_product,
                     store_name: $this->link->store->name,
+                    link: $this->link,
                     new_link: $new_temp_link,
                     highest_price: $this->link->highest_price,
                     lowest_price: $this->link->lowest_price,
