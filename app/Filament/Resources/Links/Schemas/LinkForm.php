@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Links\Schemas;
 
 use App\Filament\Resources\NotificationSettings\Schemas\NotificationSettingForm;
+use App\Models\Link;
 use App\Services\URLParserService;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\TextInput;
@@ -11,6 +12,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\Operation;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 
 class LinkForm
 {
@@ -69,13 +71,30 @@ class LinkForm
                     ->autofocus()
                     ->url()
                     ->label('URL of product')
-                    ->live(onBlur: true)
+                    ->live(debounce: 300)
                     ->afterStateUpdated(function ($state, $set, URLParserService $service) {
                         try {
                             $service->setup($state);
                             if ($service->store?->id) {
                                 $set('store_id', $service->store->id);
                                 $set('key', $service->product_key);
+
+                                $linkAlreadyExists = Link::withoutGlobalScopes()
+                                    ->where('store_id', $service->store->id)
+                                    ->where('key', $service->product_key)
+                                    ->whereExists(fn ($query) => $query->selectRaw(1)
+                                        ->from('link_product')
+                                        ->whereColumn('link_product.link_id', 'links.id')
+                                        ->where('link_product.user_id', Auth::id()))
+                                    ->exists();
+
+                                if ($linkAlreadyExists) {
+                                    Notification::make()
+                                        ->title('Link already exists')
+                                        ->body('This link is already being tracked for this store on another product.')
+                                        ->warning()
+                                        ->send();
+                                }
                             }
                         } catch (\Exception $e) {
                             Notification::make()
