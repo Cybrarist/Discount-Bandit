@@ -165,7 +165,7 @@ class CustomStoreTemplate
 
         $this->link->loadMissing([
             'notification_settings' => fn ($query) => $query->withoutGlobalScopes(),
-            'notification_settings.user',
+            'notification_settings.user.currency',
         ]);
 
         $new_temp_link = new Link([

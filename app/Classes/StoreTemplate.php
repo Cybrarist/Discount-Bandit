@@ -54,9 +54,16 @@ abstract class StoreTemplate
 
         try {
             $this->link->loadMissing([
-                'store',
+                'store.currency',
                 'products' => fn ($query) => $query->withoutGlobalScopes(),
             ]);
+
+            // don't crawl link that have been deleted but waiting for job to run
+            if ($this->link->products->isEmpty()) {
+                $this->link->touch();
+
+                return;
+            }
 
             $this->current_product_url = static::prepare_url($this->link);
 
@@ -105,7 +112,6 @@ abstract class StoreTemplate
                 user_agent: $this->user_agent,
             )->dom;
         }
-        $this->dom->saveHTMLFile('response.html');
 
         $this->schema = new SchemaParser($this->dom)->schema;
     }
@@ -152,7 +158,7 @@ abstract class StoreTemplate
 
         $this->link->loadMissing([
             'notification_settings' => fn ($query) => $query->withoutGlobalScopes(),
-            'notification_settings.user',
+            'notification_settings.user.currency',
         ]);
 
         $new_temp_link = new Link([
@@ -178,13 +184,17 @@ abstract class StoreTemplate
                 continue;
             }
 
-            $service = new NotificationService($this->link, $new_temp_link, $notification_setting, $current_product);
-            if ($service->check()) {
-                $notification_setting->user->notify(new ProductDiscounted(product: $current_product, store_name: $this->link->store->name, link: $this->link, new_link: $new_temp_link, highest_price: $this->link->highest_price, lowest_price: $this->link->lowest_price, currency_code: $this->link->store->currency->code, notification_reasons: $service->notification_reasons, product_url: $this->current_product_url));
+            try {
+                $service = new NotificationService($this->link, $new_temp_link, $notification_setting, $current_product);
+                if ($service->check()) {
+                    $notification_setting->user->notify(new ProductDiscounted(product: $current_product, store_name: $this->link->store->name, link: $this->link, new_link: $new_temp_link, highest_price: $this->link->highest_price, lowest_price: $this->link->lowest_price, currency_code: $this->link->store->currency->code, notification_reasons: $service->notification_reasons, product_url: $this->current_product_url));
 
-                $products_to_increment[] = $current_product->id;
+                    $products_to_increment[] = $current_product->id;
+                }
+            } catch (\Throwable $t) {
+                Log::warning("couldn't send notification for link {$this->link->id} to user {$notification_setting->user_id}");
+                Log::error($t);
             }
-
         }
 
         if (count($products_to_increment) > 0) {
@@ -204,7 +214,7 @@ abstract class StoreTemplate
 
     }
 
-    public function update_link_history()
+    public function update_link_history(): void
     {
         if (! $this->product_data['price']) return;
 
@@ -217,7 +227,7 @@ abstract class StoreTemplate
         ]);
 
         if ($history->price > $this->product_data['price']) $history->price = $this->product_data['price'];
-        if ($history->used_price > $this->product_data['used_price']) $history->used_price = $this->product_data['used_price'];
+        if ($this->product_data['used_price'] && $history->used_price > $this->product_data['used_price']) $history->used_price = $this->product_data['used_price'];
 
         $history->save();
     }
@@ -255,5 +265,4 @@ abstract class StoreTemplate
 
     abstract public function get_condition(): void;
 
-    abstract public function other_method_if_system_detected_as_bot(): void;
 }
