@@ -6,7 +6,6 @@ use App\Models\Link;
 use App\Models\LinkHistory;
 use App\Models\NotificationSetting;
 use App\Models\Product;
-use App\Models\User;
 
 class NotificationService
 {
@@ -27,8 +26,8 @@ class NotificationService
         public Product $product
     ) {
 
-        $user = User::with('currency')
-            ->findOrFail($this->notification_setting->user_id);
+        $user = $this->notification_setting->user;
+        $user->loadMissing('currency');
 
         $this->old_link->loadMissing(['store', 'store.currency']);
 
