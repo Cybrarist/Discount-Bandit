@@ -24,24 +24,24 @@ abstract class StoreTemplate
     protected string $current_product_url;
 
     protected array $product_data = [
-        'name'           => 'NA',
-        'image'          => '',
-        'price'          => 0.0,
-        'used_price'     => 0.0,
-        'is_in_stock'    => true,
-        'is_official'    => true,
-        'total_reviews'  => 0.0,
-        'rating'         => '',
-        'seller'         => '',
+        'name' => 'NA',
+        'image' => '',
+        'price' => 0.0,
+        'used_price' => 0.0,
+        'is_in_stock' => true,
+        'is_official' => true,
+        'total_reviews' => 0.0,
+        'rating' => '',
+        'seller' => '',
         'shipping_price' => 0.0,
-        'condition'      => 'new',
+        'condition' => 'new',
     ];
 
     // settings
     protected bool $chromium_crawler = false;
 
     protected array $chromium_options = [
-        'page'       => Page::NETWORK_IDLE,
+        'page' => Page::NETWORK_IDLE,
         'timeout_ms' => 10000,
     ];
 
@@ -49,13 +49,13 @@ abstract class StoreTemplate
 
     protected string $user_agent = '';
 
-    public function __construct(public Link $link,)
+    public function __construct(public Link $link)
     {
 
         try {
             $this->link->loadMissing([
                 'store',
-                'products' => fn($query,) => $query->withoutGlobalScopes(),
+                'products' => fn ($query) => $query->withoutGlobalScopes(),
             ]);
 
             $this->current_product_url = static::prepare_url($this->link);
@@ -66,7 +66,6 @@ abstract class StoreTemplate
         } catch (\Throwable $t) {
             Log::warning("couldn't crawl the url for link {$this->link->id} with store {$this->link->store->name}");
             Log::error($t);
-            $this->link->touch();
         }
 
         try {
@@ -80,18 +79,10 @@ abstract class StoreTemplate
         }
         try {
             $this->update_product_details();
+            $this->send_notification();
             $this->update_link_history();
         } catch (\Throwable $t) {
             Log::warning("couldn't update data for link {$this->link->id} with store {$this->link->store->name}");
-            Log::error($t);
-            $this->link->touch();
-            return;
-        }
-
-        try {
-            $this->send_notification();
-        } catch (\Throwable $t) {
-            Log::warning("couldn't send notification for link {$this->link->id} with store {$this->link->store->name}");
             Log::error($t);
             $this->link->touch();
         }
@@ -160,22 +151,22 @@ abstract class StoreTemplate
     {
 
         $this->link->loadMissing([
-            'notification_settings' => fn($query,) => $query->withoutGlobalScopes(),
+            'notification_settings' => fn ($query) => $query->withoutGlobalScopes(),
             'notification_settings.user',
         ]);
 
         $new_temp_link = new Link([
-            'name'           => $this->product_data['name'],
-            'image'          => $this->product_data['image'],
-            'price'          => $this->product_data['price'],
-            'used_price'     => $this->product_data['used_price'],
-            'is_in_stock'    => $this->product_data['is_in_stock'],
+            'name' => $this->product_data['name'],
+            'image' => $this->product_data['image'],
+            'price' => $this->product_data['price'],
+            'used_price' => $this->product_data['used_price'],
+            'is_in_stock' => $this->product_data['is_in_stock'],
             'shipping_price' => $this->product_data['shipping_price'],
-            'condition'      => $this->product_data['condition'],
-            'total_reviews'  => $this->product_data['total_reviews'],
-            'rating'         => $this->product_data['rating'],
-            'seller'         => $this->product_data['seller'],
-            'is_official'    => $this->product_data['is_official'],
+            'condition' => $this->product_data['condition'],
+            'total_reviews' => $this->product_data['total_reviews'],
+            'rating' => $this->product_data['rating'],
+            'seller' => $this->product_data['seller'],
+            'is_official' => $this->product_data['is_official'],
         ]);
 
         $products_to_increment = [];
@@ -183,7 +174,7 @@ abstract class StoreTemplate
         //
         foreach ($this->link->notification_settings as $notification_setting) {
             $current_product = $this->link->products->firstWhere('id', $notification_setting->product_id);
-            if (!$current_product) {
+            if (! $current_product) {
                 continue;
             }
 
@@ -207,21 +198,21 @@ abstract class StoreTemplate
         if (filled($this->link->image)) unset($this->product_data['image']);
 
         $this->link->update($this->product_data + [
-                'highest_price' => ($this->product_data['price'] > $this->link->highest_price) ? $this->product_data['price'] : $this->link->highest_price,
-                'lowest_price'  => (($this->product_data['price'] && $this->product_data['price'] < $this->link->lowest_price) || !$this->link->lowest_price) ? $this->product_data['price'] : $this->link->lowest_price,
-            ]);
+            'highest_price' => ($this->product_data['price'] > $this->link->highest_price) ? $this->product_data['price'] : $this->link->highest_price,
+            'lowest_price' => (($this->product_data['price'] && $this->product_data['price'] < $this->link->lowest_price) || ! $this->link->lowest_price) ? $this->product_data['price'] : $this->link->lowest_price,
+        ]);
 
     }
 
     public function update_link_history()
     {
-        if (!$this->product_data['price']) return;
+        if (! $this->product_data['price']) return;
 
         $history = LinkHistory::firstOrCreate([
-            'date'    => today(),
+            'date' => today(),
             'link_id' => $this->link->id,
         ], [
-            'price'      => $this->product_data['price'],
+            'price' => $this->product_data['price'],
             'used_price' => $this->product_data['used_price'],
         ]);
 
@@ -231,7 +222,7 @@ abstract class StoreTemplate
         $history->save();
     }
 
-    abstract public static function prepare_url(Link $link, array $extra = [],): string;
+    abstract public static function prepare_url(Link $link, array $extra = []): string;
 
     // not required for all stores
     public function prepare_dom_for_getting_product_information() {}
