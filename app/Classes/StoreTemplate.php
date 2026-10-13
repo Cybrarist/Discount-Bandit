@@ -225,9 +225,11 @@ abstract class StoreTemplate
     abstract public static function prepare_url(Link $link, array $extra = []): string;
 
     // not required for all stores
-    public function prepare_dom_for_getting_product_information() {}
+    public function prepare_dom_for_getting_product_information(): void {}
 
-    public function before_crawl() {}
+    public function before_crawl(): void {}
+
+    public function other_method_if_system_detected_as_bot(): void {}
 
     // required to be for all stores
 
