@@ -4,6 +4,14 @@ namespace App\Classes;
 
 use App\Classes\Crawler\ChromiumCrawler;
 use App\Classes\Crawler\SimpleCrawler;
+use App\Exceptions\CouldNotCrawlProductException;
+use App\Exceptions\CouldNotGetProductInformationException;
+use App\Exceptions\CouldNotGetProductPricingException;
+use App\Exceptions\CouldNotHandleBotDetectionException;
+use App\Exceptions\CouldNotPrepareDomException;
+use App\Exceptions\CouldNotSendNotificationException;
+use App\Exceptions\CouldNotUpdateLinkHistoryException;
+use App\Exceptions\CouldNotUpdateProductDetailsException;
 use App\Helpers\GeneralHelper;
 use App\Helpers\LinkHelper;
 use App\Models\Link;
@@ -29,24 +37,24 @@ class CustomStoreTemplate
     protected string $current_product_url;
 
     protected array $product_data = [
-        'name' => 'NA',
-        'image' => '',
-        'price' => 0.0,
-        'used_price' => 0.0,
-        'is_in_stock' => true,
-        'is_official' => true,
-        'total_reviews' => 0.0,
-        'rating' => '',
-        'seller' => '',
+        'name'           => 'NA',
+        'image'          => '',
+        'price'          => 0.0,
+        'used_price'     => 0.0,
+        'is_in_stock'    => true,
+        'is_official'    => true,
+        'total_reviews'  => 0.0,
+        'rating'         => '',
+        'seller'         => '',
         'shipping_price' => 0.0,
-        'condition' => 'new',
+        'condition'      => 'new',
     ];
 
     // settings
     protected bool $chromium_crawler = false;
 
     protected array $chromium_options = [
-        'page' => Page::NETWORK_IDLE,
+        'page'       => Page::NETWORK_IDLE,
         'timeout_ms' => 10000,
     ];
 
@@ -54,66 +62,72 @@ class CustomStoreTemplate
 
     protected string $user_agent = '';
 
-    public function __construct(
-        public Link $link
-    ) {
-        try {
-            $this->link->loadMissing(['store', 'products' => fn ($query) => $query->withoutGlobalScopes()]);
+    public function __construct(public Link $link,)
+    {
+        $this->link->loadMissing([
+            'store.currency',
+            'products' => fn($query,) => $query->withoutGlobalScopes(),
+        ]);
 
-            $this->current_product_url = self::prepare_url($this->link);
-
-            $this->crawl_product();
-
-        } catch (\Throwable $t) {
-            Log::error("couldn't crawl the url for link {$this->link->id} with store {$this->link->store->name}");
-            Log::error($t);
+        // don't crawl link that have been deleted but waiting for job to run
+        if ($this->link->products->isEmpty()) {
             $this->link->touch();
+
+            return;
         }
 
-        try {
-            $this->prepare_dom_for_getting_product_information();
-            $this->get_product_information();
-            $this->get_product_pricing();
-        } catch (\Throwable $t) {
-            Log::error("couldn't parse data for link {$this->link->id} with store {$this->link->store->name}");
-            Log::error($t);
-            $this->link->touch();
-        }
+        $this->current_product_url = self::prepare_url($this->link);
 
-        try {
-            $this->update_product_details();
-        } catch (\Throwable $t) {
-            Log::error("couldn't update data for link {$this->link->id} with store {$this->link->store->name}");
-            Log::error($t);
-            $this->link->touch();
+        // each step runs on its own, so a failure in one doesn't skip the others, the order matters.
+        $steps = [
+            CouldNotCrawlProductException::class          => fn() => $this->crawl_product(),
+            CouldNotHandleBotDetectionException::class    => fn() => $this->other_method_if_system_detected_as_bot(),
+            CouldNotPrepareDomException::class            => fn() => $this->prepare_dom_for_getting_product_information(),
+            CouldNotGetProductInformationException::class => fn() => $this->get_product_information(),
+            CouldNotGetProductPricingException::class     => fn() => $this->get_product_pricing(),
+            CouldNotUpdateProductDetailsException::class  => fn() => $this->update_product_details(),
+            CouldNotSendNotificationException::class      => fn() => $this->send_notification(),
+            CouldNotUpdateLinkHistoryException::class     => fn() => $this->update_link_history(),
+        ];
+
+        foreach ($steps as $exception => $step) {
+            try {
+                $step();
+            } catch (\Throwable $t) {
+                $this->log_warning(new $exception($this->link, $t));
+            }
         }
     }
 
-    public static function prepare_url(Link $link): string
+    /**
+     * Log the failed step as a warning, keeping the original error and its trace as context.
+     */
+    protected function log_warning(\Throwable $exception,): void
+    {
+        Log::warning($exception->getMessage(), ['exception' => $exception]);
+        $this->link->touch();
+    }
+
+    public static function prepare_url(Link $link,): string
     {
         $base_url = "https://{$link->store->domain}/";
 
-        [$link_base, $link_params] = LinkHelper::prepare_base_key_and_params($link);
+        [
+            $link_base,
+            $link_params
+        ] = LinkHelper::prepare_base_key_and_params($link);
 
-        return $base_url."{$link_base}?{$link_params}";
+        return $base_url . "{$link_base}?{$link_params}";
     }
 
     public function crawl_product(): void
     {
         if ($this->link->store->custom_settings['crawling_method'] == "chromium") {
-            $this->dom = new ChromiumCrawler(
-                url: $this->current_product_url,
-                timeout_ms: $this->link->store->custom_settings['timeout'],
-                page_event: $this->link->store->custom_settings['page_event'],
-            )->dom;
-        } else {
-            $this->dom = new SimpleCrawler(
-                url: $this->current_product_url,
-                extra_headers: $this->extra_headers,
-                user_agent: $this->user_agent,
-            )->dom;
+            $this->dom = new ChromiumCrawler(url: $this->current_product_url, timeout_ms: $this->link->store->custom_settings['timeout'], page_event: $this->link->store->custom_settings['page_event'])->dom;
         }
-        $this->dom->saveHTMLFile('response.html');
+        else {
+            $this->dom = new SimpleCrawler(url: $this->current_product_url, extra_headers: $this->extra_headers, user_agent: $this->user_agent)->dom;
+        }
 
         $this->schema = new SchemaParser($this->dom)->schema;
 
@@ -145,62 +159,57 @@ class CustomStoreTemplate
 
     public function update_product_details(): void
     {
-
-        $products_for_link = $this->link->products->pluck('id')->implode(',');
-
-        if (blank($products_for_link))
-            return;
-
         // update products details that are missing.
         DB::statement("
             UPDATE products
             SET
                 name = CASE WHEN name = '' OR name IS NULL THEN ? ELSE name END,
                 image = CASE WHEN image = '' OR image IS NULL THEN ? ELSE image END
-            WHERE id IN ($products_for_link)
+            WHERE id IN ({$this->link->products->pluck('id')->implode(',')})
         ", [
             $this->product_data['name'],
             $this->product_data['image'],
         ]);
+    }
 
+    public function send_notification(): void
+    {
         $this->link->loadMissing([
-            'notification_settings' => fn ($query) => $query->withoutGlobalScopes(),
+            'notification_settings' => fn($query) => $query->withoutGlobalScopes(),
             'notification_settings.user.currency',
         ]);
 
         $new_temp_link = new Link([
-            'price' => $this->product_data['price'],
-            'used_price' => $this->product_data['used_price'],
-            'is_in_stock' => $this->product_data['is_in_stock'],
+            'price'          => $this->product_data['price'],
+            'used_price'     => $this->product_data['used_price'],
+            'is_in_stock'    => $this->product_data['is_in_stock'],
             'shipping_price' => $this->product_data['shipping_price'],
-            'condition' => $this->product_data['condition'],
-            'total_reviews' => $this->product_data['total_reviews'],
-            'rating' => $this->product_data['rating'],
-            'seller' => $this->product_data['seller'],
-            'is_official' => $this->product_data['is_official'],
+            'condition'      => $this->product_data['condition'],
+            'total_reviews'  => $this->product_data['total_reviews'],
+            'rating'         => $this->product_data['rating'],
+            'seller'         => $this->product_data['seller'],
+            'is_official'    => $this->product_data['is_official'],
         ]);
 
         $products_to_increment = [];
 
         foreach ($this->link->notification_settings as $notification_setting) {
             $current_product = $this->link->products->firstWhere('id', $notification_setting->product_id);
-            $service = new NotificationService($this->link, $new_temp_link, $notification_setting, $current_product);
-            if ($service->check()) {
-                $notification_setting->user->notify(new ProductDiscounted(
-                    product: $current_product,
-                    store_name: $this->link->store->name,
-                    link: $this->link,
-                    new_link: $new_temp_link,
-                    highest_price: $this->link->highest_price,
-                    lowest_price: $this->link->lowest_price,
-                    currency_code: $this->link->store->currency->code,
-                    notification_reasons: $service->notification_reasons,
-                    product_url: $this->current_product_url,
-                ));
-
-                $products_to_increment[] = $current_product->id;
+            if (!$current_product) {
+                continue;
             }
 
+            try {
+                $service = new NotificationService($this->link, $new_temp_link, $notification_setting, $current_product);
+                if ($service->check()) {
+                    $notification_setting->user->notify(new ProductDiscounted(product: $current_product, store_name: $this->link->store->name, link: $this->link, new_link: $new_temp_link, highest_price: $this->link->highest_price, lowest_price: $this->link->lowest_price, currency_code: $this->link->store->currency->code, notification_reasons: $service->notification_reasons, product_url: $this->current_product_url));
+
+                    $products_to_increment[] = $current_product->id;
+                }
+            } catch (\Throwable $t) {
+                Log::warning("couldn't send notification for link {$this->link->id} to user {$notification_setting->user_id}");
+                Log::error($t);
+            }
         }
 
         if (count($products_to_increment) > 0) {
@@ -210,16 +219,9 @@ class CustomStoreTemplate
         }
 
         $this->link->update($this->product_data + [
-            'highest_price' => ($this->product_data['price'] > $this->link->highest_price) ? $this->product_data['price'] : $this->link->highest_price,
-            'lowest_price' => (($this->product_data['price'] &&
-                    $this->product_data['price'] < $this->link->lowest_price) ||
-                ! $this->link->lowest_price)
-                ? $this->product_data['price']
-                : $this->link->lowest_price,
-        ]);
-
-        $this->update_link_history();
-
+                'highest_price' => ($this->product_data['price'] > $this->link->highest_price) ? $this->product_data['price'] : $this->link->highest_price,
+                'lowest_price'  => (($this->product_data['price'] && $this->product_data['price'] < $this->link->lowest_price) || !$this->link->lowest_price) ? $this->product_data['price'] : $this->link->lowest_price,
+            ]);
     }
 
     // not required for all stores
@@ -240,7 +242,7 @@ class CustomStoreTemplate
             return;
         }
 
-        if (! $this->link->store->custom_settings['name_selectors']) {
+        if (!$this->link->store->custom_settings['name_selectors']) {
             return;
         }
 
@@ -263,13 +265,17 @@ class CustomStoreTemplate
             return;
         }
 
-        if (! $this->link->store->custom_settings['image_selectors']) {
+        if (!$this->link->store->custom_settings['image_selectors']) {
             return;
         }
 
         $results = $this->dom->querySelectorAll($this->link->store->custom_settings['image_selectors']);
 
-        $attributes = ['content', 'src', 'href'];
+        $attributes = [
+            'content',
+            'src',
+            'href',
+        ];
 
         $this->get_results_for_key($results, $attributes, 'image');
 
@@ -285,13 +291,17 @@ class CustomStoreTemplate
             return;
         }
 
-        if (! $this->link->store->custom_settings['total_reviews_selectors']) {
+        if (!$this->link->store->custom_settings['total_reviews_selectors']) {
             return;
         }
 
         $results = $this->dom->querySelectorAll($this->link->store->custom_settings['total_reviews_selectors']);
 
-        $attributes = ['content', 'src', 'href'];
+        $attributes = [
+            'content',
+            'src',
+            'href',
+        ];
 
         $this->get_results_for_key($results, $attributes, 'total_reviews');
     }
@@ -305,7 +315,7 @@ class CustomStoreTemplate
             return;
         }
 
-        if (! $this->link->store->custom_settings['rating_selectors']) {
+        if (!$this->link->store->custom_settings['rating_selectors']) {
             return;
         }
 
@@ -315,7 +325,7 @@ class CustomStoreTemplate
 
         $this->get_results_for_key($results, $attributes, 'rating');
 
-        if (! $this->product_data['rating']) {
+        if (!$this->product_data['rating']) {
             $this->product_data['rating'] = 0;
         }
 
@@ -330,7 +340,7 @@ class CustomStoreTemplate
             return;
         }
 
-        if (! $this->link->store->custom_settings['seller_selectors']) {
+        if (!$this->link->store->custom_settings['seller_selectors']) {
             return;
         }
 
@@ -358,18 +368,13 @@ class CustomStoreTemplate
 
             $this->get_results_for_key($results, $attributes, 'price');
 
-            $this->product_data['price'] = (float) GeneralHelper::get_numbers_with_normalized_format(
-                GeneralHelper::get_numbers_only_with_dot_and_comma($this->product_data['price'])
-            );
+            $this->product_data['price'] = (float) GeneralHelper::get_numbers_with_normalized_format(GeneralHelper::get_numbers_only_with_dot_and_comma($this->product_data['price']));
 
         }
 
-        if (! $this->product_data['price'] && $this->link->store->custom_settings['price_schema_key'])
-            $this->product_data['price'] = $this->search_for_custom_keys_and_get_values($this->link->store->custom_settings['price_schema_key']);
+        if (!$this->product_data['price'] && $this->link->store->custom_settings['price_schema_key']) $this->product_data['price'] = $this->search_for_custom_keys_and_get_values($this->link->store->custom_settings['price_schema_key']);
 
-        $this->product_data['price'] = (float) GeneralHelper::get_numbers_with_normalized_format(
-            GeneralHelper::get_numbers_only_with_dot_and_comma($this->product_data['price'])
-        );
+        $this->product_data['price'] = (float) GeneralHelper::get_numbers_with_normalized_format(GeneralHelper::get_numbers_only_with_dot_and_comma($this->product_data['price']));
 
     }
 
@@ -385,7 +390,7 @@ class CustomStoreTemplate
             return;
         }
 
-        if (! $this->link->store->custom_settings['stock_selectors']) {
+        if (!$this->link->store->custom_settings['stock_selectors']) {
             return;
         }
 
@@ -394,13 +399,10 @@ class CustomStoreTemplate
         $result_exists = $results->length > 0;
 
         // if the user didn't pass any value to compare against and searching only for existence
-        if (! array_key_exists('stock_value_to_search', $this->link->store->custom_settings)
-            || ! $this->link->store->custom_settings['stock_value_to_search']) {
-            $this->product_data['is_in_stock'] = (! array_key_exists('in_or_out_of_stock_selector_type', $this->link->store->custom_settings) ||
-                $this->link->store->custom_settings['in_or_out_of_stock_selector_type'])
-                ? $result_exists
-                : ! $result_exists;
-        } else {
+        if (!array_key_exists('stock_value_to_search', $this->link->store->custom_settings) || !$this->link->store->custom_settings['stock_value_to_search']) {
+            $this->product_data['is_in_stock'] = (!array_key_exists('in_or_out_of_stock_selector_type', $this->link->store->custom_settings) || $this->link->store->custom_settings['in_or_out_of_stock_selector_type']) ? $result_exists : !$result_exists;
+        }
+        else {
             // check if value is correct or not
 
             $string_is_correct = Str::is($this->link->store->custom_settings['stock_value_to_search'], trim($results[0]->textContent), true);
@@ -409,11 +411,14 @@ class CustomStoreTemplate
             // did this as it's easier to read and understand.
             if ($string_is_correct && $searching_for_in_stock) {
                 $this->product_data['is_in_stock'] = true;
-            } elseif ($string_is_correct && ! $searching_for_in_stock) {
+            }
+            elseif ($string_is_correct && !$searching_for_in_stock) {
                 $this->product_data['is_in_stock'] = false;
-            } elseif (! $string_is_correct && $searching_for_in_stock) {
+            }
+            elseif (!$string_is_correct && $searching_for_in_stock) {
                 $this->product_data['is_in_stock'] = false;
-            } elseif (! $string_is_correct && ! $searching_for_in_stock) {
+            }
+            elseif (!$string_is_correct && !$searching_for_in_stock) {
                 $this->product_data['is_in_stock'] = true;
             }
         }
@@ -430,7 +435,7 @@ class CustomStoreTemplate
             return;
         }
 
-        if (! $this->link->store->custom_settings['condition_selectors']) {
+        if (!$this->link->store->custom_settings['condition_selectors']) {
             return;
         }
 
@@ -444,14 +449,15 @@ class CustomStoreTemplate
 
     public function other_method_if_system_detected_as_bot() {}
 
-    private function get_results_for_key($results, $attributes, $key)
+    private function get_results_for_key($results, $attributes, $key,)
     {
         foreach ($results as $result) {
             if ($result->textContent) {
                 $this->product_data[$key] = $result->textContent;
 
                 return;
-            } else {
+            }
+            else {
                 foreach ($attributes as $attribute) {
                     if ($result->getAttribute($attribute)) {
                         if ($key == 'condition') {
@@ -470,27 +476,23 @@ class CustomStoreTemplate
 
     public function update_link_history()
     {
-        if (! $this->product_data['price'])
-            return;
+        if (!$this->product_data['price']) return;
 
         $history = LinkHistory::firstOrCreate([
-            'date' => today(),
+            'date'    => today(),
             'link_id' => $this->link->id,
         ], [
-            'price' => $this->product_data['price'],
+            'price'      => $this->product_data['price'],
             'used_price' => $this->product_data['used_price'],
         ]);
 
-        if ($history->price > $this->product_data['price'])
-            $history->price = $this->product_data['price'];
-        if ($history->used_price > $this->product_data['used_price'])
-            $history->used_price = $this->product_data['used_price'];
+        if ($history->price > $this->product_data['price']) $history->price = $this->product_data['price'];
+        if ($history->used_price > $this->product_data['used_price']) $history->used_price = $this->product_data['used_price'];
 
         $history->save();
     }
 
-
-    public function search_for_custom_keys_and_get_values(string $key, array $current_schema = [])
+    public function search_for_custom_keys_and_get_values(string $key, array $current_schema = [],)
     {
         if (blank($key) || blank($this->schema)) return null;
 
@@ -509,7 +511,10 @@ class CustomStoreTemplate
             if (preg_match('/^\[[^=]+=[^]]+\]$/', $key_part)) {
 
                 // check the schema key we want to access to compare its value to the value of get param of schema_key_value
-                [$schema_key, $schema_key_value] = Str::of($key_part)
+                [
+                    $schema_key,
+                    $schema_key_value
+                ] = Str::of($key_part)
                     ->between('[', ']')
                     ->explode('=');
 
@@ -518,8 +523,7 @@ class CustomStoreTemplate
                     ->get($schema_key_value);
 
                 // if they are not the same, skip the current record, otherwise continue to the next key.
-                if (strtolower($current_schema[$schema_key]) != strtolower($value_to_search))
-                    return null;
+                if (strtolower($current_schema[$schema_key]) != strtolower($value_to_search)) return null;
 
                 continue;
             }
@@ -529,13 +533,11 @@ class CustomStoreTemplate
                 foreach (data_get($shallow_schema, '*') as $single_record) {
                     $value = $this->search_for_custom_keys_and_get_values(implode('.', $remaining_key_parts), $single_record);
 
-                    if (filled($value))
-                        return $value;
+                    if (filled($value)) return $value;
                 }
             }
 
-            if (! isset($shallow_schema[$key_part]))
-                return null;
+            if (!isset($shallow_schema[$key_part])) return null;
 
             // check if they key exists to go through it, if we reach to a point where there isn't a child, return the result back
             $shallow_schema = $shallow_schema[$key_part];
@@ -543,5 +545,4 @@ class CustomStoreTemplate
 
         return $shallow_schema;
     }
-
 }

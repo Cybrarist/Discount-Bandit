@@ -4,6 +4,15 @@ namespace App\Classes;
 
 use App\Classes\Crawler\ChromiumCrawler;
 use App\Classes\Crawler\SimpleCrawler;
+use App\Exceptions\CouldNotCrawlProductException;
+use App\Exceptions\CouldNotGetProductInformationException;
+use App\Exceptions\CouldNotGetProductPricingException;
+use App\Exceptions\CouldNotHandleBotDetectionException;
+use App\Exceptions\CouldNotPrepareDomException;
+use App\Exceptions\CouldNotRunBeforeCrawlException;
+use App\Exceptions\CouldNotSendNotificationException;
+use App\Exceptions\CouldNotUpdateLinkHistoryException;
+use App\Exceptions\CouldNotUpdateProductDetailsException;
 use App\Models\Link;
 use App\Models\LinkHistory;
 use App\Models\Product;
@@ -52,46 +61,39 @@ abstract class StoreTemplate
     public function __construct(public Link $link)
     {
 
-        try {
-            $this->link->loadMissing([
-                'store.currency',
-                'products' => fn ($query) => $query->withoutGlobalScopes(),
-            ]);
+        $this->link->loadMissing([
+            'store.currency',
+            'products' => fn ($query) => $query->withoutGlobalScopes(),
+        ]);
 
-            // don't crawl link that have been deleted but waiting for job to run
-            if ($this->link->products->isEmpty()) {
-                $this->link->touch();
+        // don't crawl link that have been deleted but waiting for job to run
+        if ($this->link->products->isEmpty()) {
+            $this->link->touch();
 
-                return;
+            return;
+        }
+
+        $this->current_product_url = static::prepare_url($this->link);
+
+        // each step runs on its own, so a failure in one doesn't skip the others, the order matters.
+        $steps = [
+            CouldNotRunBeforeCrawlException::class => fn () => $this->before_crawl(),
+            CouldNotCrawlProductException::class => fn () => $this->crawl_product(),
+            CouldNotHandleBotDetectionException::class => fn () => $this->other_method_if_system_detected_as_bot(),
+            CouldNotPrepareDomException::class => fn () => $this->prepare_dom_for_getting_product_information(),
+            CouldNotGetProductInformationException::class => fn () => $this->get_product_information(),
+            CouldNotGetProductPricingException::class => fn () => $this->get_product_pricing(),
+            CouldNotUpdateProductDetailsException::class => fn () => $this->update_product_details(),
+            CouldNotSendNotificationException::class => fn () => $this->send_notification(),
+            CouldNotUpdateLinkHistoryException::class => fn () => $this->update_link_history(),
+        ];
+
+        foreach ($steps as $exception => $step) {
+            try {
+                $step();
+            } catch (\Throwable $t) {
+                $this->log_warning(new $exception($this->link, $t));
             }
-
-            $this->current_product_url = static::prepare_url($this->link);
-
-            $this->before_crawl();
-            $this->crawl_product();
-            $this->other_method_if_system_detected_as_bot();
-        } catch (\Throwable $t) {
-            Log::warning("couldn't crawl the url for link {$this->link->id} with store {$this->link->store->name}");
-            Log::error($t);
-        }
-
-        try {
-            $this->prepare_dom_for_getting_product_information();
-            $this->get_product_information();
-            $this->get_product_pricing();
-        } catch (\Throwable $t) {
-            Log::warning("couldn't parse data for link {$this->link->id} with store {$this->link->store->name}");
-            Log::error($t);
-            $this->link->touch();
-        }
-        try {
-            $this->update_product_details();
-            $this->send_notification();
-            $this->update_link_history();
-        } catch (\Throwable $t) {
-            Log::warning("couldn't update data for link {$this->link->id} with store {$this->link->store->name}");
-            Log::error($t);
-            $this->link->touch();
         }
 
     }
@@ -232,6 +234,15 @@ abstract class StoreTemplate
         $history->save();
     }
 
+    /**
+     * Log the failed step as a warning, keeping the original error and its trace as context.
+     */
+    protected function log_warning(\Throwable $exception): void
+    {
+        Log::warning($exception->getMessage(), ['exception' => $exception]);
+        $this->link->touch();
+    }
+
     abstract public static function prepare_url(Link $link, array $extra = []): string;
 
     // not required for all stores
@@ -264,5 +275,4 @@ abstract class StoreTemplate
     abstract public function get_shipping_price(): void;
 
     abstract public function get_condition(): void;
-
 }
