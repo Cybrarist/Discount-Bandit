@@ -4,6 +4,8 @@ namespace App\Filament\Resources\Products\Tables;
 
 use App\Enums\ProductStatusEnum;
 use App\Http\Controllers\Actions\FetchAllLinksForProductAction;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteAction;
@@ -11,12 +13,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
-use Filament\Tables\Columns\IconColumn;
-use Filament\Tables\Columns\ImageColumn;
-use Filament\Tables\Columns\Layout\Grid;
-use Filament\Tables\Columns\Layout\Panel;
 use Filament\Tables\Columns\Layout\Stack;
-use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Columns\ViewColumn;
 use Filament\Tables\Filters\Filter;
 use Filament\Tables\Filters\SelectFilter;
@@ -36,101 +33,41 @@ class ProductsTable
                     'links' => fn ($query) => $query->orderByPrice(),
                     'links.store',
                     'links.store.currency:id,code,rate',
-                    'links.link_histories:id,link_id,date',
                 ]);
             })
-            ->recordUrl(function ($record) {
-                return (! $record->name) ? route('filament.admin.resources.products.edit', ['record' => $record]) : null;
-            })
+            ->extraAttributes(['class' => 'fi-products-cards'])
             ->columns([
-                Grid::make([
-                    'lg' => 10,
+                Stack::make([
+                    ViewColumn::make('name')
+                        ->view('filament.tables.columns.product-card')
+                        ->sortable(),
+                ]),
+            ])
+            ->searchable()
+
+            ->recordActions([
+                ActionGroup::make([
+                    Action::make('refresh')
+                        ->label('Refresh all links')
+                        ->icon(Heroicon::ArrowPath)
+                        ->color('success')
+                        ->action(function ($record) {
+                            (new FetchAllLinksForProductAction)->__invoke($record);
+                            Notification::make()
+                                ->title('All links sent to crawler')
+                                ->success()
+                                ->send();
+                        }),
+
+                    DeleteAction::make(),
                 ])
-                    ->schema([
-                        ImageColumn::make('image')
-                            ->verticallyAlignCenter()
-                            ->alignCenter()
-                            ->imageSize('100%')
-                            ->extraImgAttributes(['style' => 'max-height:200px; '])
-                            ->columnSpan(3)
-                            ->url(fn ($record): string => route('filament.admin.resources.products.edit',
-                                ['record' => $record])
-                            ),
-
-                        Grid::make([
-                            'lg' => 8,
-                            'md' => 4,
-                        ])
-                            ->schema([
-
-                                TextColumn::make('name')
-                                    ->default("Fetching....")
-                                    ->columnSpan(3)
-                                    ->alignCenter()
-                                    ->searchable()
-                                    ->words(10)
-                                    ->url(fn ($record): string => route('filament.admin.resources.products.edit',
-                                        ['record' => $record])
-                                    )
-                                    ->sortable(),
-
-                                TextColumn::make('status')
-                                    ->columnSpan(2)
-                                    ->badge()
-                                    ->verticallyAlignCenter()
-                                    ->alignEnd()
-                                    ->badge(),
-
-                                IconColumn::make('refresh')
-                                    ->getStateUsing(fn () => true)
-                                    ->columnSpan(1)
-                                    ->alignEnd()
-                                    ->tooltip('Refresh All Links')
-                                    ->icon(Heroicon::ArrowPath)
-                                    ->color('success')
-                                    ->action(function ($record) {
-                                        (new FetchAllLinksForProductAction)->__invoke($record);
-                                        Notification::make()
-                                            ->title('All links sent to crawler')
-                                            ->success()
-                                            ->send();
-                                    }),
-
-                                IconColumn::make('delete')
-                                    ->getStateUsing(fn () => true)
-                                    ->columnSpan(1)
-                                    ->alignEnd()
-                                    ->icon(Heroicon::Trash)
-                                    ->color('danger')
-                                    ->action(DeleteAction::make()),
-
-                                IconColumn::make('is_favourite')
-                                    ->columnSpan(1)
-                                    ->alignEnd()
-                                    ->icon(fn ($state) => ($state) ? Heroicon::Star : Heroicon::OutlinedStar)
-                                    ->color('primary')
-                                    ->action(fn ($record) => $record->update(['is_favourite' => ! $record->is_favourite])),
-
-                            ])
-                            ->columnSpan(7),
-
-                        Stack::make([
-
-                            Panel::make([
-                                ViewColumn::make('links')
-                                    ->view('filament.tables.columns.link-prices')
-                                    ->columnSpanFull(),
-                            ])
-                                ->columnSpanFull(),
-
-                        ])
-                            ->space(3)
-                            ->columnSpanFull(),
-
-                    ]),
+                    ->icon(Heroicon::EllipsisHorizontal)
+                    ->color('gray'),
             ])
             ->contentGrid([
                 'md' => 2,
+                'xl' => 3,
+                '2xl' => 4
             ])
             ->defaultSort('is_favourite', 'desc')
 
@@ -174,6 +111,15 @@ class ProductsTable
                                 $q->where('date', '>=', $since);
                             });
                         });
+
+                        $query->with([
+                            'links' => fn ($query) => $query
+                                ->orderByPrice()
+                                ->withExists([
+                                    'link_histories as has_price_update_since' => fn ($query) => $query->where('date', '>=', $since),
+                                ]),
+                        ]);
+
                     })
                     ->indicateUsing(function (array $data) {
                         if (blank($data['days'])) {
