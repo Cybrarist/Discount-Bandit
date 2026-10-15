@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Products\Pages;
 
 use App\Filament\Resources\ProductResource\Widgets\PriceHistoryChart;
+use App\Filament\Resources\Products\Actions\BulkAddLinksAction;
 use App\Filament\Resources\Products\ProductResource;
 use App\Http\Controllers\Actions\FetchAllLinksForProductAction;
 use Filament\Actions\Action;
@@ -37,6 +38,7 @@ class EditProduct extends EditRecord
                     ->success()
                     ->send()),
 
+            BulkAddLinksAction::make(),
         ];
     }
 
