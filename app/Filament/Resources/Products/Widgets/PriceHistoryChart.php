@@ -1,15 +1,14 @@
 <?php
 
-namespace App\Filament\Resources\ProductResource\Widgets;
+namespace App\Filament\Resources\Products\Widgets;
 
-use App\Models\Link;
+use App\Services\PriceHistoryService;
 use Carbon\Carbon;
 use Filament\Forms\Components\DatePicker;
 use Filament\Schemas\Schema;
 use Filament\Support\RawJs;
 use Filament\Widgets\ChartWidget\Concerns\HasFiltersSchema;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Str;
 use Leandrocfe\FilamentApexCharts\Widgets\ApexChartWidget;
 
 class PriceHistoryChart extends ApexChartWidget
@@ -37,48 +36,20 @@ class PriceHistoryChart extends ApexChartWidget
      */
     protected function getOptions(): array
     {
-        $start_date = Carbon::parse($this->filters['start_date']);
-        $end_date = Carbon::parse($this->filters['end_date']);
-        $time_series = [];
-
-        Link::whereHas('products', function ($query) {
-            $query->where('products.id', $this->record->id);
-        })
-            ->with([
-                'store',
-                'store.currency',
-                'link_histories' => function ($query) use ($start_date, $end_date) {
-                    $query->orderBy('date', 'desc')
-                        ->whereBetween('date', [$start_date, $end_date]);
-                },
-            ])
-            ->get()
-            ->each(function (Link $link) use (&$time_series) {
-
-                $name = Str::words($link->name, 4);
-                $time_series[$link->id] = [
-                    'name' => "{$name} ({$link->store->currency->currency_symbol})",
-                    'data' => [],
-                ];
-
-                foreach ($link->link_histories as $link_history) {
-                    $time_series[$link->id]['data'][] = [
-                        'x' => $link_history->date->toDateString(),
-                        'y' => $link_history->price,
-                    ];
-                }
-
-            });
+        $time_series = PriceHistoryService::series_for_product(
+            $this->record,
+            Carbon::parse($this->filters['start_date']),
+            Carbon::parse($this->filters['end_date']),
+        );
 
         return [
             'chart' => [
-                'type' => 'area',
+                'type'   => 'area',
                 'height' => 300,
             ],
-            'series' => array_values($time_series),
-            'xaxis' => [
-                "type" => 'datetime',
-                'categories' => ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            'series' => $time_series,
+            'xaxis'  => [
+                "type"   => 'datetime',
                 'labels' => [
                     'style' => [
                         'fontFamily' => 'inherit',
@@ -95,11 +66,11 @@ class PriceHistoryChart extends ApexChartWidget
                 'enabled' => false,
             ],
             'tooltip' => [
-                'shared' => true,
-                'intersect' => false,
+                'shared'       => true,
+                'intersect'    => false,
                 'followCursor' => true,
-                'x' => [
-                    'show' => true,
+                'x'            => [
+                    'show'   => true,
                     'format' => 'yyyy-MM-dd',
                 ],
                 'marker' => [
@@ -109,7 +80,7 @@ class PriceHistoryChart extends ApexChartWidget
         ];
     }
 
-    protected function extraJsOptions(): ?\Filament\Support\RawJs
+    protected function extraJsOptions(): ?RawJs
     {
         return RawJs::make(<<<'JS'
         {

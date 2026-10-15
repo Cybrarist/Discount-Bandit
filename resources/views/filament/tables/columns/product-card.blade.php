@@ -182,5 +182,12 @@
                 @endforelse
             </div>
         </div>
+
+        {{-- Collapsible price history chart, loaded only when opened --}}
+        <x-product-price-history-chart
+            class="mt-3"
+            :product-key="$record->getKey()"
+            :product-name="$record->name"
+        />
     </div>
 </div>
