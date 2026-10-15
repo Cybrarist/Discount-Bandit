@@ -140,7 +140,7 @@ class BulkAddLinksAction extends Action
                                     ->collapsed()
                                     ->compact()
                                     ->columns(3)
-                                    ->schema(self::notificationSettingComponents()),
+                                    ->schema(NotificationSettingForm::configure(Schema::make())->getComponents()),
                             ]),
                     ]),
             ])

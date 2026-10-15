@@ -33,7 +33,7 @@ class ProductsTable
         return $table
             ->modifyQueryUsing(function ($query) {
                 $query->with([
-                    'links',
+                    'links' => fn ($query) => $query->orderByPrice(),
                     'links.store',
                     'links.store.currency:id,code,rate',
                     'links.link_histories:id,link_id,date',

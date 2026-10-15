@@ -25,7 +25,22 @@
             : $getState();
     @endphp
 
-    {{-- One row per link --}}
+    {{-- One row per link (ordered in ProductsTable), scrolls after 5 rows. --}}
+    <div
+        x-data="{
+            maxHeight: null,
+            measure() {
+                const rows = this.$el.children
+                this.maxHeight = rows.length > 5
+                    ? rows[4].getBoundingClientRect().bottom - this.$el.getBoundingClientRect().top
+                    : null
+            },
+        }"
+        x-init="$nextTick(() => measure())"
+        x-on:resize.window.debounce.150ms="measure()"
+        x-bind:style="maxHeight ? { maxHeight: `${maxHeight}px` } : {}"
+        class="flex flex-col gap-4 overflow-y-auto pe-2"
+    >
     @foreach ($visibleLinks ?? [] as $link)
         @php
             $storeRate = $link->store->currency->rate ?: 1;
@@ -51,4 +66,5 @@
             <div class="text-success-500">{{ Number::format($lowest) }}</div>
         </div>
     @endforeach
+    </div>
 </div>

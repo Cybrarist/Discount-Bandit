@@ -7,7 +7,9 @@ use App\Models\Scopes\LinkScope;
 use App\Observers\LinkObserver;
 use Database\Factories\LinkFactory;
 use Illuminate\Database\Eloquent\Attributes\ObservedBy;
+use Illuminate\Database\Eloquent\Attributes\Scope;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -42,10 +44,10 @@ class Link extends Model
     protected function casts(): array
     {
         return [
-            'price' => MoneyCast::class,
-            'used_price' => MoneyCast::class,
-            'highest_price' => MoneyCast::class,
-            'lowest_price' => MoneyCast::class,
+            'price'          => MoneyCast::class,
+            'used_price'     => MoneyCast::class,
+            'highest_price'  => MoneyCast::class,
+            'lowest_price'   => MoneyCast::class,
             'shipping_price' => MoneyCast::class,
         ];
     }
@@ -72,5 +74,19 @@ class Link extends Model
     public function link_histories(): HasMany
     {
         return $this->hasMany(LinkHistory::class);
+    }
+
+    #[Scope]
+    protected function orderByPrice(Builder $query): void
+    {
+        $query->orderByRaw('links.price = 0');
+
+        if (! config('settings.exchange_rate_api_key')) {
+            $query->orderBy('links.price');
+
+            return;
+        }
+
+        $query->orderByRaw('links.price * 1.0 / (select coalesce(nullif(currencies.rate, 0), 1) from stores join currencies on currencies.id = stores.currency_id where stores.id = links.store_id)');
     }
 }
