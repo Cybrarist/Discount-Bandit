@@ -7,6 +7,8 @@ use App\Filament\Forms\CommunityStoresForm;
 use App\Filament\Forms\ImportForm;
 use App\Filament\Pages\Auth\Login;
 use App\Filament\Pages\Auth\Register;
+use App\Filament\Pages\Dashboard;
+use App\Filament\Resources\Products\Pages\ListProducts;
 use App\Filament\Resources\Products\ProductResource;
 use App\Filament\Resources\Stores\StoreResource;
 use Asmit\ResizedColumn\ResizedColumnPlugin;
@@ -26,8 +28,10 @@ use Filament\Support\Assets\Js;
 use Filament\Support\Colors\Color;
 use Filament\Support\Enums\Platform;
 use Filament\Support\Enums\Width;
+use Filament\Tables\View\TablesRenderHook;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
+use Illuminate\Contracts\View\View;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -69,7 +73,7 @@ class AdminPanelProvider extends PanelProvider
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
-                \App\Filament\Pages\Dashboard::class,
+                Dashboard::class,
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\Filament\Widgets')
             ->widgets([
@@ -96,6 +100,11 @@ class AdminPanelProvider extends PanelProvider
                 fn () => ! Auth::user()?->customization_settings['enable_top_navigation']
             )
             ->breadcrumbs(false)
+            ->renderHook(
+                TablesRenderHook::TOOLBAR_SEARCH_BEFORE,
+                fn (): View => view('filament.tables.products-grid-columns'),
+                scopes: ListProducts::class,
+            )
             ->assets([
                 Css::make('custom-css', resource_path('css/custom.css')),
                 Js::make('custom-script', resource_path('js/custom.js')),
@@ -127,8 +136,8 @@ class AdminPanelProvider extends PanelProvider
             ->globalSearchKeyBindings(['command+k', 'ctrl+k'])
             ->globalSearchFieldSuffix(fn (): ?string => match (Platform::detect()) {
                 Platform::Windows, Platform::Linux => 'CTRL+K',
-                Platform::Mac => '⌘K',
-                default => null,
+                Platform::Mac                      => '⌘K',
+                default                            => null,
             });
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Products\Tables;
 
 use App\Enums\ProductStatusEnum;
+use App\Filament\Resources\Products\Pages\ListProducts;
 use App\Http\Controllers\Actions\FetchAllLinksForProductAction;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
@@ -64,11 +65,9 @@ class ProductsTable
                     ->icon(Heroicon::EllipsisHorizontal)
                     ->color('gray'),
             ])
-            ->contentGrid([
-                'md' => 2,
-                'xl' => 3,
-                '2xl' => 4
-            ])
+            ->contentGrid(fn ($livewire): array => $livewire instanceof ListProducts
+                ? $livewire->content_grid()
+                : ListProducts::DEFAULT_CONTENT_GRID)
             ->defaultSort('is_favourite', 'desc')
 
             ->filters([
