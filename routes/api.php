@@ -2,8 +2,8 @@
 
 use App\Http\Controllers\Actions\GetChartForCurrentLinkAndItsRelatedLinksForTheUserProducts;
 use App\Http\Controllers\Actions\GetOtherRelatedLinksController;
-use App\Http\Controllers\AddLinkFromBrowserPluginAction;
 use App\Http\Controllers\GetLinkUsingUrlController;
+use App\Http\Controllers\LinkController;
 use App\Http\Controllers\ProductController;
 use App\Http\Controllers\StoreController;
 use App\Models\User;
@@ -18,10 +18,10 @@ use Illuminate\Validation\ValidationException;
 Route::middleware('auth:sanctum')
     ->name('api.')
     ->group(function () {
-        Route::post('/links/add', AddLinkFromBrowserPluginAction::class);
-
+        Route::apiResource('links', LinkController::class);
         Route::apiResource('stores', StoreController::class);
         Route::apiResource('products', ProductController::class);
+
         //        Route::get('/products/search', [ProductController::class, 'search']);
         Route::get('/link/search-url', GetLinkUsingUrlController::class);
         Route::get('/link/{link}/related', GetOtherRelatedLinksController::class);

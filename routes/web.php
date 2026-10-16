@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\ProductController;
 use Illuminate\Support\Facades\Route;
 use Spatie\Feed\Http\FeedController;
 
@@ -18,5 +19,3 @@ Route::middleware('signed')
             ->name('products.temp.snooze');
 
     });
-
-

@@ -49,7 +49,7 @@ class LinkHelper
             str_contains($store_name, 'Currys') => Currys::prepare_url($link),
             str_contains($store_name, 'DIY') => Diy::prepare_url($link),
             str_contains($store_name, 'Ebay') => Ebay::prepare_url($link),
-            str_contains($store_name, 'Emaxme') => Emaxme::prepare_url($link),
+            str_contains($store_name, 'Emax') => Emaxme::prepare_url($link),
             str_contains($store_name, 'Eprice') => Eprice::prepare_url($link),
             str_contains($store_name, 'FlipKart') => Flipkart::prepare_url($link),
             str_contains($store_name, 'Fnac') => Fnac::prepare_url($link),

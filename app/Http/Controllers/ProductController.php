@@ -65,10 +65,14 @@ class ProductController extends Controller
         //
     }
 
-    public function snooze(Product $product)
+    public function snooze(int $productId)
     {
-        $product->update(['snoozed_until' => today()->addDay()]);
+        Product::withoutGlobalScopes()
+            ->where('id', $productId)
+            ->update([
+                'snoozed_until' => today()->addDay(),
+            ]);
 
-        return "Product Snoozed Successfully Until ".today()->addDay()->toDateTimeString();
+        return "Product Snoozed Successfully Until ".today()->addDay()->format('d-m-Y');
     }
 }

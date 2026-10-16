@@ -41,6 +41,15 @@ class UserForm
                     ->showAllValidationMessages()
                     ->validationAttribute(__('filament-panels::auth/pages/register.form.password.validation_attribute')),
 
+                Select::make('role')
+                    ->options(RoleEnum::class)
+                    ->default(RoleEnum::User->value)
+                    ->required()
+                    ->preload()
+                    ->native(false)
+                    ->visible(fn () => Auth::user()->role === RoleEnum::Admin)
+                    ->dehydrated(fn () => Auth::user()->role === RoleEnum::Admin),
+
                 Section::make('Notification Settings')
                     ->columns(3)
                     ->columnSpanFull()
@@ -56,7 +65,7 @@ class UserForm
                                     ->remove(['https://', 'http://'])
                                     ->explode('/');
 
-                                if (count($ntfy_url) ==1) {
+                                if (count($ntfy_url) == 1) {
                                     Notification::make()
                                         ->title('you are missing the topic in ntfy url')
                                         ->body('the url should be something like https://myntfy.com/topic')
@@ -74,19 +83,27 @@ class UserForm
 
                         TextInput::make('notification_settings.ntfy_auth_token'),
 
-                        TextInput::make('notification_settings.telegram_bot_token'),
+                        TextInput::make('notification_settings.telegram_bot_token')
+                            ->columnStart(1),
                         TextInput::make('notification_settings.telegram_channel_id')
                             ->hint('include the "-"'),
 
-                        TextInput::make('notification_settings.gotify_url'),
+                        TextInput::make('notification_settings.gotify_url')
+                            ->columnStart(1),
                         TextInput::make('notification_settings.gotify_token'),
 
-                        Toggle::make('notification_settings.enable_rss_feed')
+                        TextInput::make('notification_settings.apprise_url')
+                            ->placeholder('https://mydomain.com/notify/configKey')
+                            ->url()
                             ->columnStart(1),
+
                         TextInput::make('rss_feed')
                             ->formatStateUsing(fn ($state) => config('app.url').'/feed/?feed_id='.$state)
                             ->copyable()
-                            ->disabled(),
+                            ->disabled()
+                            ->columnStart(1),
+
+                        Toggle::make('notification_settings.enable_rss_feed'),
 
                     ]),
 

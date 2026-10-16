@@ -12,6 +12,11 @@ class LinksRelationManager extends RelationManager
 {
     protected static string $relationship = 'links';
 
+    /**
+     * @var array<string, string>
+     */
+    protected $listeners = ['refresh' => '$refresh'];
+
     public function form(Schema $schema): Schema
     {
         return LinkForm::configure($schema, $this->ownerRecord);

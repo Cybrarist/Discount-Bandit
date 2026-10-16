@@ -4,7 +4,7 @@ namespace App\Filament\Resources\Links\Tables;
 
 use App\Helpers\LinkHelper;
 use App\Http\Controllers\Actions\FetchSingleLinkAction;
-use App\Models\Link;
+use App\Http\Controllers\Actions\Links\AttachLinkToProductAction;
 use Filament\Actions\Action;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DetachAction;
@@ -18,7 +18,6 @@ use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Number;
 
@@ -44,39 +43,7 @@ class LinksTable
                                 $action->halt();
                             }
 
-                            $link = Link::updateOrCreate(Arr::only($data, [
-                                'key',
-                                'store_id',
-                            ]));
-
-                            $link->products()
-                                ->syncWithoutDetaching([$product->id => [
-                                    'user_id' => Auth::id(),
-                                ]]);
-
-                            if ($link->image && ! $product->image)
-                                $product->image = $link->image;
-
-                            if ($link->name && ! $product->name)
-                                $product->name = $link->name;
-
-                            if ($product->isDirty())
-                                $product->save();
-
-                            $link->notification_settings()
-                                ->create([
-                                    'price_desired' => $data['price_desired'],
-                                    'percentage_drop' => $data['percentage_drop'],
-                                    'price_lowest_in_x_days' => $data['price_lowest_in_x_days'],
-                                    'is_in_stock' => $data['is_in_stock'],
-                                    'is_shipping_included' => $data['is_shipping_included'],
-                                    'any_price_change' => $data['any_price_change'],
-                                    'is_official' => $data['is_official'],
-                                    'extra_costs_amount' => $data['extra_costs_amount'],
-                                    'extra_costs_percentage' => $data['extra_costs_percentage'],
-                                    'user_id' => Auth::id(),
-                                    'product_id' => $product->id,
-                                ]);
+                            $link = new AttachLinkToProductAction()->__invoke($product, $data);
 
                             $total_notification_settings = $link->notification_settings()->count();
                             if ($total_notification_settings > 1)

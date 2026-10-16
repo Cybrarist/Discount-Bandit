@@ -105,7 +105,7 @@ class AdminPanelProvider extends PanelProvider
                 FilamentAuthenticationLogPlugin::make(),
                 EasyFooterPlugin::make()
                     ->withGithub()
-                    ->withLogo(asset("storage/bandit.png"), "https://discount-bandit.cybrarist.com", "v-4.0"),
+                    ->withLogo(asset("storage/bandit.png"), "https://discount-bandit.cybrarist.com", "v-4.0.5"),
                 BreezyCore::make()
                     ->myProfile()
                     ->enableTwoFactorAuthentication()

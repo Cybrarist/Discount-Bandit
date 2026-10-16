@@ -43,7 +43,7 @@ class ProductForm
                     ->columnSpan(1)
                     ->label("Snooze Notification Until"),
 
-                TextInput::make('max_notifications')
+                TextInput::make('max_notifications_daily')
                     ->label("Max Notification Sent Daily")
                     ->integer()
                     ->minValue(0)
@@ -73,6 +73,11 @@ class ProductForm
                     ->multiple()
                     ->nullable()
                     ->preload(),
+
+                Toggle::make('is_list')
+                    ->inline(false)
+                    ->label("List Mode")
+                    ->helperText('list mode will send notification detail per item like name and image instead of product\'s'),
 
                 TextInput::make('notifications_sent')
                     ->hiddenOn([Operation::Create])

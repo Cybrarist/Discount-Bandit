@@ -5,6 +5,7 @@ namespace App\NotificationsChannels;
 use App\Models\User;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
+use Illuminate\Support\Uri;
 
 class Ntfy
 {
@@ -16,9 +17,17 @@ class Ntfy
     {
         $auth = [];
 
-        $ntfy_url = Str::of($user->notification_settings['ntfy_url'])
-            ->remove(['https://', 'http://'])
-            ->explode('/');
+        $original_ntfy = $user->notification_settings['ntfy_url'];
+
+        $ntfy_url = parse_url($original_ntfy);
+
+        $ntfy_topic = str_replace('/', '', $ntfy_url['path']);
+        $ntfy_post_url = "{$ntfy_url['scheme']}://{$ntfy_url['host']}";
+
+        if (isset($ntfy_url['port'])) {
+            $ntfy_post_url .= ":{$ntfy_url['port']}";
+        }
+
 
         if ($user->notification_settings['ntfy_auth_username'] && $user->notification_settings['ntfy_auth_password']) {
             $auth["Authorization"] = "Basic ".base64_encode($user->notification_settings['ntfy_auth_username'].":".$user->notification_settings['ntfy_auth_password']);
@@ -27,7 +36,7 @@ class Ntfy
         }
 
         $data = [
-            "topic" => $ntfy_url[1],
+            "topic" => $ntfy_topic,
             "message" => Str::replace("<br>", "\n", $notification_content),
             "title" => $notification['Title'],
             "tags" => explode(',', $notification['X-Tags']),
@@ -37,6 +46,6 @@ class Ntfy
 
         Http::withHeaders($auth)
             ->asJson()
-            ->post($ntfy_url[0], $data);
+            ->post($ntfy_post_url, $data);
     }
 }

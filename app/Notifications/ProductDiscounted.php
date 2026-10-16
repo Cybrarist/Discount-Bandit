@@ -3,8 +3,10 @@
 namespace App\Notifications;
 
 use App\Models\Link;
+use App\Models\Product;
 use App\Models\RssFeedItem;
 use App\Models\User;
+use App\NotificationsChannels\AppriseChannel;
 use App\NotificationsChannels\GotifyChannel;
 use App\NotificationsChannels\NtfyChannel;
 use Illuminate\Notifications\Notification;
@@ -24,14 +26,17 @@ class ProductDiscounted extends Notification
 
     public string $notification_text;
 
+    public string $notification_product_name;
+
+    public string $notification_image;
+
     /**
      * Create a new notification instance.
      */
     public function __construct(
-        public int $product_id,
-        public ?string $product_name,
-        public ?string $product_image,
+        public Product $product,
         public string $store_name,
+        public Link $link,
         public Link $new_link,
         public float $highest_price,
         public float $lowest_price,
@@ -39,11 +44,19 @@ class ProductDiscounted extends Notification
         public array $notification_reasons,
         public string $product_url = "",
     ) {
+        if ($this->product->is_list) {
+            $this->notification_product_name = $this->link->name ?? $this->product->name;
+            $this->notification_image = $this->link->image ?? $this->product->image;
+        } else {
+            $this->notification_product_name = $this->product->name;
+            $this->notification_image = $this->product->image;
+        }
+
         $this->product_temp_link = URL::temporarySignedRoute("products.temp.show", now()->addMinutes(15), ['product' => $this->product_id]);
         $this->product_temp_snooze = URL::temporarySignedRoute("products.temp.snooze", today()->endOfDay(), ['product' => $this->product_id]);
 
-        $this->notification_title = "For Just {$this->currency_code} {$this->new_link->price} -  Discount For ".Str::words($this->product_name, 5);
-        $this->notification_text = "{$this->product_name}, is at {$this->currency_code}{$this->new_link->price} <br>".
+        $this->notification_title = "For Just {$this->currency_code} {$this->new_link->price} -  Discount For ".Str::words($this->notification_product_name, 10);
+        $this->notification_text = "{$this->notification_product_name}, is at {$this->currency_code}{$this->new_link->price} <br>".
                 "----------------<br>".
                 "Used Price: {$this->new_link->used_price} <br>".
                 "Shipping Price: {$this->new_link->shipping_price} <br>".
@@ -66,16 +79,20 @@ class ProductDiscounted extends Notification
     {
 
         $channels = [];
-        if ($notifiable->notification_settings['ntfy_url']) {
+        if (array_key_exists('ntfy_url', $notifiable->notification_settings) && $notifiable->notification_settings['ntfy_url']) {
             $channels[] = NtfyChannel::class;
         }
 
-        if ($notifiable->notification_settings['telegram_channel_id'] && $notifiable->notification_settings['telegram_bot_token']) {
+        if (array_key_exists('telegram_channel_id', $notifiable->notification_settings) && $notifiable->notification_settings['telegram_channel_id'] && $notifiable->notification_settings['telegram_bot_token']) {
             $channels[] = 'telegram';
         }
 
-        if ($notifiable->notification_settings['gotify_url']) {
+        if (array_key_exists('gotify_url', $notifiable->notification_settings) && $notifiable->notification_settings['gotify_url']) {
             $channels[] = GotifyChannel::class;
+        }
+
+        if (array_key_exists('apprise_url', $notifiable->notification_settings) && $notifiable->notification_settings['apprise_url']) {
+            $channels[] = AppriseChannel::class;
         }
 
         if ($notifiable->notification_settings['enable_rss_feed']) {
@@ -85,9 +102,9 @@ class ProductDiscounted extends Notification
                     'title' => $this->notification_title,
                     'summary' => Str::replace("<br>", "&#xa;", $this->notification_text),
                     'updated' => now()->toDateTimeString(),
-                    'product_id' => $this->product_id,
-                    'image' => $this->product_image,
-                    'name' => $this->product_name,
+                    'product_id' => $this->product->id,
+                    'image' => $this->notification_image,
+                    'name' => $this->notification_product_name,
                     'link' => $this->product_url,
                     'authorName' => "Discount Bandit",
                 ],
@@ -101,11 +118,11 @@ class ProductDiscounted extends Notification
     {
 
         $content = [
-            'title' => "For Just $this->price -  Discount For ".Str::words($this->product_name, 5),
+            "title" => $this->notification_title,
             'body' => $this->notification_text.
                 "----------------<br>
                 Product URL: . {$this->product_url}",
-            'attach' => [$this->image],
+            'attach' => [$this->notification_image],
             'format' => 'html',
         ];
 
@@ -141,7 +158,7 @@ class ProductDiscounted extends Notification
                     "url" => $this->product_temp_snooze,
                 ],
             ],
-            "Attach" => $this->product_image,
+            "Attach" => $this->notification_image,
             "X-Tags" => "money_with_wings, ".implode(", ", $this->notification_reasons),
         ];
 
@@ -155,7 +172,7 @@ class ProductDiscounted extends Notification
         $notification_title = Str::remove([":", "_", "-", "|", "*"], "For Just {$this->currency_code} {$this->new_link->price} -  Discount For ".Str::words($this->product_name, 5));
 
         return TelegramFile::create()
-            ->photo($this->product_image)
+            ->photo($this->notification_image)
             ->token($notifiable->notification_settings['telegram_bot_token'])
             ->to($notifiable->notification_settings['telegram_channel_id'])
             ->content(

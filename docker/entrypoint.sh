@@ -31,7 +31,9 @@ php artisan discount:fill-supervisor-workers
 
 php artisan discount:exchange-rate
 
-Xvfb :99 -screen 0 2000x2000x24 & export DISPLAY=:99
+Xvfb :99 -screen 0 2000x2000x24 &
+sleep 1
+export DISPLAY=:99
 
 #php artisan discount:test-notify
 

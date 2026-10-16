@@ -1,6 +1,12 @@
 {
-    "rules": {
-        "single_quote": false,
-        "control_structure_braces": false
+  "rules": {
+    "single_quote": false,
+    "control_structure_braces": false,
+    "binary_operator_spaces": {
+      "default": "single_space",
+      "operators": {
+        "=>": "align_single_space_minimal"
+      }
     }
+  }
 }

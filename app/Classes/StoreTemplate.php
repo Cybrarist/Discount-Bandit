@@ -4,6 +4,15 @@ namespace App\Classes;
 
 use App\Classes\Crawler\ChromiumCrawler;
 use App\Classes\Crawler\SimpleCrawler;
+use App\Exceptions\CouldNotCrawlProductException;
+use App\Exceptions\CouldNotGetProductInformationException;
+use App\Exceptions\CouldNotGetProductPricingException;
+use App\Exceptions\CouldNotHandleBotDetectionException;
+use App\Exceptions\CouldNotPrepareDomException;
+use App\Exceptions\CouldNotRunBeforeCrawlException;
+use App\Exceptions\CouldNotSendNotificationException;
+use App\Exceptions\CouldNotUpdateLinkHistoryException;
+use App\Exceptions\CouldNotUpdateProductDetailsException;
 use App\Models\Link;
 use App\Models\LinkHistory;
 use App\Models\Product;
@@ -49,39 +58,42 @@ abstract class StoreTemplate
 
     protected string $user_agent = '';
 
-    public function __construct(
-        public Link $link
-    ) {
+    public function __construct(public Link $link)
+    {
 
-        try {
-            $this->link->loadMissing(['store', 'products' => fn ($query) => $query->withoutGlobalScopes()]);
+        $this->link->loadMissing([
+            'store.currency',
+            'products' => fn ($query) => $query->withoutGlobalScopes(),
+        ]);
 
-            $this->current_product_url = static::prepare_url($this->link);
-
-            $this->before_crawl();
-            $this->crawl_product();
-            $this->other_method_if_system_detected_as_bot();
-        } catch (\Throwable $t) {
-            Log::error("couldn't crawl the url for link {$this->link->id} with store {$this->link->store->name}");
-            Log::error($t);
+        // don't crawl link that have been deleted but waiting for job to run
+        if ($this->link->products->isEmpty()) {
             $this->link->touch();
+
+            return;
         }
 
-        try {
-            $this->prepare_dom_for_getting_product_information();
-            $this->get_product_information();
-            $this->get_product_pricing();
-        } catch (\Throwable $t) {
-            Log::error("couldn't parse data for link {$this->link->id} with store {$this->link->store->name}");
-            Log::error($t);
-            $this->link->touch();
-        }
-        try {
-            $this->update_product_details();
-        } catch (\Throwable $t) {
-            Log::error("couldn't update data for link {$this->link->id} with store {$this->link->store->name}");
-            Log::error($t);
-            $this->link->touch();
+        $this->current_product_url = static::prepare_url($this->link);
+
+        // each step runs on its own, so a failure in one doesn't skip the others, the order matters.
+        $steps = [
+            CouldNotRunBeforeCrawlException::class => fn () => $this->before_crawl(),
+            CouldNotCrawlProductException::class => fn () => $this->crawl_product(),
+            CouldNotHandleBotDetectionException::class => fn () => $this->other_method_if_system_detected_as_bot(),
+            CouldNotPrepareDomException::class => fn () => $this->prepare_dom_for_getting_product_information(),
+            CouldNotGetProductInformationException::class => fn () => $this->get_product_information(),
+            CouldNotGetProductPricingException::class => fn () => $this->get_product_pricing(),
+            CouldNotUpdateProductDetailsException::class => fn () => $this->update_product_details(),
+            CouldNotSendNotificationException::class => fn () => $this->send_notification(),
+            CouldNotUpdateLinkHistoryException::class => fn () => $this->update_link_history(),
+        ];
+
+        foreach ($steps as $exception => $step) {
+            try {
+                $step();
+            } catch (\Throwable $t) {
+                $this->log_warning(new $exception($this->link, $t));
+            }
         }
 
     }
@@ -102,7 +114,6 @@ abstract class StoreTemplate
                 user_agent: $this->user_agent,
             )->dom;
         }
-        $this->dom->saveHTMLFile('response.html');
 
         $this->schema = new SchemaParser($this->dom)->schema;
     }
@@ -142,13 +153,19 @@ abstract class StoreTemplate
             $this->product_data['name'],
             $this->product_data['image'],
         ]);
+    }
+
+    public function send_notification(): void
+    {
 
         $this->link->loadMissing([
             'notification_settings' => fn ($query) => $query->withoutGlobalScopes(),
-            'notification_settings.user',
+            'notification_settings.user.currency',
         ]);
 
         $new_temp_link = new Link([
+            'name' => $this->product_data['name'],
+            'image' => $this->product_data['image'],
             'price' => $this->product_data['price'],
             'used_price' => $this->product_data['used_price'],
             'is_in_stock' => $this->product_data['is_in_stock'],
@@ -162,26 +179,24 @@ abstract class StoreTemplate
 
         $products_to_increment = [];
 
+        //
         foreach ($this->link->notification_settings as $notification_setting) {
             $current_product = $this->link->products->firstWhere('id', $notification_setting->product_id);
-            $service = new NotificationService($this->link, $new_temp_link, $notification_setting, $current_product);
-            if ($service->check()) {
-                $notification_setting->user->notify(new ProductDiscounted(
-                    product_id: $current_product->id,
-                    product_name: $current_product->name,
-                    product_image: $current_product->image,
-                    store_name: $this->link->store->name,
-                    new_link: $new_temp_link,
-                    highest_price: $this->link->highest_price,
-                    lowest_price: $this->link->lowest_price,
-                    currency_code: $this->link->store->currency->code,
-                    notification_reasons: $service->notification_reasons,
-                    product_url: $this->current_product_url,
-                ));
-
-                $products_to_increment[] = $current_product->id;
+            if (! $current_product) {
+                continue;
             }
 
+            try {
+                $service = new NotificationService($this->link, $new_temp_link, $notification_setting, $current_product);
+                if ($service->check()) {
+                    $notification_setting->user->notify(new ProductDiscounted(product: $current_product, store_name: $this->link->store->name, link: $this->link, new_link: $new_temp_link, highest_price: $this->link->highest_price, lowest_price: $this->link->lowest_price, currency_code: $this->link->store->currency->code, notification_reasons: $service->notification_reasons, product_url: $this->current_product_url));
+
+                    $products_to_increment[] = $current_product->id;
+                }
+            } catch (\Throwable $t) {
+                Log::warning("couldn't send notification for link {$this->link->id} to user {$notification_setting->user_id}");
+                Log::error($t);
+            }
         }
 
         if (count($products_to_increment) > 0) {
@@ -190,29 +205,20 @@ abstract class StoreTemplate
                 ->increment('notifications_sent');
         }
 
-        if (filled($this->link->name))
-            unset($this->product_data['name']);
+        if (filled($this->link->name)) unset($this->product_data['name']);
 
-        if (filled($this->link->image))
-            unset($this->product_data['image']);
+        if (filled($this->link->image)) unset($this->product_data['image']);
 
         $this->link->update($this->product_data + [
             'highest_price' => ($this->product_data['price'] > $this->link->highest_price) ? $this->product_data['price'] : $this->link->highest_price,
-            'lowest_price' => (($this->product_data['price'] &&
-                    $this->product_data['price'] < $this->link->lowest_price) ||
-                ! $this->link->lowest_price)
-                ? $this->product_data['price']
-                : $this->link->lowest_price,
+            'lowest_price' => (($this->product_data['price'] && $this->product_data['price'] < $this->link->lowest_price) || ! $this->link->lowest_price) ? $this->product_data['price'] : $this->link->lowest_price,
         ]);
-
-        $this->update_link_history();
 
     }
 
-    public function update_link_history()
+    public function update_link_history(): void
     {
-        if (! $this->product_data['price'])
-            return;
+        if (! $this->product_data['price']) return;
 
         $history = LinkHistory::firstOrCreate([
             'date' => today(),
@@ -222,20 +228,29 @@ abstract class StoreTemplate
             'used_price' => $this->product_data['used_price'],
         ]);
 
-        if ($history->price > $this->product_data['price'])
-            $history->price = $this->product_data['price'];
-        if ($history->used_price > $this->product_data['used_price'])
-            $history->used_price = $this->product_data['used_price'];
+        if ($history->price > $this->product_data['price']) $history->price = $this->product_data['price'];
+        if ($this->product_data['used_price'] && $history->used_price > $this->product_data['used_price']) $history->used_price = $this->product_data['used_price'];
 
         $history->save();
+    }
+
+    /**
+     * Log the failed step as a warning, keeping the original error and its trace as context.
+     */
+    protected function log_warning(\Throwable $exception): void
+    {
+        Log::warning($exception->getMessage(), ['exception' => $exception]);
+        $this->link->touch();
     }
 
     abstract public static function prepare_url(Link $link, array $extra = []): string;
 
     // not required for all stores
-    public function prepare_dom_for_getting_product_information() {}
+    public function prepare_dom_for_getting_product_information(): void {}
 
-    public function before_crawl() {}
+    public function before_crawl(): void {}
+
+    public function other_method_if_system_detected_as_bot(): void {}
 
     // required to be for all stores
 
@@ -260,6 +275,4 @@ abstract class StoreTemplate
     abstract public function get_shipping_price(): void;
 
     abstract public function get_condition(): void;
-
-    abstract public function other_method_if_system_detected_as_bot(): void;
 }

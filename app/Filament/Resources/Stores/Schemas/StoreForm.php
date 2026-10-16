@@ -29,7 +29,7 @@ class StoreForm
         return $schema
             ->components([
                 FileUpload::make('image')
-                    ->image()
+                    ->acceptedFileTypes(['image/png', 'image/jpeg', 'image/webp', 'image/gif'])
                     ->disk('store')
                     ->maxFiles(1)
                     ->previewable()
@@ -194,7 +194,18 @@ class StoreForm
                                 TextInput::make('custom_settings.price_selectors'),
                                 TextInput::make('custom_settings.used_price_selectors'),
                                 TextInput::make('custom_settings.shipping_selectors'),
-                                TextInput::make('custom_settings.stock_selectors'),
+                                TextInput::make('custom_settings.stock_selectors')
+                                    ->columnStart(1),
+                                Toggle::make('custom_settings.in_or_out_of_stock_selector_type')
+                                    ->default(true)
+                                    ->inline(false)
+                                    ->label(fn ($state) => $state
+                                        ? 'the selector to detect if item has stocks'
+                                        : 'the selector to detect if item is out of stock')
+                                    ->live(),
+                                TextInput::make('custom_settings.stock_value_to_search')
+                                    ->label('Value to check (case insensitive)')
+                                    ->helperText('if no value passed, the app will check for existence of the selector only'),
                                 TextInput::make('custom_settings.condition_selectors'),
                                 TextInput::make('custom_settings.seller_selectors'),
                             ]),

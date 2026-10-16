@@ -31,9 +31,20 @@ class NotificationTest extends TestCase
 
     public function test_notification_not_sent_as_price_didnt_change()
     {
+        // Case 1: same price, any_price_change enabled — should NOT notify
         $this->notification_service->new_link->price = $this->notification_service->old_link->price;
+        $this->notification_service->notification_setting->any_price_change = true;
+        $this->assertFalse($this->notification_service->check(), 'Case 1: same price should not notify even with any_price_change on');
 
-        $this->assertFalse($this->notification_service->check(), 'Price did not change');
+        // Case 2: price changed by a fraction due to float precision — should NOT notify
+        $this->notification_service->new_link->price = $this->notification_service->old_link->price + 0.0000001;
+        $this->notification_service->notification_reasons = [];
+        $this->assertFalse($this->notification_service->check(), 'Case 2: float precision noise should not trigger notification');
+
+        // Case 3: price genuinely changed — SHOULD notify
+        $this->notification_service->new_link->price = $this->notification_service->old_link->price - 10;
+        $this->notification_service->notification_reasons = [];
+        $this->assertTrue($this->notification_service->check(), 'Case 3: real price change should notify');
     }
 
     public function test_notification_not_sent_as_is_official_is_false()

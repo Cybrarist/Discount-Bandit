@@ -3,6 +3,7 @@
 namespace App\Filament\Resources\Links\Pages;
 
 use App\Filament\Resources\Links\LinkResource;
+use App\Filament\Resources\Links\Widgets\LinkPriceHistoryChart;
 use App\Helpers\LinkHelper;
 use App\Http\Controllers\Actions\FetchSingleLinkAction;
 use Filament\Actions\Action;
@@ -14,20 +15,27 @@ class EditLink extends EditRecord
 {
     protected static string $resource = LinkResource::class;
 
+    protected function getFooterWidgets(): array
+    {
+        return [
+            LinkPriceHistoryChart::class,
+        ];
+    }
+
     protected function getHeaderActions(): array
     {
         return [
             Action::make('open')
                 ->outlined()
                 ->icon(Heroicon::Link)
-                ->url(fn ($record) => LinkHelper::get_url($record), true),
+                ->url(fn($record,) => LinkHelper::get_url($record), true),
 
             Action::make('reset_link')
                 ->icon(Heroicon::Backspace)
                 ->tooltip('Reset name and image, and fill them again on next fetch')
-                ->action(function ($record) {
+                ->action(function ($record,) {
                     $record->update([
-                        'name' => null,
+                        'name'  => null,
                         'image' => null,
                     ]);
 
@@ -43,7 +51,7 @@ class EditLink extends EditRecord
             Action::make('Fetch')
                 ->icon(Heroicon::ArrowPath)
                 ->color('success')
-                ->action(fn ($record) => new FetchSingleLinkAction()->__invoke($record)),
+                ->action(fn($record,) => new FetchSingleLinkAction()->__invoke($record)),
 
         ];
     }

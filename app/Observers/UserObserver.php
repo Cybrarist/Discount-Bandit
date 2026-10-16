@@ -2,8 +2,10 @@
 
 namespace App\Observers;
 
+use App\Enums\RoleEnum;
 use App\Http\Controllers\Actions\ResetUserSettingToDefaultAction;
 use App\Models\User;
+use Illuminate\Support\Facades\Auth;
 
 class UserObserver
 {
@@ -13,6 +15,19 @@ class UserObserver
     public function created(User $user): void
     {
         new ResetUserSettingToDefaultAction()->__invoke($user);
+    }
+
+    /**
+     * Prevent non-admins from changing their own role.
+     * This guards against crafted Livewire/HTTP requests that bypass form controls.
+     */
+    public function saving(User $user): void
+    {
+        $authUser = Auth::user();
+
+        if ($authUser && $authUser->role !== RoleEnum::Admin && $user->isDirty('role')) {
+            $user->role = $user->getOriginal('role') ?? RoleEnum::User;
+        }
     }
 
     /**

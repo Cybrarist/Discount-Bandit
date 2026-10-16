@@ -50,6 +50,8 @@ class EditStore extends EditRecord
                             'used_price_selectors' => $record->custom_settings['used_price_selectors'] ?? null,
                             'shipping_selectors' => $record->custom_settings['shipping_price_selectors'] ?? null,
                             'stock_selectors' => $record->custom_settings['stock_selectors'] ?? null,
+                            'in_or_out_of_stock_selector_type' => $record->custom_settings['in_or_out_of_stock_selector_type'] ?? true,
+                            'stock_value_to_search' => $record->custom_settings['stock_value_to_search'] ?? true,
                             'condition_selectors' => $record->custom_settings['condition_selectors'] ?? null,
                             'seller_selectors' => $record->custom_settings['seller_selectors'] ?? null,
                         ],

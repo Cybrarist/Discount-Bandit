@@ -29,7 +29,7 @@ class AddStoreToDiscountJob implements ShouldQueue
     {
         $response = Http::get($this->url);
 
-        $contents = file_get_contents($this->image);
+        $contents = Http::get($this->image)->body();
         $image_name = Str::random(10).'.png';
 
         Storage::disk('public')->put('store/'.$image_name, $contents);
@@ -49,6 +49,8 @@ class AddStoreToDiscountJob implements ShouldQueue
             'used_price_selectors' => $store_information['css']['used_price_selectors'],
             'shipping_price_selectors' => $store_information['css']['shipping_selectors'],
             'stock_selectors' => $store_information['css']['stock_selectors'],
+            'in_or_out_of_stock_selector_type' => $store_information['css']['in_or_out_of_stock_selector_type'],
+            'stock_value_to_search' => $store_information['css']['stock_value_to_search'],
             'condition_selectors' => $store_information['css']['condition_selectors'],
 
             'name_schema_key' => $store_information['schema']['name_schema_key'],

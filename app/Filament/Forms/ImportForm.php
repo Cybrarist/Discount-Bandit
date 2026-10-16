@@ -4,6 +4,7 @@ namespace App\Filament\Forms;
 
 use App\Enums\Icons\Devicons;
 use App\Enums\ProductStatusEnum;
+use App\Enums\RoleEnum;
 use App\Models\Category;
 use App\Models\Link;
 use App\Models\NotificationSetting;
@@ -24,20 +25,19 @@ use Illuminate\Support\Facades\DB;
 
 class ImportForm
 {
+    public static function allowed_to_access(): bool
+    {
+        return Auth::user()->role === RoleEnum::Admin;
+    }
+
+
     public static function configure()
     {
-
-        if (Auth::user()?->role !== 'admin') {
-            Notification::make()
-                ->title('You are not authorized to access this page')
-                ->danger()
-                ->send();
-        }
-
         ini_set('max_execution_time', 6000);
 
         return Action::make('Import')
             ->icon(Heroicon::ArrowUpCircle)
+            ->authorize(fn () => self::allowed_to_access())
             ->schema([
                 Shout::make('so-important')
                     ->heading('Important Notice')

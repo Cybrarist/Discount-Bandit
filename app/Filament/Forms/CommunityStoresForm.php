@@ -2,6 +2,7 @@
 
 namespace App\Filament\Forms;
 
+use App\Enums\RoleEnum;
 use App\Helpers\StoreHelper;
 use App\Jobs\AddStoreToDiscountJob;
 use Daikazu\FilamentImageCheckboxGroup\Forms\Components\ImageCheckboxGroup;
@@ -14,6 +15,7 @@ use Filament\Schemas\Components\Wizard;
 use Filament\Schemas\Components\Wizard\Step;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Str;
 
 /**
  * Community Stores Form Configuration
@@ -28,19 +30,16 @@ use Illuminate\Support\Facades\Auth;
  */
 class CommunityStoresForm
 {
+    public static function allowed_to_access(): bool
+    {
+        return Auth::user()->role === RoleEnum::Admin;
+    }
+
     public static function configure()
     {
-        // Authorization check: prevent admin users from accessing this form
-        // (admins likely have different workflows or permissions)
-        if (Auth::user()?->role == 'admin') {
-            Notification::make()
-                ->title('You are not authorized to access this page')
-                ->danger()
-                ->send();
-        }
-
         return Action::make('add_community_stores')
             ->icon(Heroicon::BuildingStorefront)
+            ->authorize(fn () => self::allowed_to_access())
             ->schema([
                 Wizard::make([
 
@@ -53,6 +52,9 @@ class CommunityStoresForm
                             // Updates results dynamically as user types
                             TextInput::make('search')
                                 ->live(debounce: 600)
+                                ->afterStateUpdated(function ($state, $set) {
+                                    $set('letter', $state ? Str::upper(substr($state, 0, 1)) : -1);
+                                })
                                 ->label('Search for a store'),
 
                             // Generates A-Z buttons dynamically for quick filtering

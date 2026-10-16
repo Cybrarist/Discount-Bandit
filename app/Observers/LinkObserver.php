@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Enums\RoleEnum;
 use App\Helpers\LinkHelper;
+use App\Jobs\CheckIfStoreNeedsToBeEnabledJob;
 use App\Models\Link;
 use Filament\Notifications\Notification;
 use Illuminate\Support\Facades\Auth;
@@ -15,7 +16,7 @@ class LinkObserver
     {
         if (
             Auth::check() &&
-            Auth::user()->role == RoleEnum::Admin->value &&
+            Auth::user()->role == RoleEnum::User->value &&
             Auth::user()->other_settings['max_links'] &&
             Auth::user()->links()->count() >= Auth::user()->other_settings['max_links']
         ) {
@@ -41,7 +42,7 @@ class LinkObserver
      */
     public function created(Link $link): void
     {
-        //
+        CheckIfStoreNeedsToBeEnabledJob::dispatch($link->store_id);
     }
 
     /**
@@ -57,7 +58,7 @@ class LinkObserver
      */
     public function deleted(Link $link): void
     {
-        //
+        CheckIfStoreNeedsToBeEnabledJob::dispatch($link->store_id);
     }
 
     /**

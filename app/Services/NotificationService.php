@@ -6,7 +6,6 @@ use App\Models\Link;
 use App\Models\LinkHistory;
 use App\Models\NotificationSetting;
 use App\Models\Product;
-use App\Models\User;
 
 class NotificationService
 {
@@ -27,8 +26,8 @@ class NotificationService
         public Product $product
     ) {
 
-        $user = User::with('currency')
-            ->findOrFail($this->notification_setting->user_id);
+        $user = $this->notification_setting->user;
+        $user->loadMissing('currency');
 
         $this->old_link->loadMissing(['store', 'store.currency']);
 
@@ -42,14 +41,11 @@ class NotificationService
 
     public function check(): bool
     {
-
-        // ignore currency rate.
-
         if (
-            ! $this->new_link->price && ! $this->new_link->used_price ||
-            $this->is_product_snoozed() ||
-            $this->old_link->price == $this->new_link->price ||
-            $this->notification_setting->is_official && ! $this->new_link->is_official
+            (! $this->new_link->price && ! $this->new_link->used_price) ||
+            $this->old_link->price === $this->new_link->price ||
+            ($this->notification_setting->is_official && ! $this->new_link->is_official) ||
+            $this->is_product_snoozed()
         )
             return false;
 

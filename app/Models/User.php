@@ -48,8 +48,8 @@ class User extends Authenticatable implements FilamentUser
         'customization_settings.theme_color',
         'other_settings',
         'other_settings.max_links',
-        'role',
         'currency_id',
+        'role',
     ];
 
     /**
