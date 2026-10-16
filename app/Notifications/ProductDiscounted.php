@@ -52,8 +52,8 @@ class ProductDiscounted extends Notification
             $this->notification_image = $this->product->image;
         }
 
-        $this->product_temp_link = URL::temporarySignedRoute("api.products.show", now()->addMinutes(15), ['product' => $this->product->id]);
-        $this->product_temp_snooze = URL::temporarySignedRoute("products.snooze", today()->endOfDay(), ['productId' => $this->product->id]);
+        $this->product_temp_link = URL::temporarySignedRoute("products.temp.show", now()->addMinutes(15), ['product' => $this->product_id]);
+        $this->product_temp_snooze = URL::temporarySignedRoute("products.temp.snooze", today()->endOfDay(), ['product' => $this->product_id]);
 
         $this->notification_title = "For Just {$this->currency_code} {$this->new_link->price} -  Discount For ".Str::words($this->notification_product_name, 10);
         $this->notification_text = "{$this->notification_product_name}, is at {$this->currency_code}{$this->new_link->price} <br>".

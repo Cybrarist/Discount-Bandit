@@ -15,7 +15,7 @@ php artisan storage:link
 
 printenv > /etc/environment
 
-php artisan migrate --force --seed
+php artisan migrate --force --seed --seeder='Database\Seeders\DatabaseSeeder'
 
 php artisan optimize:clear
 
