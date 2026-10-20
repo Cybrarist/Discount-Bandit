@@ -28,6 +28,7 @@ class Store extends Model
         'currency_id',
         'are_params_allowed',
         'allowed_params',
+        'short_url_hosts',
         'custom_settings',
         'custom_settings.timeout',
         'custom_settings.page_event',
@@ -64,6 +65,7 @@ class Store extends Model
             'custom_settings' => 'json',
             'custom_settings.crawling_method' => CrawlingMethodEnum::class,
             'allowed_params' => 'array',
+            'short_url_hosts' => 'array',
             'are_params_allowed' => 'boolean',
             'status' => StoreStatusEnum::class,
         ];

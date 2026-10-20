@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Stores\Schemas;
 
 use App\Enums\StoreStatusEnum;
 use App\Http\Controllers\Actions\NewStoreSmartSetupAction;
+use App\Services\URLParserService;
 use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
@@ -79,6 +80,21 @@ class StoreForm
                             ->simple(
                                 TextInput::make('field')->required(),
                             )
+                            ->distinct()
+                            ->addActionAlignment(Alignment::Start),
+
+                        Repeater::make('short_url_hosts')
+                            ->label('Short URL hosts')
+                            ->helperText('Hosts of the store share links, e.g. a.co, they are resolved to the full product URL.')
+                            ->grid(3)
+                            ->columnSpanFull()
+                            ->simple(
+                                TextInput::make('host')
+                                    ->required()
+                                    ->placeholder('a.co')
+                                    ->dehydrateStateUsing(fn (?string $state): string => URLParserService::normalize_host($state)),
+                            )
+                            ->defaultItems(0)
                             ->distinct()
                             ->addActionAlignment(Alignment::Start),
 

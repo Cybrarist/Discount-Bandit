@@ -8,8 +8,10 @@ use App\Filament\Resources\Products\Pages\EditProduct;
 use App\Models\Link;
 use App\Models\NotificationSetting;
 use App\Models\Product;
+use App\Models\Store;
 use App\Models\User;
 use Filament\Actions\Testing\TestAction;
+use Illuminate\Support\Facades\Http;
 use Livewire\Livewire;
 use Tests\TestCase;
 
@@ -111,6 +113,51 @@ class EditProductBulkAddLinksTest extends TestCase
 
         $this->assertSame($firstRowKey, array_key_first($rows));
         $this->assertSame(['https://test.com/a', 'https://test.com/b', 'https://test.com/c'], array_column($rows, 'url'));
+    }
+
+    public function test_short_urls_are_resolved_together_on_the_review_step(): void
+    {
+        Store::firstWhere('domain', 'test.com')->update(['short_url_hosts' => ['a.co']]);
+
+        Http::preventStrayRequests();
+        Http::fake([
+            'a.co/d/first'  => Http::response('', 301, ['Location' => 'https://test.com/first-item?ref=share']),
+            'a.co/d/second' => Http::response('', 301, ['Location' => 'https://test.com/second-item']),
+            'a.co/d/broken' => Http::response('', 404),
+        ]);
+
+        $component = Livewire::test(EditProduct::class, ['record' => $this->defaultProduct->id])
+            ->mountAction('bulkAddLinks')
+            ->fillForm([
+                'urls' => [
+                    ['url' => 'https://a.co/d/first'],
+                    ['url' => 'a.co/d/second'],
+                    ['url' => 'https://a.co/d/broken'],
+                    ['url' => 'https://test.com/plain-item'],
+                ],
+            ]);
+
+        $this->assertSame(
+            ['https://a.co/d/first', 'a.co/d/second', 'https://a.co/d/broken', 'https://test.com/plain-item'],
+            array_column($component->instance()->mountedActions[0]['data']['urls'], 'url'),
+        );
+        Http::assertNothingSent();
+
+        $component->goToNextWizardStep()->assertHasNoFormErrors();
+
+        $links = array_values($component->instance()->mountedActions[0]['data']['links']);
+
+        $this->assertSame(
+            ['https://test.com/first-item?ref=share', 'https://test.com/second-item', 'https://a.co/d/broken', 'https://test.com/plain-item'],
+            array_column($links, 'url'),
+        );
+        $this->assertSame(
+            [BulkAddLinksAction::STATUS_OK, BulkAddLinksAction::STATUS_OK, BulkAddLinksAction::STATUS_ERROR, BulkAddLinksAction::STATUS_OK],
+            array_column($links, 'status'),
+        );
+        $this->assertSame(['first-item', 'second-item', null, 'plain-item'], array_column($links, 'key'));
+        $this->assertSame("Couldn't resolve the short URL", $links[2]['message']);
+        Http::assertSentCount(3);
     }
 
     public function test_requires_at_least_one_filled_url(): void

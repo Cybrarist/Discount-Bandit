@@ -2,6 +2,7 @@
 
 namespace Database\Seeders;
 
+use App\Helpers\CacheHelper;
 use App\Models\Currency;
 use App\Models\Store;
 use Illuminate\Database\Seeder;
@@ -33,6 +34,8 @@ class StoreSeeder extends Seeder
             });
 
         }
+
+        CacheHelper::forget_short_url_hosts();
     }
 
     /**

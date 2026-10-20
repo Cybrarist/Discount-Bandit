@@ -74,8 +74,14 @@ class LinkForm
                     ->url()
                     ->label('URL of product')
                     ->live(debounce: 300)
+                    ->extraAttributes(fn (TextInput $component): array => ['wire:target' => $component->getStatePath()])
                     ->afterStateUpdated(function ($state, $set, URLParserService $service) {
                         try {
+                            if (URLParserService::is_short_url($state)) {
+                                $state = URLParserService::expand_short_url($state);
+                                $set('url', $state);
+                            }
+
                             $service->setup($state);
                             if ($service->store?->id) {
                                 $set('store_id', $service->store->id);

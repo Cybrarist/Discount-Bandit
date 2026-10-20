@@ -42,3 +42,13 @@
         }
     }
 }
+
+/* Bulk add links review step: wrap long URLs in the section heading instead of overflowing */
+.fi-bulk-link-section .fi-section-header-text-ctn {
+    @apply min-w-0;
+
+    & .fi-section-header-heading,
+    & .fi-section-header-description {
+        overflow-wrap: anywhere;
+    }
+}

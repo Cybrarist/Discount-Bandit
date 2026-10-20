@@ -69,12 +69,11 @@ class BulkAddLinksAction extends Action
                             ->helperText('Paste a list of links into any row to split it into rows, press Enter to add another row.')
                             ->simple(TextInput::make('url')
                                 ->placeholder('https://')
-                                ->live(onBlur: true)
                                 ->afterStateUpdated(fn (?string $state, TextInput $component) => self::splitPastedUrls($state, $component))
                                 ->extraInputAttributes([
                                     'x-init'                     => "\$nextTick(() => { if (! \$el.value && \$el.closest('.fi-fo-simple-repeater-item') === \$el.closest('.fi-fo-simple-repeater-items')?.lastElementChild) \$el.focus() })",
-                                    'x-on:keydown.enter.prevent' => "if (\$el.value.trim()) { \$el.blur(); \$el.closest('.fi-fo-simple-repeater').querySelector('.fi-fo-simple-repeater-add button')?.click() }",
-                                    'x-on:paste'                 => "const urls = \$event.clipboardData.getData('text').trim().split(/[\\s,]+/).filter(Boolean); if (urls.length > 1) { \$event.preventDefault(); \$el.value = urls.join(' '); \$el.dispatchEvent(new Event('input')); \$el.blur() }",
+                                    'x-on:keydown.enter.prevent' => "if (\$el.value.trim()) { \$el.closest('.fi-fo-simple-repeater').querySelector('.fi-fo-simple-repeater-add button')?.click() }",
+                                    'x-on:paste'                 => "const urls = \$event.clipboardData.getData('text').trim().split(/[\\s,]+/).filter(Boolean); if (urls.length > 1) { \$event.preventDefault(); \$el.value = urls.join(' '); \$el.dispatchEvent(new Event('input')); \$wire.\$commit() }",
                                 ]), )
                             ->defaultItems(1)
                             ->addActionLabel('Add URL')
@@ -117,7 +116,7 @@ class BulkAddLinksAction extends Action
                                     ->description(fn (Get $get): ?string => $get('message'))
                                     ->icon(fn (Get $get): Heroicon => self::statusIcon($get('status')))
                                     ->iconColor(fn (Get $get): string => self::statusColor($get('status')))
-                                    ->extraAttributes(fn (Get $get): array => self::statusOutline($get('status')))
+                                    ->extraAttributes(fn (Get $get): array => ['class' => 'fi-bulk-link-section', ...self::statusOutline($get('status'))])
                                     ->headerActions([
                                         Action::make('removeLink')
                                             ->label('Remove')
@@ -234,14 +233,22 @@ class BulkAddLinksAction extends Action
      */
     public static function analyzeUrls(Product $product, array $urls, array $defaults): array
     {
+        $expanded_urls = URLParserService::expand_short_urls($urls);
+
         $items = collect($urls)
-            ->mapWithKeys(function (string $url) use ($product, $defaults): array {
+            ->mapWithKeys(function (string $url) use ($product, $defaults, $expanded_urls): array {
+                $expanded_url = $expanded_urls[$url];
+
                 [
                     $status,
                     $message,
                     $storeId,
                     $key
-                ] = self::parseUrl($product, $url);
+                ] = $expanded_url
+                    ? self::parseUrl($product, $expanded_url)
+                    : [self::STATUS_ERROR, "Couldn't resolve the short URL", null, null];
+
+                $url = $expanded_url ?? $url;
 
                 return [
                     (string) Str::uuid() => [

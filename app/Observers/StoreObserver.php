@@ -2,6 +2,7 @@
 
 namespace App\Observers;
 
+use App\Helpers\CacheHelper;
 use App\Models\Store;
 use Illuminate\Support\Facades\Artisan;
 
@@ -13,6 +14,10 @@ class StoreObserver
     public function saved(Store $store): void
     {
         Artisan::call('discount:fill-supervisor-workers');
+
+        if ($store->wasRecentlyCreated || $store->wasChanged('short_url_hosts')) {
+            CacheHelper::forget_short_url_hosts();
+        }
     }
 
     /**
@@ -28,7 +33,7 @@ class StoreObserver
      */
     public function deleted(Store $store): void
     {
-        //
+        CacheHelper::forget_short_url_hosts();
     }
 
     /**
