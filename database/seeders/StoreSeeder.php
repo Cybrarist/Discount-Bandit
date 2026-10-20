@@ -13,11 +13,40 @@ class StoreSeeder extends Seeder
      */
     public function run(): void
     {
+        foreach ($this->stores() as $store) {
+            Store::withoutEvents(function () use ($store) {
+                $identifiers = [
+                    'domain' => $store["domain"],
+                    'name' => $store["name"],
+                    "currency_id" => $store["currency_id"],
+                ];
 
-        $stores = [
+                if (isset($store['short_url_hosts'])) {
+                    $store['short_url_hosts'] = collect(Store::firstWhere($identifiers)?->short_url_hosts)
+                        ->merge($store['short_url_hosts'])
+                        ->unique()
+                        ->values()
+                        ->all();
+                }
+
+                Store::updateOrCreate($identifiers, $store);
+            });
+
+        }
+    }
+
+    /**
+     * Predefined stores, matched on domain, name and currency.
+     *
+     * @return list<array<string, mixed>>
+     */
+    protected function stores(): array
+    {
+        return [
             [
                 'name' => 'Amazon UAE',
                 'domain' => 'amazon.ae',
+                'short_url_hosts' => ['a.co', 'amzn.to'],
                 'image' => 'amazon_ae.png',
                 'currency_id' => Currency::firstOrCreate(['code' => 'AED'])->id,
                 'slug' => 'amazon_ae',
@@ -26,6 +55,7 @@ class StoreSeeder extends Seeder
             [
                 'name' => 'Amazon USA',
                 'domain' => 'amazon.com',
+                'short_url_hosts' => ['a.co', 'amzn.to'],
                 'image' => 'amazon.png',
                 'currency_id' => Currency::firstOrCreate(['code' => 'USD'])->id,
                 'slug' => 'amazon_com',
@@ -35,6 +65,7 @@ class StoreSeeder extends Seeder
             [
                 'name' => 'Amazon UK',
                 'domain' => 'amazon.co.uk',
+                'short_url_hosts' => ['amzn.eu'],
                 'image' => 'amazon_co_uk.png',
                 'currency_id' => Currency::firstOrCreate(['code' => 'GBP'])->id,
                 'slug' => 'amazon_uk',
@@ -139,6 +170,7 @@ class StoreSeeder extends Seeder
             [
                 'name' => 'Amazon Japan',
                 'domain' => 'amazon.co.jp',
+                'short_url_hosts' => ['amzn.asia'],
                 'image' => 'amazon_co_jp.png',
                 'currency_id' => Currency::firstOrCreate(['code' => 'JPY'])->id,
                 'slug' => 'amazon_co_jp',
@@ -209,6 +241,7 @@ class StoreSeeder extends Seeder
             [
                 'name' => 'Ebay',
                 'domain' => 'ebay.com',
+                'short_url_hosts' => ['ebay.us'],
                 'image' => 'ebay.png',
                 'currency_id' => Currency::firstOrCreate(['code' => 'USD'])->id,
                 'slug' => 'ebay_com',
@@ -418,6 +451,7 @@ class StoreSeeder extends Seeder
             [
                 'name' => 'FlipKart',
                 'domain' => 'flipkart.com',
+                'short_url_hosts' => ['fkrt.it'],
                 'image' => 'flipkart.svg',
                 'currency_id' => Currency::firstOrCreate(['code' => 'INR'])->id,
                 'slug' => 'flipkart_com',
@@ -622,23 +656,11 @@ class StoreSeeder extends Seeder
             ], [
                 'name' => 'Aliexpress',
                 'domain' => 'aliexpress.com',
+                'short_url_hosts' => ['a.aliexpress.com', 's.click.aliexpress.com'],
                 'image' => 'aliexpress.svg',
                 'currency_id' => Currency::firstOrCreate(['code' => 'USD'])->id,
                 'slug' => 'aliexpress_com',
             ],
         ];
-
-        foreach ($stores as $store) {
-            Store::withoutEvents(function () use ($store) {
-                Store::updateOrCreate([
-                    'domain' => $store["domain"],
-                    'name' => $store["name"],
-                    "currency_id" => $store["currency_id"],
-                ],
-                    $store
-                );
-            });
-
-        }
     }
 }
