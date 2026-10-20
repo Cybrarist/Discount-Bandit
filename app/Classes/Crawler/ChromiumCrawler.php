@@ -14,6 +14,7 @@ use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use Throwable;
 
 class ChromiumCrawler
 {
@@ -82,7 +83,7 @@ class ChromiumCrawler
 
         // If fast path failed, acquire exclusive lock to start a new browser
         if (! $browser) {
-            $lockHandle = fopen($lockFile, 'c');
+            $lockHandle = fopen($lockFile, 'cb');
             flock($lockHandle, LOCK_EX);
 
             try {
@@ -121,7 +122,7 @@ class ChromiumCrawler
         $maxConcurrentPages = 4;
 
         // Block until a page slot is available
-        $pageSlot = fopen($pageLockFile, 'c');
+        $pageSlot = fopen($pageLockFile, 'cb');
         $waited = 0;
         while (true) {
             flock($pageSlot, LOCK_EX);
@@ -155,7 +156,7 @@ class ChromiumCrawler
 
         } catch (OperationTimedOut $e) {
             Log::error("Page navigation timed out: " . $url);
-            $this->dom = $page?->getHtml();
+            $this->dom = HTMLDocument::createFromString($page->getHtml(), LIBXML_NOERROR);
         } catch (CommunicationException $e) {
             Log::error("Couldn't connect to the page");
         } catch (NoResponseAvailable $e) {
@@ -171,7 +172,7 @@ class ChromiumCrawler
             }
 
             // Release page slot
-            $pageSlot = fopen($pageLockFile, 'c');
+            $pageSlot = fopen($pageLockFile, 'cb');
             flock($pageSlot, LOCK_EX);
             $count = (int) (file_exists($pageLockFile . '.count') ? file_get_contents($pageLockFile . '.count') : 1);
             file_put_contents($pageLockFile . '.count', max(0, $count - 1));

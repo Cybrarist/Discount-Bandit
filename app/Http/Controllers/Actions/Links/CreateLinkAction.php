@@ -4,13 +4,15 @@ namespace App\Http\Controllers\Actions\Links;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use JetBrains\PhpStorm\NoReturn;
 
 class CreateLinkAction extends Controller
 {
     /**
      * Handle the incoming request.
      */
-    public function __invoke(Request $request)
+    #[NoReturn]
+    public function __invoke(Request $request): void
     {
         $validated = $request->validate([
             'url' => ['required', 'string', 'url'],
