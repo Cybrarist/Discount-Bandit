@@ -71,7 +71,7 @@ class EditProductBulkAddLinksTest extends TestCase
             ->assertHasNoFormErrors()
             ->assertNotified('1 link(s) added');
 
-        $newLink = Link::withoutGlobalScopes()->firstWhere('key', 'new-item?');
+        $newLink = Link::withoutGlobalScopes()->firstWhere('key', 'new-item');
 
         $this->assertTrue($newLink->products()->whereKey($this->defaultProduct->id)->exists());
         $this->assertEquals(30, NotificationSetting::firstWhere('link_id', $newLink->id)->price_desired);

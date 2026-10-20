@@ -155,6 +155,7 @@ class ChromiumCrawler
 
         } catch (OperationTimedOut $e) {
             Log::error("Page navigation timed out: " . $url);
+            $this->dom = $page?->getHtml();
         } catch (CommunicationException $e) {
             Log::error("Couldn't connect to the page");
         } catch (NoResponseAvailable $e) {

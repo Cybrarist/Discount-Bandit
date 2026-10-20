@@ -7,6 +7,14 @@
       "operators": {
         "=>": "align_single_space_minimal"
       }
-    }
+    },
+    "concat_space": {
+      "spacing": "one"
+    },
+    "match": false,
+    "no_spaces_around_offset": true,
+    "method_chaining_indentation": false,
+    "statement_indentation": true,
+    "ternary_operator_spaces": true
   }
 }

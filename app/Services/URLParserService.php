@@ -43,6 +43,8 @@ class URLParserService
 
         throw_if(! $this->store, new Exception('store not found'));
 
+        $this->remove_disallowed_params();
+
         $this->top_host = explode('.', $this->parsed_url->host())[0];
 
     }
@@ -62,10 +64,31 @@ class URLParserService
                 ->remove(["www."])
                 ->toString();
             $this->product_key = $this->parsed_url->path();
+
+            $this->product_key .= "?" . http_build_query($this->parsed_url->query()
+                    ->toArray());
         }
 
-        $this->product_key .= "?".http_build_query($this->parsed_url->query()->toArray());
 
+    }
+
+    private function remove_disallowed_params(): void
+    {
+        [
+            $base_key,
+            $params
+        ] = array_pad(explode('?', $this->product_key, 2), 2, '');
+
+        parse_str($params, $query);
+
+        if (!$this->store->are_params_allowed) {
+            $query = [];
+        }
+        elseif (filled($this->store->allowed_params)) {
+            $query = Arr::only($query, $this->store->allowed_params);
+        }
+
+        $this->product_key = filled($query) ? $base_key . '?' . http_build_query($query) : $base_key;
     }
 
     // predefined stores

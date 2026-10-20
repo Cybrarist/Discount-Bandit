@@ -3,7 +3,6 @@
 namespace App\Filament\Resources\Products\Actions;
 
 use App\Filament\Resources\NotificationSettings\Schemas\NotificationSettingForm;
-use App\Helpers\LinkHelper;
 use App\Http\Controllers\Actions\Links\AttachLinkToProductAction;
 use App\Models\Link;
 use App\Models\Product;
@@ -300,16 +299,7 @@ class BulkAddLinksAction extends Action
             ];
         }
 
-        $link = new Link([
-            'store_id' => $service->store->id,
-            'key'      => $service->product_key,
-        ]);
-        $link->setRelation('store', $service->store);
-        [
-            $baseKey,
-            $params
-        ] = LinkHelper::prepare_base_key_and_params($link);
-        $key = "{$baseKey}?{$params}";
+        $key = $service->product_key;
 
         $existingLink = Link::withoutGlobalScopes()
             ->where('store_id', $service->store->id)

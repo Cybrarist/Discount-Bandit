@@ -1,0 +1,95 @@
+<?php
+
+namespace Tests\Feature\Services;
+
+use App\Http\Controllers\Actions\Links\AttachLinkToProductAction;
+use App\Models\Currency;
+use App\Models\Link;
+use App\Models\Product;
+use App\Models\Store;
+use App\Models\User;
+use App\Services\URLParserService;
+use Tests\TestCase;
+
+class URLParserServiceProductKeyTest extends TestCase
+{
+    public function test_amazon_key_has_no_query_or_question_mark(): void
+    {
+        $this->create_store('amazon.com');
+        $this->actingAs(User::first());
+
+        $service = new URLParserService;
+        $service->setup('https://www.amazon.com/Colgate-Toothbrush/dp/B01FXI8J6U?refinements=p_36%3A-6900&s=health');
+
+        $this->assertSame('B01FXI8J6U', $service->product_key);
+
+        $link = (new AttachLinkToProductAction)(Product::first(), [
+            'store_id' => $service->store->id,
+            'key'      => $service->product_key,
+        ]);
+
+        $this->assertDatabaseHas('links', [
+            'id'       => $link->id,
+            'store_id' => $service->store->id,
+            'key'      => 'B01FXI8J6U',
+        ]);
+    }
+
+    public function test_custom_store_keeps_only_its_allowed_params_in_parser_and_database(): void
+    {
+        $this->create_store('test.com', ['are_params_allowed' => true,
+                                         'allowed_params'     => [
+                                             'id',
+                                             'color'
+                                         ]
+        ]);
+        $this->actingAs(User::first());
+
+        $service = new URLParserService;
+        $service->setup('https://test.com/product.php?id=5&utm_source=mail&color=red');
+
+        $this->assertSame('product.php?id=5&color=red', $service->product_key);
+
+        $link = (new AttachLinkToProductAction)(Product::first(), [
+            'store_id' => $service->store->id,
+            'key'      => $service->product_key,
+        ]);
+
+        $this->assertDatabaseHas('links', [
+            'id'       => $link->id,
+            'store_id' => $service->store->id,
+            'key'      => 'product.php?id=5&color=red',
+        ]);
+
+        $service->setup('https://test.com/product.php?id=5&color=red&utm_source=newsletter');
+
+        $this->assertSame($link->id, Link::withoutGlobalScopes()
+            ->where('store_id', $service->store->id)
+            ->where('key', $service->product_key)
+            ->sole()->id);
+    }
+
+    public function test_custom_store_without_allowed_params_has_no_question_mark(): void
+    {
+        $this->create_store('test.com', ['are_params_allowed' => false]);
+
+        $service = new URLParserService;
+        $service->setup('https://test.com/product?utm_source=mail');
+
+        $this->assertSame('product', $service->product_key);
+    }
+
+    /**
+     * @param array<string, mixed> $attributes
+     */
+    private function create_store(string $domain, array $attributes = []): void
+    {
+        Store::updateOrCreate(['domain' => $domain], [
+            'name'        => $domain,
+            'slug'        => str_replace('.', '_', $domain),
+            'image'       => 'store.png',
+            'currency_id' => Currency::firstWhere('code', 'USD')->id,
+            ...$attributes,
+        ]);
+    }
+}
