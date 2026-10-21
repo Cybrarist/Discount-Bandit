@@ -41,10 +41,10 @@ class ProductsTable
                 Stack::make([
                     ViewColumn::make('name')
                         ->view('filament.tables.columns.product-card')
-                        ->sortable(),
+                        ->sortable()
+                        ->searchable(),
                 ]),
             ])
-            ->searchable()
 
             ->recordActions([
                 ActionGroup::make([
