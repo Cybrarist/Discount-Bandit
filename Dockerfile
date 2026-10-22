@@ -1,4 +1,4 @@
-FROM dunglas/frankenphp:1.9.1-php8.4-trixie
+FROM dunglas/frankenphp:1.13.2-php8.4-trixie
 
 LABEL authors="Cybrarist"
 
