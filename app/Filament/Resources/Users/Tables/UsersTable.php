@@ -38,6 +38,7 @@ class UsersTable
                     ->label('Email address')
                     ->searchable(),
                 TextColumn::make('role')
+                    ->badge()
                     ->sortable(),
 
                 TextColumn::make('total_product')

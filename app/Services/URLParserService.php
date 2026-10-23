@@ -4,14 +4,21 @@ namespace App\Services;
 
 use App\Exceptions\CouldntParseProductKeyOrURLException;
 use App\Models\Currency;
+use App\Helpers\CacheHelper;
+use App\Helpers\UserAgentHelper;
 use App\Models\Store;
 use Illuminate\Support\Arr;
+use Illuminate\Http\Client\Pool;
+use Illuminate\Http\Client\Response;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Illuminate\Support\Uri;
 use Mockery\Exception;
 
 class URLParserService
 {
+    private const int MAX_SHORT_URL_REDIRECTS = 5;
+
     public string $domain;
 
     public string $top_host;
@@ -30,6 +37,7 @@ class URLParserService
         if (Str::doesntcontain($url, '://'))
             $url = "https://".$url;
 
+        $url = self::expand_short_url($url);
 
         $this->parsed_url = Uri::of($url);
 
@@ -43,8 +51,96 @@ class URLParserService
 
         throw_if(! $this->store, new Exception('store not found'));
 
+        $this->remove_disallowed_params();
+
         $this->top_host = explode('.', $this->parsed_url->host())[0];
 
+    }
+
+
+    /**
+     * prepare the short url
+     */
+    public static function is_short_url(?string $url): bool
+    {
+        $host = self::normalize_host($url);
+
+        return filled($host) && in_array($host, CacheHelper::get_short_url_hosts(), true);
+    }
+
+
+    public static function normalize_host(?string $url): string
+    {
+        if (blank($url)) {
+            return '';
+        }
+
+        $url = trim($url);
+        $host = parse_url(Str::contains($url, '://') ? $url : "https://{$url}", PHP_URL_HOST);
+
+        return Str::lower(Str::chopStart((string) $host, 'www.'));
+    }
+
+    /**
+     * Follow the redirects of a short URL until it lands on a non short host, without requesting the store itself.
+     */
+    public static function expand_short_url(string $url): string
+    {
+        $expanded_url = self::expand_short_urls([$url])[$url];
+
+        throw_if(blank($expanded_url), new Exception("Couldn't resolve the short URL"));
+
+        return $expanded_url;
+    }
+
+    /**
+     * Expand many short URLs at once, each redirect hop is requested in parallel for all URLs.
+     * URLs that aren't short are returned as they are, short URLs that couldn't be resolved are null.
+     *
+     * @param  list<string>  $urls
+     * @return array<string, ?string> expanded URL keyed by the original URL
+     */
+    public static function expand_short_urls(array $urls): array
+    {
+        $expanded_urls = collect($urls)
+            ->mapWithKeys(fn (string $url): array => [$url => Str::contains(trim($url), '://') ? trim($url) : 'https://'.trim($url)])
+            ->all();
+
+        for ($redirect = 0; $redirect < self::MAX_SHORT_URL_REDIRECTS; $redirect++) {
+            $short_urls = array_filter($expanded_urls, fn (?string $url): bool => self::is_short_url($url));
+
+            if (blank($short_urls)) {
+                break;
+            }
+
+            $responses = Http::pool(fn (Pool $pool): array => collect($short_urls)
+                ->map(fn (string $url, string $original_url) => $pool->as($original_url)
+                    ->withoutRedirecting()
+                    ->withUserAgent(UserAgentHelper::get_random_user_agent())
+                    ->timeout(10)
+                    ->get($url))
+                ->values()
+                ->all());
+
+            foreach ($short_urls as $original_url => $url) {
+                $response = $responses[$original_url] ?? null;
+                $location = $response instanceof Response ? $response->header('Location') : null;
+
+                $expanded_urls[$original_url] = match (true) {
+                    blank($location) => null,
+                    Str::startsWith($location, '/') => parse_url($url, PHP_URL_SCHEME).'://'.parse_url($url, PHP_URL_HOST).$location,
+                    default => $location,
+                };
+            }
+        }
+
+        return collect($expanded_urls)
+            ->map(fn (?string $url, string $original_url): ?string => match (true) {
+                ! self::is_short_url($original_url) => trim($original_url),
+                blank($url), self::is_short_url($url) => null,
+                default => $url,
+            })
+            ->all();
     }
 
     private function parse_product_key_or_url(): void
@@ -62,10 +158,31 @@ class URLParserService
                 ->remove(["www."])
                 ->toString();
             $this->product_key = $this->parsed_url->path();
+
+            $this->product_key .= "?" . http_build_query($this->parsed_url->query()
+                    ->toArray());
         }
 
-        $this->product_key .= "?".http_build_query($this->parsed_url->query()->toArray());
 
+    }
+
+    private function remove_disallowed_params(): void
+    {
+        [
+            $base_key,
+            $params
+        ] = array_pad(explode('?', $this->product_key, 2), 2, '');
+
+        parse_str($params, $query);
+
+        if (!$this->store->are_params_allowed) {
+            $query = [];
+        }
+        elseif (filled($this->store->allowed_params)) {
+            $query = Arr::only($query, $this->store->allowed_params);
+        }
+
+        $this->product_key = filled($query) ? $base_key . '?' . http_build_query($query) : $base_key;
     }
 
     // predefined stores
@@ -261,8 +378,6 @@ class URLParserService
         };
 
         return Str::lower($temp[count($temp) - 2]);
-
-        throw new \Exception("wrong formula");
     }
 
     public function get_newegg_key(): string

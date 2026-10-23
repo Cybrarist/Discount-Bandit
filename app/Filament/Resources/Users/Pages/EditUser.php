@@ -52,10 +52,9 @@ class EditUser extends EditRecord
                     ]);
 
                     $record->notify(new ProductDiscounted(
-                        product_id: $product->id,
-                        product_name: $product->name,
-                        product_image: "https://raw.githubusercontent.com/Cybrarist/Discount-Bandit/refs/heads/master/storage/app/public/bandit.png",
+                        product: $product,
                         store_name: "Discount Bandit",
+                        link: $link,
                         new_link: $link,
                         highest_price: 150,
                         lowest_price: 100,

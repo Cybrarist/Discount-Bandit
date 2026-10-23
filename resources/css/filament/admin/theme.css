@@ -2,6 +2,7 @@
 
 @source '../../../../app/Filament/**/*';
 @source '../../../../resources/views/filament/**/*';
+@source '../../../../resources/views/components/**/*';
 
 @source '../../../../vendor/jeffgreco13/filament-breezy/resources/**/*';
 @source '../../../../vendor/devonab/filament-easy-footer/resources/views/**/*';
@@ -10,3 +11,44 @@
 @source '../../../../vendor/daikazu/filament-image-checkbox-group/resources/views/**/*.blade.php';
 @source '../../../../vendor/eightynine/filament-advanced-widgets/resources/views/**/*.blade.php';
 @source '../../../../vendor/daikazu/filament-image-checkbox-group/resources/views/**/*.blade.php';
+@source '../../../../vendor/gboquizosanchez/filament-log-viewer/resources/views/**/*.blade.php';
+
+/* Products list: custom product cards (resources/views/filament/tables/columns/product-card.blade.php) */
+.fi-products-cards .fi-ta-content-grid .fi-ta-record {
+    @apply items-stretch overflow-hidden p-0 transition hover:shadow-lg hover:ring-2 hover:ring-primary-500/50;
+
+    & .fi-ta-record-content-ctn {
+        @apply gap-0 p-0;
+    }
+
+    & .fi-ta-record-content,
+    & .fi-ta-col {
+        @apply p-0!;
+    }
+
+    & .fi-ta-stack {
+        @apply items-stretch;
+    }
+
+    & .fi-ta-record-checkbox {
+        @apply absolute start-3 top-3 z-20 m-0;
+    }
+
+    & .fi-ta-actions {
+        @apply absolute end-3 top-3 z-20 p-0!;
+
+        & .fi-icon-btn {
+            @apply rounded-full bg-black/20 text-white backdrop-blur-sm transition duration-150 hover:scale-110 hover:bg-black/60 hover:shadow-md;
+        }
+    }
+}
+
+/* Bulk add links review step: wrap long URLs in the section heading instead of overflowing */
+.fi-bulk-link-section .fi-section-header-text-ctn {
+    @apply min-w-0;
+
+    & .fi-section-header-heading,
+    & .fi-section-header-description {
+        overflow-wrap: anywhere;
+    }
+}

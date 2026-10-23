@@ -56,7 +56,7 @@ class Newegg extends StoreTemplate
         return Str::replace(
             ["[domain]", "[country]", "[product_key]"],
             [$link->store->domain, $country_code, Str::upper($link_base)],
-            $domain_to_use) ."?{$link_params}";
+            $domain_to_use)."?{$link_params}";
 
     }
 
@@ -164,7 +164,7 @@ class Newegg extends StoreTemplate
 
     public function other_method_if_system_detected_as_bot(): void {}
 
-    public function prepare_dom_for_getting_product_information()
+    public function prepare_dom_for_getting_product_information(): void
     {
         if (isset($this->schema['product'])) {
             $this->schema = $this->schema['product'];

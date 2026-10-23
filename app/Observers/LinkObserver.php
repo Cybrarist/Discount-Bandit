@@ -3,7 +3,6 @@
 namespace App\Observers;
 
 use App\Enums\RoleEnum;
-use App\Helpers\LinkHelper;
 use App\Jobs\CheckIfStoreNeedsToBeEnabledJob;
 use App\Models\Link;
 use Filament\Notifications\Notification;
@@ -16,7 +15,7 @@ class LinkObserver
     {
         if (
             Auth::check() &&
-            Auth::user()->role == RoleEnum::User->value &&
+            Auth::user()->role === RoleEnum::User->value &&
             Auth::user()->other_settings['max_links'] &&
             Auth::user()->links()->count() >= Auth::user()->other_settings['max_links']
         ) {
@@ -32,9 +31,6 @@ class LinkObserver
             ]);
 
         }
-
-        [$link_base, $link_params] = LinkHelper::prepare_base_key_and_params($link);
-        $link->key = $link_base."?".$link_params;
     }
 
     /**

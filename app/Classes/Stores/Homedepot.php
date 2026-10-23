@@ -134,7 +134,7 @@ class Homedepot extends StoreTemplate
 
     public function other_method_if_system_detected_as_bot(): void {}
 
-    public function prepare_dom_for_getting_product_information()
+    public function prepare_dom_for_getting_product_information(): void
     {
         if (isset($this->schema['product'])) {
             $this->schema = $this->schema['product'];

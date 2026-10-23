@@ -4,6 +4,7 @@ namespace App\Models;
 
 use App\Enums\ProductStatusEnum;
 use App\Models\Scopes\UserOwnedScope;
+use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +14,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 #[ScopedBy(UserOwnedScope::class)]
 class Product extends Model
 {
-    /** @use HasFactory<\Database\Factories\ProductFactory> */
+    /** @use HasFactory<ProductFactory> */
     use HasFactory;
 
     protected $fillable = [
@@ -29,6 +30,7 @@ class Product extends Model
         'highest_price',
         'notifications_sent',
         'remove_link_if_out_of_stock_for_x_days',
+        'is_list',
 
     ];
 
@@ -36,6 +38,8 @@ class Product extends Model
     {
         return [
             'snoozed_until' => 'date',
+            'is_favourite' => 'boolean',
+            'is_in_stock' => 'boolean',
             'status' => ProductStatusEnum::class,
         ];
     }

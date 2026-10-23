@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Currency;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Arr;
 
@@ -326,13 +325,13 @@ class CurrencySeeder extends Seeder
             'ZWL' => '$',
         ];
 
-
         foreach ($currencies as $code => $currency) {
             Currency::updateOrCreate([
                 "code" => $code,
             ], [
                 "name" => $currency,
                 "symbol" => Arr::exists($symbols, $code) ? $symbols[$code] : null,
+                'rate' => config('settings.exchange_rate_api_key') ? 0 : 1,
             ]);
         }
     }

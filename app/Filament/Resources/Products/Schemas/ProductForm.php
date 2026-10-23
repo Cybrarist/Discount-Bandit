@@ -74,6 +74,11 @@ class ProductForm
                     ->nullable()
                     ->preload(),
 
+                Toggle::make('is_list')
+                    ->inline(false)
+                    ->label("List Mode")
+                    ->helperText('list mode will send notification detail per item like name and image instead of product\'s'),
+
                 TextInput::make('notifications_sent')
                     ->hiddenOn([Operation::Create])
                     ->numeric(),

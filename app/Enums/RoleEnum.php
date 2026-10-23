@@ -14,10 +14,10 @@ enum RoleEnum: string implements HasColor, HasLabel
 
     public function getColor(): string|array|null
     {
-        return [
-            'admin' => 'primary',
-            'user' => 'secondary',
-        ];
+        return match ($this) {
+            RoleEnum::Admin => 'primary',
+            RoleEnum::User => 'secondary',
+        };
     }
 
     public function getLabel(): string|Htmlable|null
