@@ -8,6 +8,7 @@ use App\Filament\Forms\ImportForm;
 use App\Filament\Pages\Auth\Login;
 use App\Filament\Pages\Auth\Register;
 use App\Filament\Pages\Dashboard;
+use App\Filament\Resources\Links\Pages\ListLinks;
 use App\Filament\Resources\Products\Pages\ListProducts;
 use App\Filament\Resources\Products\ProductResource;
 use App\Filament\Resources\Stores\StoreResource;
@@ -104,6 +105,11 @@ class AdminPanelProvider extends PanelProvider
                 TablesRenderHook::TOOLBAR_SEARCH_BEFORE,
                 fn (): View => view('filament.tables.products-grid-columns'),
                 scopes: ListProducts::class,
+            )
+            ->renderHook(
+                TablesRenderHook::TOOLBAR_SEARCH_BEFORE,
+                fn (): View => view('filament.tables.links-grid-columns'),
+                scopes: ListLinks::class,
             )
             ->assets([
                 Css::make('custom-css', resource_path('css/custom.css')),

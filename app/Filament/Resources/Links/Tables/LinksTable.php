@@ -2,10 +2,12 @@
 
 namespace App\Filament\Resources\Links\Tables;
 
+use App\Filament\Resources\Links\Pages\ListLinks;
 use App\Helpers\LinkHelper;
 use App\Http\Controllers\Actions\FetchSingleLinkAction;
 use App\Http\Controllers\Actions\Links\AttachLinkToProductAction;
 use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DetachAction;
 use Filament\Actions\EditAction;
@@ -13,7 +15,9 @@ use Filament\Notifications\Notification;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\ImageColumn;
+use Filament\Tables\Columns\Layout\Stack;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ViewColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
@@ -23,44 +27,49 @@ use Illuminate\Support\Number;
 
 class LinksTable
 {
+
+    // check if i am calling from product card or from links index page
     public static function configure(Table $table, ?Model $product = null): Table
     {
-        if ($product) {
-            $table
-                ->recordUrl(fn ($record) => route('filament.admin.resources.links.edit', ['record' => $record->id]))
-                ->headerActions([
-                    CreateAction::make('create')
-                        ->label('Add link')
-                        ->using(function ($data, $action) use ($product) {
+        return $product
+            ? self::configure_product_table($table, $product)
+            : self::configure_cards($table);
+    }
 
-                            if (blank($data['store_id'])) {
-                                Notification::make()
-                                    ->title("Store doesn't exist")
-                                    ->body("Please create the store first or check the url")
-                                    ->danger()
-                                    ->send();
-
-                                $action->halt();
-                            }
-
-                            $link = new AttachLinkToProductAction()->__invoke($product, $data);
-
-                            $total_notification_settings = $link->notification_settings()->count();
-                            if ($total_notification_settings > 1)
-                                Notification::make()
-                                    ->title("You have multiple notification settings for this link ({$total_notification_settings})")
-                                    ->actions([
-                                        Action::make('View')
-                                            ->url(route('filament.admin.resources.links.edit', ['record' => $link->id])),
-                                    ])
-                                    ->duration(1000)
-                                    ->warning()
-                                    ->send();
-                        }),
-                ]);
-        }
-
+    private static function configure_product_table(Table $table, Model $product): Table
+    {
         return $table
+            ->recordUrl(fn ($record) => route('filament.admin.resources.links.edit', ['record' => $record->id]))
+            ->headerActions([
+                CreateAction::make('create')
+                    ->label('Add link')
+                    ->using(function ($data, $action) use ($product) {
+
+                        if (blank($data['store_id'])) {
+                            Notification::make()
+                                ->title("Store doesn't exist")
+                                ->body("Please create the store first or check the url")
+                                ->danger()
+                                ->send();
+
+                            $action->halt();
+                        }
+
+                        $link = new AttachLinkToProductAction()->__invoke($product, $data);
+
+                        $total_notification_settings = $link->notification_settings()->count();
+                        if ($total_notification_settings > 1)
+                            Notification::make()
+                                ->title("You have multiple notification settings for this link ({$total_notification_settings})")
+                                ->actions([
+                                    Action::make('View')
+                                        ->url(route('filament.admin.resources.links.edit', ['record' => $link->id])),
+                                ])
+                                ->duration(1000)
+                                ->warning()
+                                ->send();
+                    }),
+            ])
             ->modifyQueryUsing(fn ($query) => $query
                 ->with(['store:id,name,currency_id,domain,referral,are_params_allowed,allowed_params', 'store.currency:id,code,rate'])
             )
@@ -178,23 +187,8 @@ class LinksTable
                     ->formatStateUsing(fn ($record) => $record->pivot?->created_at),
 
             ])
-            ->filters([
-                SelectFilter::make('store_id')
-                    ->relationship('store', 'name')
-                    ->label('Store')
-                    ->preload()
-                    ->searchable()
-                    ->native(false),
-
-                TernaryFilter::make('is_official')->boolean(),
-                TernaryFilter::make('is_in_stock')->boolean(),
-
-            ])
+            ->filters(self::filters())
             ->recordActions([
-                EditAction::make()
-                    ->visible(! $product?->id)
-                    ->iconButton(),
-
                 DetachAction::make()
                     ->iconButton()
                     ->icon(Heroicon::Trash)
@@ -208,5 +202,65 @@ class LinksTable
                     ->action(fn ($record) => new FetchSingleLinkAction()->__invoke($record)),
 
             ]);
+    }
+
+    private static function configure_cards(Table $table): Table
+    {
+        Auth::user()->loadMissing('currency:id,code,rate');
+
+        return $table
+            ->modifyQueryUsing(fn ($query) => $query
+                ->with(['store:id,name,image,currency_id,domain,referral,are_params_allowed,allowed_params', 'store.currency:id,code,rate'])
+            )
+            ->extraAttributes(['class' => 'fi-products-cards'])
+            ->columns([
+                Stack::make([
+                    ViewColumn::make('name')
+                        ->view('filament.tables.columns.link-card')
+                        ->sortable()
+                        ->searchable(),
+                ]),
+            ])
+            ->recordActions([
+                ActionGroup::make([
+                    Action::make('Fetch')
+                        ->label('Refresh link')
+                        ->icon(Heroicon::ArrowPath)
+                        ->color('success')
+                        ->action(function ($record) {
+                            new FetchSingleLinkAction()->__invoke($record);
+                            Notification::make()
+                                ->title('Link sent to crawler')
+                                ->success()
+                                ->send();
+                        }),
+
+                    EditAction::make(),
+                ])
+                    ->icon(Heroicon::EllipsisHorizontal)
+                    ->color('gray'),
+            ])
+            ->contentGrid(fn ($livewire): array => $livewire instanceof ListLinks
+                ? $livewire->content_grid()
+                : ListLinks::DEFAULT_CONTENT_GRID)
+            ->filters(self::filters());
+    }
+
+    /**
+     * @return array<int, SelectFilter|TernaryFilter>
+     */
+    private static function filters(): array
+    {
+        return [
+            SelectFilter::make('store_id')
+                ->relationship('store', 'name')
+                ->label('Store')
+                ->preload()
+                ->searchable()
+                ->native(false),
+
+            TernaryFilter::make('is_official')->boolean(),
+            TernaryFilter::make('is_in_stock')->boolean(),
+        ];
     }
 }
