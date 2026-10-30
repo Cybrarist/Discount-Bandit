@@ -4,6 +4,9 @@ return [
 
     'exchange_rate_api_key' => env("EXCHANGE_RATE_API_KEY"),
 
+    // exchangerate-api (default) or allratestoday; EXCHANGE_RATE_API_KEY is the key for the selected provider
+    'exchange_rate_provider' => env("EXCHANGE_RATE_PROVIDER", 'exchangerate-api'),
+
     'cron' => env("CRON", '*/5 * * * *'),
 
     'theme_color' => env("THEME_COLOR", 'Red'),

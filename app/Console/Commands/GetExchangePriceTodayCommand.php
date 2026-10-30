@@ -29,18 +29,14 @@ class GetExchangePriceTodayCommand extends Command
      */
     public function handle()
     {
-        $response = Http::get("https://v6.exchangerate-api.com/v6/".
-            config('settings.exchange_rate_api_key').
-            "/latest/USD")->json();
+        $rates = match (config('settings.exchange_rate_provider')) {
+            'allratestoday' => $this->allRatesTodayRates(),
+            default => $this->exchangeRateApiRates(),
+        };
 
-        if (! isset($response['conversion_rates'])) {
-            Log::error("Couldn't get the currencies");
-            Log::info($response);
-
+        if ($rates === null) {
             return;
         }
-
-        $rates = $response["conversion_rates"];
 
         $rates = Arr::only($rates, Currency::all()->pluck('code')->toArray());
 
@@ -51,5 +47,38 @@ class GetExchangePriceTodayCommand extends Command
                 "rate" => $rate,
             ]);
         }
+    }
+
+    private function exchangeRateApiRates(): ?array
+    {
+        $response = Http::get("https://v6.exchangerate-api.com/v6/".
+            config('settings.exchange_rate_api_key').
+            "/latest/USD")->json();
+
+        if (! isset($response['conversion_rates'])) {
+            Log::error("Couldn't get the currencies");
+            Log::info($response);
+
+            return null;
+        }
+
+        return $response["conversion_rates"];
+    }
+
+    private function allRatesTodayRates(): ?array
+    {
+        $response = Http::withToken(config('settings.exchange_rate_api_key'))
+            ->get("https://allratestoday.com/api/v1/rates", ["source" => "USD"])
+            ->json();
+
+        if (! is_array($response) || ! array_is_list($response)) {
+            Log::error("Couldn't get the currencies");
+            Log::info($response);
+
+            return null;
+        }
+
+        // Rows look like {"source": "USD", "target": "EUR", "rate": 0.89, "time": "..."}.
+        return array_merge(['USD' => 1], Arr::pluck($response, 'rate', 'target'));
     }
 }
