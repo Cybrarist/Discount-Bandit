@@ -8,6 +8,9 @@ It has a notification system built in, so you can be notified when the price dro
 Feel free to access the up-to-date documentation from [Here](https://discount-bandit.cybrarist.com)
 
 ## Deployment
+
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/template/uR9f0Y)
+
 Discount Bandit uses a web interface, so you need to install some dependencies first:
 - [php](https://www.php.net)
 - [composer](https://getcomposer.org)
