@@ -27,5 +27,8 @@ services:
       APP_URL: "http://localhost:8080"
       ASSET_URL: "http://localhost:8080"
       EXCHANGE_RATE_API_KEY:
+      AMAZON_PROVIDER: crawler #set to scavio to read Amazon prices from the Scavio API
+      SCAVIO_API_KEY:
+      SCAVIO_REFRESH_HOURS: 24 #hours between scheduled checks of an Amazon link when AMAZON_PROVIDER is scavio
       CRON: "*/5 * * * *"
       APP_KEY: #required, check docs to how generate it
