@@ -1,0 +1,46 @@
+{
+    "data": {
+        "asin": "B0B831STBX",
+        "title": "Tapo P110(2-pack) Smart Plug, Energy Monitoring WiFi Plug, Max 13A",
+        "brand": "Tapo",
+        "url": "https://www.amazon.co.uk/dp/B0B831STBX",
+        "price": 15.98,
+        "list_price": 23.99,
+        "currency": "GBP",
+        "rating": 4.6,
+        "reviews_count": 54356,
+        "is_prime": true,
+        "is_sponsored": false,
+        "has_buy_box": true,
+        "availability": "In stock",
+        "max_quantity": 3,
+        "sold_by": "Amazon",
+        "other_sellers_count": 10,
+        "sales_volume": "5K+ bought in past month",
+        "image": "https://m.media-amazon.com/images/I/411h0Dpqo0L._SX342_SY445_QL70_ML2_.jpg",
+        "shipping": {
+            "is_prime": true,
+            "zipcode": null,
+            "options": [
+                {
+                    "type": "free",
+                    "price": 0,
+                    "is_prime": false,
+                    "delivery_date": "Sunday, 8 November",
+                    "order_deadline_hours": null,
+                    "order_deadline_minutes": null
+                },
+                {
+                    "type": "standard",
+                    "price": 0,
+                    "is_prime": false,
+                    "delivery_date": "Tomorrow, 6 November",
+                    "order_deadline_hours": 8,
+                    "order_deadline_minutes": 23
+                }
+            ]
+        }
+    },
+    "response_time": 4194,
+    "credits_used": 1
+}

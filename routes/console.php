@@ -1,5 +1,6 @@
 <?php
 
+use App\Classes\Stores\AmazonScavio;
 use App\Console\Commands\ClearNotificationCount;
 use App\Enums\StoreStatusEnum;
 use App\Jobs\CrawlProductJob;
@@ -30,7 +31,14 @@ Schedule::call(function () {
             ->get();
 
         foreach ($stores as $store) {
-            foreach ($store->links as $index => $link) {
+            $links = $store->links;
+
+            // Amazon links read through the Scavio API are checked every SCAVIO_REFRESH_HOURS
+            if (str_contains($store->name, 'Amazon') && AmazonScavio::is_selected()) {
+                $links = $links->filter(fn ($link) => AmazonScavio::is_due($link))->values();
+            }
+
+            foreach ($links as $index => $link) {
                 CrawlProductJob::dispatch($link->id)
                     ->onQueue($store->slug)
                     ->delay(now()->addSeconds($index * 5));
