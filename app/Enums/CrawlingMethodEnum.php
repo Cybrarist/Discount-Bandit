@@ -12,6 +12,19 @@ enum CrawlingMethodEnum: string implements HasColor, HasLabel
     case SimpleHttp = 'http';
     case Chromium = 'chromium';
 
+    /**
+     * Resolve the enum from either an enum instance or its raw value, ignoring
+     * anything that is not a valid crawling method.
+     */
+    public static function fromValue(mixed $value): ?self
+    {
+        return match (true) {
+            $value instanceof self => $value,
+            is_string($value)      => self::tryFrom($value),
+            default                => null,
+        };
+    }
+
     public function getColor(): string|array|null
     {
         return [
