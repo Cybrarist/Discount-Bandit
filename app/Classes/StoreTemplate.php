@@ -4,6 +4,7 @@ namespace App\Classes;
 
 use App\Classes\Crawler\ChromiumCrawler;
 use App\Classes\Crawler\SimpleCrawler;
+use App\Enums\CrawlingMethodEnum;
 use App\Exceptions\CouldNotCrawlProductException;
 use App\Exceptions\CouldNotGetProductInformationException;
 use App\Exceptions\CouldNotGetProductPricingException;
@@ -66,6 +67,8 @@ abstract class StoreTemplate
             'products' => fn ($query) => $query->withoutGlobalScopes(),
         ]);
 
+        $this->apply_crawling_method();
+
         // don't crawl link that have been deleted but waiting for job to run
         if ($this->link->products->isEmpty()) {
             $this->link->touch();
@@ -96,6 +99,23 @@ abstract class StoreTemplate
             }
         }
 
+    }
+
+    /**
+     * Honour the crawling method chosen for the store in
+     * Stores → Custom Store Settings. It takes precedence over the default
+     * each store class sets for itself, and leaves that default untouched
+     * when the store has no explicit setting.
+     */
+    protected function apply_crawling_method(): void
+    {
+        $settings = $this->link->store->custom_settings ?? [];
+
+        $method = CrawlingMethodEnum::fromValue($settings['crawling_method'] ?? null);
+
+        if ($method !== null) {
+            $this->chromium_crawler = $method === CrawlingMethodEnum::Chromium;
+        }
     }
 
     public function crawl_product(): void

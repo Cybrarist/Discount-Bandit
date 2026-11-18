@@ -138,7 +138,7 @@ class StoreForm
                         Select::make('custom_settings.crawling_method')
                             ->options([
                                 'chromium' => 'Chromium',
-                                //                                'http' => 'Simple HTTP',
+                                'http' => 'Simple HTTP',
                             ])
                             ->default('chromium')
                             ->preload()

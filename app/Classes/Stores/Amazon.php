@@ -18,6 +18,24 @@ class Amazon extends StoreTemplate
 
     const string OTHER_BUYING_OPTIONS = "https://www.[domain]/gp/product/ajax?ref=dp_aod_NEW_mbc&asin=[product_key]&m=&qid=&smid=&&sourcecustomerorglistid=&sourcecustomerorglistitemid=&sr=&pc=dp&experienceId=aodAjaxMain";
 
+    /**
+     * Amazon marketplaces that have been seen answering plain HTTP requests
+     * with the "sorry"/captcha page, so they are crawled with a real browser
+     * by default.
+     *
+     * This is a best-effort default: Amazon's bot detection is dynamic, so a
+     * marketplace may work one minute and be blocked the next. Users can
+     * always override it per store in Stores → Custom Store Settings.
+     */
+    protected const array CHROMIUM_REQUIRED_DOMAINS = [
+        'amazon.de',
+        'amazon.ca',
+        'amazon.es',
+        'amazon.fr',
+        'amazon.it',
+        'amazon.co.uk',
+    ];
+
     protected array $extra_headers = [
         'Accept' => 'application/json',
         "Cache-Control" => "no-cache",
@@ -28,15 +46,13 @@ class Amazon extends StoreTemplate
     public function __construct(Link $link, array $extra_headers = [], ?string $user_agent = '')
     {
 
-        if (in_array($link->store->domain, [
-            'amazon.de',
-            'amazon.ca',
-        ])) {
-            $this->chromium_crawler = true;
-        } else {
-            $this->extra_headers = $extra_headers + $this->extra_headers;
-            $this->user_agent = ($user_agent) ?: UserAgentHelper::get_random_user_agent();
+        // Prepare the HTTP-mode headers unconditionally: the store setting may
+        // still force plain HTTP for a domain that defaults to Chromium.
+        $this->extra_headers = $extra_headers + $this->extra_headers;
+        $this->user_agent = ($user_agent) ?: UserAgentHelper::get_random_user_agent();
 
+        if (in_array($link->store->domain, self::CHROMIUM_REQUIRED_DOMAINS, true)) {
+            $this->chromium_crawler = true;
         }
 
         parent::__construct($link);
